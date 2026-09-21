@@ -2,34 +2,47 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0F766E">
-<title>KaamWala — Invoices for Pakistani Freelancers</title>
+<meta name="description" content="Free invoice & proposal generator for Pakistani freelancers and small businesses. Works on phone. Urdu & English. JazzCash, Easypaisa & QR payment support.">
+<title>KaamWala — Professional Invoices on Your Phone</title>
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:#0F172A;background:#F8FAFC;line-height:1.55;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:640px;margin:0 auto;padding:0 18px}
-  header{padding:14px 0;border-bottom:1px solid #E2E8F0;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
-  .brand{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:#0F172A;text-decoration:none}
-  .mark{display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;background:#0F766E;color:#fff;border-radius:9px;font-size:.85rem}
-  .hero{padding:44px 0 24px;text-align:center}
-  .hero h1{font-size:2rem;font-weight:800;line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
-  .hl{background:linear-gradient(180deg,transparent 62%,#CCFBF1 62%);padding:0 4px}
-  .lede{color:#64748B;font-size:1.05rem;margin:0 auto 22px;max-width:460px}
-  .cta{display:inline-block;background:#0F766E;color:#fff;font-weight:700;padding:14px 26px;border-radius:12px;text-decoration:none;min-height:48px;line-height:1.2}
-  .cta:active{transform:scale(.98)}
-  .note{color:#64748B;font-size:.85rem;margin-top:14px}
-  .features{padding:32px 0 40px}
-  .features h2{font-size:1.4rem;margin:0 0 16px;text-align:center}
-  .grid{display:grid;gap:14px;grid-template-columns:1fr}
-  .card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px}
-  .card h3{margin:0 0 4px;font-size:1rem}
-  .card p{margin:0;color:#64748B;font-size:.95rem}
-  footer{padding:24px 0 40px;text-align:center;color:#64748B;font-size:.9rem;border-top:1px solid #E2E8F0}
-  @media(min-width:640px){
-    .hero h1{font-size:2.5rem}
-    .grid{grid-template-columns:1fr 1fr}
-  }
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:#0F172A;background:#F8FAFC;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:640px;margin:0 auto;padding:0 18px}
+header{padding:14px 0;border-bottom:1px solid #E2E8F0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
+.brand{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:#0F172A;text-decoration:none}
+.mark{display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;background:#0F766E;color:#fff;border-radius:9px;font-size:.85rem;font-weight:800}
+.hero{padding:44px 0 24px;text-align:center}
+.hero h1{font-size:2rem;font-weight:800;line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
+.hl{background:linear-gradient(180deg,transparent 62%,#CCFBF1 62%);padding:0 4px}
+.lede{color:#64748B;font-size:1.05rem;margin:0 auto 22px;max-width:480px}
+.cta{display:inline-block;background:#0F766E;color:#fff;font-weight:700;padding:14px 26px;border-radius:12px;text-decoration:none;min-height:48px;line-height:1.2}
+.cta:active{transform:scale(.98)}
+.note{color:#64748B;font-size:.85rem;margin-top:14px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0 6px}
+.badge{background:#fff;border:1px solid #E2E8F0;color:#475569;padding:6px 12px;border-radius:20px;font-size:.78rem;font-weight:600}
+.features{padding:32px 0 40px}
+.features h2{font-size:1.4rem;margin:0 0 16px;text-align:center}
+.grid{display:grid;gap:14px;grid-template-columns:1fr}
+.card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px}
+.card h3{margin:0 0 4px;font-size:1rem;font-weight:700;color:#0F172A}
+.card p{margin:0;color:#64748B;font-size:.94rem}
+.how{padding:20px 0 40px}
+.how h2{font-size:1.4rem;margin:0 0 16px;text-align:center}
+.steps{display:grid;gap:10px}
+.step{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:14px}
+.step-num{flex-shrink:0;width:32px;height:32px;background:#0F766E;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem}
+.step-body h4{margin:0 0 2px;font-size:.95rem;color:#0F172A}
+.step-body p{margin:0;font-size:.85rem;color:#64748B}
+.faq{padding:24px 0 40px}
+.faq h2{font-size:1.4rem;margin:0 0 14px;text-align:center}
+.faq-item{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:14px;margin-bottom:8px}
+.faq-item h4{margin:0 0 5px;font-size:.95rem;color:#0F172A}
+.faq-item p{margin:0;font-size:.88rem;color:#64748B}
+footer{padding:28px 0 40px;text-align:center;color:#64748B;font-size:.88rem;border-top:1px solid #E2E8F0}
+footer a{color:#0F766E;text-decoration:none;font-weight:600;margin:0 8px}
+@media(min-width:640px){.hero h1{font-size:2.5rem}.grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -41,43 +54,69 @@
 </header>
 
 <main>
-  <section class="hero">
-    <div class="wrap">
-      <h1>Professional invoices,<br><span class="hl">made on your phone.</span></h1>
-      <p class="lede">Free invoice and proposal generator for Pakistani freelancers. No laptop. No signup. Works offline. Urdu &amp; English.</p>
-      <a href="#" class="cta">Create Invoice — Free</a>
-      <p class="note">Free forever plan · No credit card · 100% private</p>
-    </div>
-  </section>
 
-  <section class="features">
-    <div class="wrap">
-      <h2>Built for the way you work</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>📱 Made for mobile</h3>
-          <p>Designed for a phone first. Fast, clean, and easy to use with one hand.</p>
-        </div>
-        <div class="card">
-          <h3>🇵🇰 PKR &amp; Urdu ready</h3>
-          <p>Rupee formatting, Urdu labels, and invoice styles that make sense in Pakistan.</p>
-        </div>
-        <div class="card">
-          <h3>⚡ Works offline</h3>
-          <p>No internet needed after the first load. Your data stays on your phone.</p>
-        </div>
-        <div class="card">
-          <h3>🔒 Private by design</h3>
-          <p>No account required. No tracking. Your client data never leaves your device.</p>
-        </div>
-      </div>
+<section class="hero">
+  <div class="wrap">
+    <h1>Professional invoices,<br><span class="hl">made on your phone.</span></h1>
+    <p class="lede">Free invoice generator for Pakistani freelancers, shops, and small businesses. No laptop. No signup. Works offline.</p>
+    <a href="app.html" class="cta">Create Invoice — Free</a>
+    <p class="note">No credit card · No signup · 100% private</p>
+    <div class="badges">
+      <span class="badge">📱 Mobile-first</span>
+      <span class="badge">🇵🇰 PKR &amp; Urdu ready</span>
+      <span class="badge">🔒 Offline</span>
+      <span class="badge">💳 JazzCash &amp; Easypaisa</span>
     </div>
-  </section>
+  </div>
+</section>
+
+<section class="features">
+  <div class="wrap">
+    <h2>Everything you need</h2>
+    <div class="grid">
+      <div class="card"><h3>🏢 Business Profile</h3><p>Apni business details ek baar save karein — logo, contact, license. Har invoice par automatic.</p></div>
+      <div class="card"><h3>🛒 Product List</h3><p>Common products aur services rate ke saath save karein. Invoice banate waqt dropdown se choose karein.</p></div>
+      <div class="card"><h3>💳 Payment QR</h3><p>Apna JazzCash ya Easypaisa QR invoice par lagayein. Client scan kar ke direct payment karega.</p></div>
+      <div class="card"><h3>📄 PDF Export</h3><p>Professional PDF bana ke WhatsApp, Email ya kisi bhi app par bhejein. Ek tap mein.</p></div>
+      <div class="card"><h3>📋 Invoice History</h3><p>Purani invoices save rehti hain. Ek tap se dobara edit ya send karein.</p></div>
+      <div class="card"><h3>⚡ Fast &amp; Offline</h3><p>Internet ke bina bhi chalta hai. Sab data aapke phone par, kisi server par nahi.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Setup your business (once)</h4><p>Name, logo, contact, payment details — ek hi baar bharein.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Create invoice</h4><p>Client details bharein, products dropdown se choose karein, totals auto-calculate honge.</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Send PDF</h4><p>Share button dabayein — WhatsApp, Email, ya koi bhi app. Client ko professional invoice milega.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="faq">
+  <div class="wrap">
+    <h2>Frequently asked</h2>
+    <div class="faq-item"><h4>Is it really free?</h4><p>Yes — 100% free. No hidden charges, no credit card, no ads. Aapke phone par sab kuch chalta hai.</p></div>
+    <div class="faq-item"><h4>Do I need internet?</h4><p>Sirf pehli baar app khulne ke liye. Uske baad sab offline chalta hai — invoice banana, PDF, sab.</p></div>
+    <div class="faq-item"><h4>Where is my data stored?</h4><p>Aapke phone par hi. Koi server nahi, koi tracking nahi. Aapka data sirf aapka hai.</p></div>
+    <div class="faq-item"><h4>Can I use my JazzCash QR?</h4><p>Yes! Easypaisa/JazzCash app se apna QR screenshot lein aur upload karein. Har invoice par automatically aa jayega.</p></div>
+    <div class="faq-item"><h4>Urdu support hai?</h4><p>Interface English hai lekin PKR, Pakistani business format, aur Urdu numbers sab support hai. Urdu labels jald aa rahe hain.</p></div>
+  </div>
+</section>
+
 </main>
 
 <footer>
   <div class="wrap">
-    <p>© 2025 KaamWala · Made in Pakistan 🇵🇰</p>
+    <p style="margin:0 0 8px">Made in Pakistan 🇵🇰</p>
+    <p style="margin:0">
+      <a href="app.html">App</a>
+      <a href="history.html">History</a>
+      <a href="profile.html">Profile</a>
+    </p>
+    <p style="margin:14px 0 0;font-size:.8rem">© 2025 KaamWala</p>
   </div>
 </footer>
 

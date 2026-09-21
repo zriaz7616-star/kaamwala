@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<title>Business Profile — KaamWala</title>
+<link rel="stylesheet" href="app.css">
+<style>
+.banner{background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;
+  padding:12px 14px;border-radius:12px;font-size:.9rem;margin-bottom:14px;line-height:1.45}
+.banner strong{color:#047857}
+.hint{color:#94A3B8;font-size:.78rem;margin-top:4px}
+
+.logo-box{display:flex;align-items:center;gap:14px}
+.logo-preview{width:80px;height:80px;border-radius:12px;background:#F1F5F9;
+  border:2px dashed #CBD5E1;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0}
+.logo-preview img{width:100%;height:100%;object-fit:contain}
+.logo-preview .ph{font-size:.7rem;color:#94A3B8;text-align:center;padding:4px;line-height:1.2}
+.logo-actions{flex:1;display:flex;flex-direction:column;gap:6px}
+.logo-btn{background:#F0FDFA;color:#0F766E;border:1.5px solid #99F6E4;
+  padding:9px 12px;border-radius:9px;font-weight:700;font-size:.85rem;cursor:pointer;
+  text-align:center;font-family:inherit;min-height:40px}
+.logo-btn:active{background:#CCFBF1}
+.logo-remove{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA}
+.hidden-input{display:none}
+
+.qr-preview{width:180px;height:180px;border-radius:12px;background:#fff;
+  border:2px dashed #CBD5E1;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;margin:0 auto 12px}
+.qr-preview img{width:100%;height:100%;object-fit:contain;padding:6px;background:#fff}
+.qr-preview .ph{font-size:.75rem;color:#94A3B8;text-align:center;padding:4px;line-height:1.2}
+.qr-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+
+.products-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.product-row{display:grid;grid-template-columns:1fr 100px 34px;gap:6px;align-items:center}
+.product-row input{width:100%;padding:10px 12px;border:1.5px solid #CBD5E1;border-radius:9px;
+  background:#fff;min-height:44px;font-size:15px}
+.product-row .pr-rate{text-align:right}
+.product-row .pr-del{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA;
+  border-radius:8px;width:34px;height:44px;font-size:1.2rem;font-weight:700;
+  cursor:pointer;padding:0;line-height:1;font-family:inherit}
+
+.profile-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:6px}
+.btn-danger{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="app.html" class="brand" aria-label="Back"><span class="mark">KW</span></a>
+  <h1 class="topbar-title">Business Profile</h1>
+  <span style="width:36px"></span>
+</header>
+
+<main class="app">
+
+  <div class="banner">
+    <strong>Ek baar bharein — hamesha ke liye.</strong><br>
+    Ye details har invoice ke top par letterhead ki tarah dikhengi.
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Logo</h2>
+    <div class="logo-box">
+      <div class="logo-preview" id="logoPreview"><span class="ph">No logo</span></div>
+      <div class="logo-actions">
+        <button type="button" class="logo-btn" id="pickLogoBtn">📷 Upload Logo</button>
+        <button type="button" class="logo-btn logo-remove" id="removeLogoBtn">🗑 Remove</button>
+      </div>
+    </div>
+    <input type="file" id="logoInput" class="hidden-input" accept="image/*">
+    <div class="hint">Square logo best hai.</div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Business Info</h2>
+    <label class="field">
+      <span>Business Name *</span>
+      <input type="text" id="pBusinessName" placeholder="e.g. Younas Sons Medicine Traders">
+    </label>
+    <label class="field">
+      <span>Owner / Your Name</span>
+      <input type="text" id="pOwnerName" placeholder="e.g. Zeeshan Riaz">
+    </label>
+    <label class="field">
+      <span>License / Reg No. <small>(optional)</small></span>
+      <input type="text" id="pLicense" placeholder="e.g. NTN 3752117-9">
+    </label>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Contact</h2>
+    <label class="field">
+      <span>Email</span>
+      <input type="email" id="pEmail" placeholder="you@example.com">
+    </label>
+    <label class="field">
+      <span>Phone</span>
+      <input type="tel" id="pPhone" placeholder="+92 3XX XXXXXXX">
+    </label>
+    <label class="field">
+      <span>Address</span>
+      <textarea id="pAddress" rows="2" placeholder="Street, City, Pakistan"></textarea>
+    </label>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Payment Details <small style="text-transform:none;font-weight:400;color:#94A3B8">(invoice par dikhengi)</small></h2>
+    <label class="field">
+      <span>JazzCash Number</span>
+      <input type="tel" id="pJazzcash" placeholder="e.g. 0300 1234567">
+    </label>
+    <label class="field">
+      <span>Easypaisa Number</span>
+      <input type="tel" id="pEasypaisa" placeholder="e.g. 0345 1234567">
+    </label>
+    <label class="field">
+      <span>Bank Details</span>
+      <textarea id="pBank" rows="2" placeholder="Bank name, Account title, IBAN / Account #"></textarea>
+    </label>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Payment QR Code</h2>
+    <div class="hint" style="margin-bottom:10px">
+      <strong>Best (payment):</strong> Easypaisa/JazzCash app se apna QR ka screenshot lein aur upload karein.<br>
+      <strong>Optional (info only):</strong> Neeche koi bhi text likhein — jaise business name, address, WhatsApp. Ye normal QR banega (payment ke liye nahi).
+    </div>
+
+    <div class="qr-preview" id="qrPreview"><span class="ph">No QR yet</span></div>
+
+    <div class="qr-actions">
+      <button type="button" class="logo-btn" id="pickQrBtn">📷 Upload Image</button>
+      <button type="button" class="logo-btn logo-remove" id="removeQrBtn">🗑 Remove</button>
+    </div>
+    <input type="file" id="qrInput" class="hidden-input" accept="image/*">
+
+    <label class="field" style="margin-top:8px">
+      <span>Generate from text</span>
+      <input type="text" id="qrText" placeholder="e.g. 0300 7552962">
+    </label>
+    <button type="button" class="btn btn-ghost" id="generateQrBtn">⚡ Generate QR</button>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Invoice Defaults</h2>
+    <div class="row">
+      <label class="field">
+        <span>Default Currency</span>
+        <select id="pCurrency">
+          <option value="PKR">PKR — Rupee</option>
+          <option value="USD">USD — Dollar</option>
+          <option value="AED">AED — Dirham</option>
+          <option value="GBP">GBP — Pound</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Invoice Prefix</span>
+        <input type="text" id="pPrefix" placeholder="INV" maxlength="8">
+      </label>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Products / Services</h2>
+    <div class="hint" style="margin-bottom:10px">Product add karein — invoice banate waqt dropdown se choose ho jayega aur rate khud bhar jayega.</div>
+    <div class="products-list" id="productsList"></div>
+    <button type="button" class="btn btn-ghost" id="addProductBtn">+ Add Product</button>
+  </div>
+
+  <div class="section profile-actions">
+    <button id="saveProfileBtn" class="btn btn-primary btn-block">💾 Save Profile</button>
+    <a href="app.html" class="btn btn-soft btn-block" style="text-decoration:none">← Back to Invoice</a>
+    <button id="clearProfileBtn" class="btn btn-danger btn-block">🗑 Delete Profile</button>
+  </div>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script src="qrcode.min.js"></script>
+<script src="profile.js"></script>
+</body>
+</html>

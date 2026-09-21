@@ -1,27 +1,103 @@
 (function(){
   'use strict';
 
-  var CURRENCY_SYMBOLS = {PKR:'Rs ', USD:'$', AED:'AED ', GBP:'£'};
+  var CURRENCY_SYMBOLS = {PKR:'Rs', USD:'$', AED:'AED', GBP:'GBP'};
+  var pdfCache = { signature: null, blob: null, file: null, filename: null };
+  var prebuildTimer = null;
 
   document.addEventListener('DOMContentLoaded', init);
 
   function init(){
     setDefaults();
+    renderBizCard();
+    populateProductsDatalist();
     bindTabs();
     bindFields();
     bindItems();
-    bindSave();
+    bindActions();
     renderItems();
     renderPreview();
+    setDebug('Ready. Prebuilding PDF…');
+    setTimeout(schedulePrebuild, 300);
   }
 
   function $(id){ return document.getElementById(id); }
+  function setDebug(msg){ var el = $('debug'); if (el) el.textContent = msg; }
+  function logDebug(msg){ try { console.log('[KW] ' + msg); } catch(e){} }
   function escapeHtml(s){
     return String(s==null?'':s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
+  function getProfile(){
+    try { return JSON.parse(localStorage.getItem('kw_profile') || 'null'); }
+    catch(e){ return null; }
+  }
+
+  /* ---------- BUSINESS CARD ---------- */
+  function renderBizCard(){
+    var p = getProfile();
+    var wrap = $('bizCardWrap');
+    if (!wrap) return;
+    if (!p || !p.businessName){
+      wrap.innerHTML =
+        '<div class="biz-card biz-card-empty">' +
+          '<div class="biz-card-empty-icon">🏢</div>' +
+          '<div class="biz-card-empty-body">' +
+            '<h3>Setup your business</h3>' +
+            '<p>Add name, logo, contact & payment — har invoice par automatic aayengi.</p>' +
+          '</div>' +
+          '<a href="profile.html" class="biz-card-setup-btn">Set up →</a>' +
+        '</div>';
+      return;
+    }
+    var metaParts = [];
+    if (p.ownerName && p.ownerName !== p.businessName) metaParts.push(p.ownerName);
+    if (p.license) metaParts.push(p.license);
+    var contactParts = [p.phone, p.email].filter(Boolean);
+    var logoSrc = p.logo
+      ? '<img src="' + p.logo + '" alt="logo" class="biz-card-logo-img">'
+      : '<div class="biz-card-logo-ph">' + escapeHtml((p.businessName || 'B').charAt(0).toUpperCase()) + '</div>';
+
+    wrap.innerHTML =
+      '<div class="biz-card">' +
+        '<div class="biz-card-logo">' + logoSrc + '</div>' +
+        '<div class="biz-card-info">' +
+          '<h3>' + escapeHtml(p.businessName) + '</h3>' +
+          (metaParts.length ? '<p class="biz-card-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
+          (contactParts.length ? '<p class="biz-card-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
+        '</div>' +
+        '<a href="profile.html" class="biz-card-edit" aria-label="Edit business">✏️</a>' +
+      '</div>';
+  }
+
+  function populateProductsDatalist(){
+    var p = getProfile();
+    var dl = $('kwProducts');
+    if (!dl) return;
+    dl.innerHTML = '';
+    if (!p || !p.products || !p.products.length) return;
+    p.products.forEach(function(prod){
+      if (!prod.name) return;
+      var opt = document.createElement('option');
+      opt.value = prod.name;
+      dl.appendChild(opt);
+    });
+  }
+
+  function findProduct(name){
+    var p = getProfile();
+    if (!p || !p.products) return null;
+    var needle = String(name || '').trim().toLowerCase();
+    if (!needle) return null;
+    for (var i = 0; i < p.products.length; i++){
+      if (String(p.products[i].name || '').toLowerCase() === needle) return p.products[i];
+    }
+    return null;
+  }
+
+  /* ---------- DEFAULTS ---------- */
   function setDefaults(){
     var today = new Date();
     var isoToday = today.toISOString().slice(0,10);
@@ -29,7 +105,12 @@
     due.setDate(due.getDate() + 14);
     $('invDate').value = isoToday;
     $('invDue').value = due.toISOString().slice(0,10);
-    $('invNumber').value = 'INV-' + String(Date.now()).slice(-5);
+    var p = getProfile();
+    var prefix = (p && p.prefix) ? p.prefix : 'INV';
+    if (!$('invNumber').value){
+      $('invNumber').value = prefix + '-' + String(Date.now()).slice(-5);
+    }
+    if (p && p.currency && $('invCurrency')) $('invCurrency').value = p.currency;
   }
 
   function bindTabs(){
@@ -41,19 +122,19 @@
         $('view-edit').classList.toggle('is-hidden', tab !== 'edit');
         $('view-preview').classList.toggle('is-hidden', tab !== 'preview');
         if (tab === 'preview') renderPreview();
+        schedulePrebuild();
       });
     });
   }
 
   function bindFields(){
-    var ids = ['fromName','fromEmail','fromPhone','fromAddress',
-               'toName','toEmail','toPhone','toAddress',
+    var ids = ['toName','toEmail','toPhone','toAddress',
                'invNumber','invDate','invDue','invCurrency','invNotes'];
     ids.forEach(function(id){
       var el = $(id);
       if (!el) return;
-      el.addEventListener('input', renderPreview);
-      el.addEventListener('change', renderPreview);
+      el.addEventListener('input', function(){ renderPreview(); schedulePrebuild(); });
+      el.addEventListener('change', function(){ renderPreview(); schedulePrebuild(); });
     });
   }
 
@@ -62,14 +143,15 @@
       addItem({desc:'', qty:1, rate:0});
       renderItems();
       renderPreview();
+      schedulePrebuild();
     });
-
     var itemsWrap = $('items');
     itemsWrap.addEventListener('input', function(e){
       var t = e.target;
       if (t.matches('.item-desc,.item-qty,.item-rate')) {
         updateAmounts();
         renderPreview();
+        schedulePrebuild();
       }
     });
     itemsWrap.addEventListener('click', function(e){
@@ -81,9 +163,16 @@
           ensureAtLeastOne();
           updateAmounts();
           renderPreview();
+          schedulePrebuild();
         }
       }
     });
+  }
+
+  function bindActions(){
+    $('saveBtn').addEventListener('click', saveInvoice);
+    $('shareBtn').addEventListener('click', shareInvoice);
+    $('pdfBtn').addEventListener('click', downloadPDF);
   }
 
   function ensureAtLeastOne(){
@@ -104,25 +193,21 @@
     var desc = document.createElement('input');
     desc.type = 'text';
     desc.className = 'item-desc';
-    desc.placeholder = 'Service or product description';
+    desc.placeholder = 'Type product or service name';
     desc.value = item.desc || '';
+    desc.setAttribute('list', 'kwProducts');
+    desc.setAttribute('autocomplete', 'off');
 
     var grid = document.createElement('div');
     grid.className = 'item-grid';
 
     function numField(cls, labelText, value){
       var label = document.createElement('label');
-      var span = document.createElement('span');
-      span.textContent = labelText;
+      var span = document.createElement('span'); span.textContent = labelText;
       var inp = document.createElement('input');
-      inp.type = 'number';
-      inp.className = cls;
-      inp.inputMode = 'decimal';
-      inp.min = '0';
-      inp.step = '0.01';
-      inp.value = value;
-      label.appendChild(span);
-      label.appendChild(inp);
+      inp.type = 'number'; inp.className = cls; inp.inputMode = 'decimal';
+      inp.min = '0'; inp.step = '0.01'; inp.value = value;
+      label.appendChild(span); label.appendChild(inp);
       return label;
     }
 
@@ -130,53 +215,56 @@
     grid.appendChild(numField('item-rate','Rate', item.rate != null ? item.rate : 0));
 
     var amtLabel = document.createElement('label');
-    var amtSpan = document.createElement('span');
-    amtSpan.textContent = 'Amount';
+    var amtSpan = document.createElement('span'); amtSpan.textContent = 'Amount';
     var amt = document.createElement('input');
-    amt.type = 'text';
-    amt.className = 'item-amount';
-    amt.readOnly = true;
-    amt.value = '0.00';
-    amtLabel.appendChild(amtSpan);
-    amtLabel.appendChild(amt);
+    amt.type = 'text'; amt.className = 'item-amount'; amt.readOnly = true; amt.value = '0.00';
+    amtLabel.appendChild(amtSpan); amtLabel.appendChild(amt);
     grid.appendChild(amtLabel);
 
     var rm = document.createElement('button');
-    rm.type = 'button';
-    rm.className = 'remove-btn';
-    rm.textContent = '×';
+    rm.type = 'button'; rm.className = 'remove-btn'; rm.textContent = '×';
     rm.setAttribute('aria-label','Remove item');
     grid.appendChild(rm);
+
+    desc.addEventListener('change', function(){
+      var prod = findProduct(desc.value);
+      if (!prod) return;
+      var rateInput = row.querySelector('.item-rate');
+      if (!rateInput) return;
+      var cur = parseFloat(rateInput.value);
+      if (!cur || cur === 0){
+        rateInput.value = prod.rate || 0;
+        rateInput.dispatchEvent(new Event('input', {bubbles:true}));
+      }
+    });
 
     row.appendChild(desc);
     row.appendChild(grid);
     return row;
   }
 
-  function bindSave(){
-    $('saveBtn').addEventListener('click', saveInvoice);
-  }
-
   function readData(){
+    var p = getProfile();
     var data = {
       from: {
-        name: $('fromName').value.trim(),
-        email: $('fromEmail').value.trim(),
-        phone: $('fromPhone').value.trim(),
-        address: $('fromAddress').value.trim()
+        name: p ? p.businessName : '',
+        ownerName: p ? p.ownerName : '',
+        license: p ? p.license : '',
+        email: p ? p.email : '',
+        phone: p ? p.phone : '',
+        address: p ? p.address : '',
+        logo: p ? (p.logo || '') : ''
       },
-      to: {
-        name: $('toName').value.trim(),
-        email: $('toEmail').value.trim(),
-        phone: $('toPhone').value.trim(),
-        address: $('toAddress').value.trim()
-      },
-      invoice: {
-        number: $('invNumber').value.trim(),
-        date: $('invDate').value,
-        due: $('invDue').value,
-        currency: $('invCurrency').value,
-        notes: $('invNotes').value.trim()
+      to: { name: $('toName').value.trim(), email: $('toEmail').value.trim(),
+            phone: $('toPhone').value.trim(), address: $('toAddress').value.trim() },
+      invoice: { number: $('invNumber').value.trim(), date: $('invDate').value,
+                 due: $('invDue').value, currency: $('invCurrency').value,
+                 notes: $('invNotes').value.trim() },
+      payment: {
+        jazzcash: p ? (p.jazzcash || '') : '',
+        easypaisa: p ? (p.easypaisa || '') : '',
+        bank: p ? (p.bank || '') : '',
+        qrImage: p ? (p.qrImage || '') : ''
       },
       items: []
     };
@@ -198,7 +286,15 @@
     var sym = CURRENCY_SYMBOLS[cur] || (cur + ' ');
     var v = (Math.round((n||0)*100)/100).toLocaleString('en-US',
       {minimumFractionDigits:2, maximumFractionDigits:2});
-    return sym + v;
+    return sym + ' ' + v;
+  }
+
+  function formatMoneyPlain(n, cur){
+    var sym = CURRENCY_SYMBOLS[cur] || (cur + ' ');
+    var v = (Math.round((n||0)*100)/100).toFixed(2);
+    var parts = v.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return sym + ' ' + parts.join('.');
   }
 
   function formatDate(iso){
@@ -210,14 +306,12 @@
   }
 
   function updateAmounts(){
-    var cur = $('invCurrency').value;
     document.querySelectorAll('.item-row').forEach(function(row){
       var qty = parseFloat(row.querySelector('.item-qty').value) || 0;
       var rate = parseFloat(row.querySelector('.item-rate').value) || 0;
       row.querySelector('.item-amount').value = (qty * rate).toFixed(2);
     });
-    var totals = calcTotals(readData().items);
-    return totals;
+    return calcTotals(readData().items);
   }
 
   function renderItems(){
@@ -249,86 +343,483 @@
       itemsHtml = '<tr><td colspan="4" style="text-align:center;color:#94A3B8;padding:20px">No items yet</td></tr>';
     }
 
-    var fromLines = [
-      d.from.email, d.from.phone, d.from.address
-    ].filter(Boolean).map(function(l){ return '<p class="inv-party-line">'+escapeHtml(l)+'</p>'; }).join('');
+    var logoHtml = d.from.logo ? '<img src="' + d.from.logo + '" class="inv-logo" alt="logo">' : '';
+    var metaParts = [];
+    if (d.from.ownerName && d.from.ownerName !== d.from.name) metaParts.push(d.from.ownerName);
+    if (d.from.license) metaParts.push(d.from.license);
+    var contactParts = [d.from.phone, d.from.email].filter(Boolean);
 
-    var toLines = [
-      d.to.email, d.to.phone, d.to.address
-    ].filter(Boolean).map(function(l){ return '<p class="inv-party-line">'+escapeHtml(l)+'</p>'; }).join('');
+    var letterhead =
+      '<div class="inv-letterhead">' + logoHtml +
+        '<h1 class="inv-biz-name">' + (escapeHtml(d.from.name) || 'Your Business') + '</h1>' +
+        (metaParts.length ? '<p class="inv-biz-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
+        (contactParts.length ? '<p class="inv-biz-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
+        (d.from.address ? '<p class="inv-biz-address">' + escapeHtml(d.from.address) + '</p>' : '') +
+      '</div>';
+
+    var toLines = [d.to.email, d.to.phone, d.to.address]
+      .filter(Boolean).map(function(l){ return '<p class="inv-party-line">'+escapeHtml(l)+'</p>'; }).join('');
+
+    var clientBlock =
+      '<div class="inv-client-block">' +
+        '<div class="inv-label">BILL TO</div>' +
+        '<p class="inv-party-name">' + (escapeHtml(d.to.name) || 'Client') + '</p>' +
+        toLines +
+      '</div>';
+
+    var payLines = [];
+    if (d.payment.jazzcash) payLines.push('<div><strong>JazzCash:</strong> ' + escapeHtml(d.payment.jazzcash) + '</div>');
+    if (d.payment.easypaisa) payLines.push('<div><strong>Easypaisa:</strong> ' + escapeHtml(d.payment.easypaisa) + '</div>');
+    if (d.payment.bank) payLines.push('<div><strong>Bank:</strong> ' + escapeHtml(d.payment.bank) + '</div>');
+
+    var payHtml = '';
+    if (payLines.length || d.payment.qrImage){
+      payHtml = '<div class="inv-payment">' +
+        (d.payment.qrImage ? '<div class="inv-payment-qr"><img src="' + d.payment.qrImage + '" alt="QR"></div>' : '') +
+        '<div class="inv-payment-info">' +
+          '<div class="inv-payment-title">💳 Payment Details</div>' +
+          payLines.join('') +
+        '</div>' +
+      '</div>';
+    }
 
     el.innerHTML =
-      '<div class="inv-head">' +
-        '<div>' +
-          '<div class="inv-brand">KaamWala</div>' +
-          '<div class="inv-label">Invoice</div>' +
-        '</div>' +
-        '<div style="text-align:right">' +
-          '<p class="inv-title">' + escapeHtml(d.invoice.number || '—') + '</p>' +
-        '</div>' +
-      '</div>' +
-
-      '<div class="inv-parties">' +
-        '<div>' +
-          '<div class="inv-label">From</div>' +
-          '<p class="inv-party-name">' + (escapeHtml(d.from.name) || 'Your business') + '</p>' +
-          fromLines +
-        '</div>' +
-        '<div>' +
-          '<div class="inv-label">Bill To</div>' +
-          '<p class="inv-party-name">' + (escapeHtml(d.to.name) || 'Client') + '</p>' +
-          toLines +
+      letterhead +
+      '<div class="inv-inv-row">' +
+        '<div><div class="inv-label">INVOICE</div>' +
+        '<div class="inv-inv-num">' + escapeHtml(d.invoice.number || '—') + '</div></div>' +
+        '<div class="inv-inv-dates">' +
+          '<div><span class="inv-label">DATE</span> ' + formatDate(d.invoice.date) + '</div>' +
+          '<div><span class="inv-label">DUE</span> ' + formatDate(d.invoice.due) + '</div>' +
         '</div>' +
       '</div>' +
-
-      '<div class="inv-meta">' +
-        '<div class="k">Invoice Date</div><div class="v">' + formatDate(d.invoice.date) + '</div>' +
-        '<div class="k">Due Date</div><div class="v">' + formatDate(d.invoice.due) + '</div>' +
-      '</div>' +
-
-      '<table class="inv-table">' +
-        '<thead><tr>' +
-          '<th>Description</th>' +
-          '<th class="num">Qty</th>' +
-          '<th class="num">Rate</th>' +
-          '<th class="num">Amount</th>' +
-        '</tr></thead>' +
-        '<tbody>' + itemsHtml + '</tbody>' +
-      '</table>' +
-
-      '<div class="inv-total">' +
-        '<div class="k">Subtotal</div><div class="v">' + formatMoney(totals.subtotal, cur) + '</div>' +
-        '<div class="k grand">Total</div><div class="v grand">' + formatMoney(totals.total, cur) + '</div>' +
-      '</div>' +
-
+      clientBlock +
+      '<table class="inv-table"><thead><tr><th>Description</th><th class="num">Qty</th>' +
+      '<th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>' +
+      itemsHtml + '</tbody></table>' +
+      '<div class="inv-total"><div class="k">Subtotal</div><div class="v">' +
+      formatMoney(totals.subtotal, cur) + '</div><div class="k grand">Total</div>' +
+      '<div class="v grand">' + formatMoney(totals.total, cur) + '</div></div>' +
+      payHtml +
       (d.invoice.notes ? '<div class="inv-notes">' + escapeHtml(d.invoice.notes) + '</div>' : '') +
-
-      '<div class="inv-footer">Made with KaamWala · kaamwala.app</div>';
+      '<div class="inv-footer">Made with KaamWala</div>';
   }
 
   function saveInvoice(){
     try {
       var data = readData();
-      if (!data.to.name) {
-        toast('Please add a client name');
-        return;
-      }
+      if (!data.to.name) { toast('Please add a client name'); return; }
       if (!data.items.some(function(it){ return it.desc; })) {
-        toast('Please add at least one item');
-        return;
+        toast('Please add at least one item'); return;
       }
-      data.savedAt = new Date().toISOString();
-      data.id = 'inv_' + Date.now();
       var key = 'kw_invoices';
       var all = [];
       try { all = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){ all = []; }
-      all.unshift(data);
-      if (all.length > 50) all = all.slice(0, 50);
-      localStorage.setItem(key, JSON.stringify(all));
-      toast('✓ Invoice saved on this phone');
+      if (!Array.isArray(all)) all = [];
+      var editingId = $('editingId') ? $('editingId').value : '';
+      data.savedAt = new Date().toISOString();
+      if (editingId){
+        var found = false;
+        for (var i = 0; i < all.length; i++){
+          if (all[i].id === editingId){
+            data.id = editingId;
+            data.createdAt = all[i].createdAt || all[i].savedAt || data.savedAt;
+            all[i] = data; found = true; break;
+          }
+        }
+        if (!found){
+          data.id = editingId; data.createdAt = data.savedAt; all.unshift(data);
+        }
+        localStorage.setItem(key, JSON.stringify(all));
+        toast('✓ Invoice updated');
+      } else {
+        data.id = 'inv_' + Date.now();
+        data.createdAt = data.savedAt;
+        all.unshift(data);
+        if (all.length > 50) all = all.slice(0, 50);
+        localStorage.setItem(key, JSON.stringify(all));
+        if ($('editingId')) $('editingId').value = data.id;
+        if ($('topbarTitle')) $('topbarTitle').textContent = 'Editing Invoice';
+        toast('✓ Invoice saved');
+      }
     } catch (err) {
-      toast('Could not save: ' + err.message);
+      toast('Save failed: ' + err.message);
     }
+  }
+
+  function loadScript(src){
+    return new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.src = src; s.async = true;
+      s.onload = function(){ resolve(); };
+      s.onerror = function(){ reject(new Error('Failed: ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function ensureJsPDF(){
+    if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+    return loadScript('jspdf.umd.min.js')
+      .catch(function(){
+        return loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      });
+  }
+
+  function buildInvoicePDF(){
+    return ensureJsPDF().then(function(){
+      var d = readData();
+      var totals = calcTotals(d.items);
+      var jsPDF = window.jspdf.jsPDF;
+      var pdf = new jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+      var M = 15, W = 210, CW = W - 2*M, y = 15;
+      var TEAL = [15,118,110], DARK = [15,23,42], GRAY = [100,116,139];
+      var LIGHT = [226,232,240], BG = [248,250,252];
+      var cur = d.invoice.currency;
+
+      // Letterhead
+      if (d.from.logo) {
+        try {
+          var logoH = 18, logoW = 18;
+          pdf.addImage(d.from.logo, 'JPEG', W/2 - logoW/2, y, logoW, logoH);
+          y += logoH + 2;
+        } catch(e){}
+      }
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(18);
+      pdf.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
+      pdf.text(d.from.name || 'Business Name', W/2, y + 3, {align:'center'});
+      y += 9;
+
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      var metaParts = [];
+      if (d.from.ownerName && d.from.ownerName !== d.from.name) metaParts.push(d.from.ownerName);
+      if (d.from.license) metaParts.push('License: ' + d.from.license);
+      if (metaParts.length){
+        pdf.text(metaParts.join('  •  '), W/2, y, {align:'center'});
+        y += 4;
+      }
+      var contactParts = [d.from.phone, d.from.email].filter(Boolean);
+      if (contactParts.length){
+        pdf.text(contactParts.join('  |  '), W/2, y, {align:'center'});
+        y += 4;
+      }
+      if (d.from.address){
+        var addrL = pdf.splitTextToSize(d.from.address, CW - 40);
+        addrL.forEach(function(line, i){ pdf.text(line, W/2, y + i*4, {align:'center'}); });
+        y += addrL.length * 4;
+      }
+      y += 2;
+      pdf.setDrawColor(TEAL[0],TEAL[1],TEAL[2]); pdf.setLineWidth(0.6);
+      pdf.line(M, y, W-M, y);
+      y += 8;
+
+      // Invoice row
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+      pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
+      pdf.text('INVOICE', M, y);
+      pdf.text(d.invoice.number || '', W - M, y, {align:'right'});
+      y += 6;
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
+      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      pdf.text('Date: ' + formatDate(d.invoice.date), M, y);
+      pdf.text('Due: ' + formatDate(d.invoice.due), W - M, y, {align:'right'});
+      y += 4;
+      pdf.setDrawColor(LIGHT[0],LIGHT[1],LIGHT[2]);
+      pdf.line(M, y, W-M, y);
+      y += 8;
+
+      // Bill to
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
+      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      pdf.text('BILL TO', M, y);
+      y += 5;
+      pdf.setFontSize(11); pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
+      pdf.text(d.to.name || 'Client', M, y);
+      y += 5;
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
+      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      if (d.to.email){ pdf.text(d.to.email, M, y); y += 4; }
+      if (d.to.phone){ pdf.text(d.to.phone, M, y); y += 4; }
+      if (d.to.address){
+        var tal = pdf.splitTextToSize(d.to.address, CW);
+        tal.forEach(function(line, i){ pdf.text(line, M, y + i*4); });
+        y += tal.length * 4;
+      }
+      y += 6;
+
+      // Items
+      var descX = M, qtyX = M + CW - 68, rateX = M + CW - 38, amtX = W - M;
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
+      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      pdf.text('DESCRIPTION', descX, y);
+      pdf.text('QTY', qtyX + 10, y, {align:'right'});
+      pdf.text('RATE', rateX + 15, y, {align:'right'});
+      pdf.text('AMOUNT', amtX, y, {align:'right'});
+      y += 2.5;
+      pdf.setDrawColor(DARK[0],DARK[1],DARK[2]); pdf.setLineWidth(0.4);
+      pdf.line(M, y, W - M, y); pdf.setLineWidth(0.2); y += 6;
+
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(9.5);
+      pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
+      var renderedItems = d.items.filter(function(it){ return it.desc || it.amount; });
+      if (renderedItems.length === 0){
+        pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]); pdf.text('No items', M, y); y += 8;
+      } else {
+        renderedItems.forEach(function(it){
+          if (y > 240){ pdf.addPage(); y = 20; }
+          var descLines = pdf.splitTextToSize(it.desc || '—', CW - 78);
+          var rowH = Math.max(6, descLines.length * 4.5);
+          descLines.forEach(function(line, idx){ pdf.text(line, descX, y + idx * 4.5); });
+          pdf.text(String(it.qty), qtyX + 10, y, {align:'right'});
+          pdf.text(formatMoneyPlain(it.rate, cur), rateX + 15, y, {align:'right'});
+          pdf.text(formatMoneyPlain(it.amount, cur), amtX, y, {align:'right'});
+          y += rowH + 2;
+          pdf.setDrawColor(LIGHT[0],LIGHT[1],LIGHT[2]);
+          pdf.line(M, y, W - M, y); y += 5;
+        });
+      }
+      if (y > 230){ pdf.addPage(); y = 20; }
+      y += 5;
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(10);
+      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      pdf.text('Subtotal', amtX - 55, y);
+      pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
+      pdf.text(formatMoneyPlain(totals.subtotal, cur), amtX, y, {align:'right'});
+      y += 4;
+      pdf.setDrawColor(TEAL[0],TEAL[1],TEAL[2]); pdf.setLineWidth(0.5);
+      pdf.line(amtX - 70, y, amtX, y); pdf.setLineWidth(0.2);
+      y += 7;
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(12);
+      pdf.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
+      pdf.text('Total', amtX - 55, y);
+      pdf.text(formatMoneyPlain(totals.total, cur), amtX, y, {align:'right'});
+      y += 12;
+
+      // Payment with QR
+      var payLines = [];
+      if (d.payment.jazzcash) payLines.push('JazzCash: ' + d.payment.jazzcash);
+      if (d.payment.easypaisa) payLines.push('Easypaisa: ' + d.payment.easypaisa);
+      if (d.payment.bank) payLines.push('Bank: ' + d.payment.bank);
+
+      if (payLines.length || d.payment.qrImage){
+        if (y > 220){ pdf.addPage(); y = 20; }
+        var hasQr = !!d.payment.qrImage;
+        var qrSize = 30;   // mm
+        var infoW = hasQr ? CW - qrSize - 8 : CW;
+        var boxH = Math.max(hasQr ? qrSize + 8 : 0,
+                            payLines.length * 4.5 + 12);
+
+        pdf.setFillColor(BG[0],BG[1],BG[2]);
+        pdf.rect(M, y, CW, boxH, 'F');
+
+        // Info side
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(9);
+        pdf.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
+        pdf.text('PAYMENT DETAILS', M + 4, y + 6);
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5);
+        pdf.setTextColor(71,85,105);
+        payLines.forEach(function(line, i){
+          var ll = pdf.splitTextToSize(line, infoW - 8);
+          pdf.text(ll[0], M + 4, y + 12 + i * 4.5);
+        });
+
+        // QR side
+        if (hasQr){
+          try {
+            var qx = M + CW - qrSize - 4;
+            var qy = y + 4;
+            pdf.addImage(d.payment.qrImage, 'JPEG', qx, qy, qrSize, qrSize);
+            pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5);
+            pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+            pdf.text('Scan to pay', qx + qrSize/2, qy + qrSize + 3, {align:'center'});
+          } catch(e){}
+        }
+        y += boxH + 6;
+      }
+
+      if (d.invoice.notes){
+        if (y > 240){ pdf.addPage(); y = 20; }
+        var notesLines = pdf.splitTextToSize(d.invoice.notes, CW - 10);
+        var notesH = notesLines.length * 4.5 + 8;
+        pdf.setFillColor(BG[0],BG[1],BG[2]);
+        pdf.rect(M, y, CW, notesH, 'F'); y += 5.5;
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
+        pdf.setTextColor(71,85,105);
+        notesLines.forEach(function(line, idx){ pdf.text(line, M + 5, y + idx * 4.5); });
+        y += notesH;
+      }
+
+      y += 10;
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+      pdf.text('Made with KaamWala', W/2, y, {align:'center'});
+      return pdf;
+    });
+  }
+
+  function dataSignature(){
+    var d = readData();
+    return JSON.stringify({
+      f: d.from, t: d.to, i: d.invoice, p: d.payment,
+      it: d.items.map(function(x){ return [x.desc, x.qty, x.rate]; })
+    });
+  }
+
+  function invoiceFilename(ext){
+    var d = readData();
+    function safe(s){ return String(s||'').replace(/[^a-zA-Z0-9\-_]/g,'_').slice(0,24) || 'invoice'; }
+    return safe(d.invoice.number || 'INV') + '_' + safe(d.to.name || 'client') + '.' + ext;
+  }
+
+  function prebuildPDF(){
+    var sig = dataSignature();
+    if (pdfCache.signature === sig && pdfCache.file) return Promise.resolve(pdfCache);
+    return buildInvoicePDF().then(function(pdf){
+      var blob = pdf.output('blob');
+      var filename = invoiceFilename('pdf');
+      var file = new File([blob], filename, {type:'application/pdf'});
+      pdfCache = { signature: sig, blob: blob, file: file, filename: filename };
+      setDebug('Ready. PDF cached (' + Math.round(blob.size/1024) + ' KB).');
+      return pdfCache;
+    });
+  }
+
+  function schedulePrebuild(){
+    if (prebuildTimer) clearTimeout(prebuildTimer);
+    prebuildTimer = setTimeout(function(){
+      prebuildPDF().catch(function(err){ logDebug('Prebuild: ' + err.message); });
+    }, 300);
+  }
+
+  function downloadBlob(blob, filename){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }, 500);
+  }
+
+  function validateForShare(){
+    var d = readData();
+    if (!d.to.name) { toast('Add a client name first'); return false; }
+    if (!d.items.some(function(it){ return it.desc; })) {
+      toast('Add at least one item first'); return false;
+    }
+    return true;
+  }
+
+  function canShareFile(file){
+    return typeof navigator.share === 'function' &&
+           typeof navigator.canShare === 'function' &&
+           navigator.canShare({files:[file]});
+  }
+
+  function downloadPDF(){
+    if (!validateForShare()) return;
+    var btn = $('pdfBtn');
+    btn.disabled = true;
+    toast('Preparing PDF…');
+    prebuildPDF()
+      .then(function(cache){
+        downloadBlob(cache.blob, cache.filename);
+        toast('✓ PDF saved to Downloads');
+      })
+      .catch(function(err){
+        setDebug('[PDF] ERROR: ' + err.message);
+        toast('PDF failed');
+      })
+      .then(function(){ btn.disabled = false; });
+  }
+
+  function injectModalCSS(){
+    if (document.getElementById('kw-modal-css')) return;
+    var css = document.createElement('style');
+    css.id = 'kw-modal-css';
+    css.textContent = [
+      '.kw-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100;',
+      'display:flex;align-items:flex-end;justify-content:center;padding:16px;}',
+      '.kw-modal{background:#fff;border-radius:16px;padding:20px;width:100%;',
+      'max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:kwup .25s ease;}',
+      '@keyframes kwup{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}',
+      '.kw-modal h3{margin:0 0 6px;font-size:1.15rem;font-weight:800;color:#0F172A;}',
+      '.kw-modal p{margin:0 0 16px;color:#64748B;font-size:.92rem;}',
+      '.kw-modal button{width:100%;}',
+      '.kw-modal .kw-share-btn{background:#0F766E;color:#fff;border:none;padding:14px;',
+      'border-radius:12px;font-weight:800;font-size:1rem;min-height:52px;cursor:pointer;',
+      'margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;}',
+      '.kw-modal .kw-cancel-btn{background:#F1F5F9;color:#475569;border:none;padding:12px;',
+      'border-radius:12px;font-weight:700;font-size:.95rem;min-height:48px;cursor:pointer;font-family:inherit;}'
+    ].join('');
+    document.head.appendChild(css);
+  }
+
+  function openShareModal(cache){
+    injectModalCSS();
+    var overlay = document.createElement('div');
+    overlay.className = 'kw-overlay';
+    overlay.innerHTML =
+      '<div class="kw-modal">' +
+        '<h3>✓ Invoice ready</h3>' +
+        '<p>Tap below to share via WhatsApp, Email, or any app.</p>' +
+        '<button class="kw-share-btn" id="kwShareGo">📤 Open Share Menu</button>' +
+        '<button class="kw-cancel-btn" id="kwShareCancel">Cancel</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    overlay.querySelector('#kwShareCancel').addEventListener('click', close);
+    overlay.querySelector('#kwShareGo').addEventListener('click', function(){
+      var d = readData();
+      navigator.share({
+        files: [cache.file],
+        title: 'Invoice ' + (d.invoice.number || ''),
+        text: 'Invoice from ' + (d.from.name || 'KaamWala')
+      }).then(function(){ close(); toast('✓ Shared'); })
+        .catch(function(err){
+          close();
+          if (err && err.name === 'AbortError') return;
+          downloadBlob(cache.blob, cache.filename);
+          toast('✓ PDF saved to Downloads');
+        });
+    });
+  }
+
+  function shareInvoice(){
+    if (!validateForShare()) return;
+    var sig = dataSignature();
+    if (pdfCache.signature === sig && pdfCache.file && canShareFile(pdfCache.file)) {
+      var d = readData();
+      navigator.share({
+        files: [pdfCache.file],
+        title: 'Invoice ' + (d.invoice.number || ''),
+        text: 'Invoice from ' + (d.from.name || 'KaamWala')
+      }).then(function(){ toast('✓ Shared'); })
+        .catch(function(err){
+          if (err && err.name === 'AbortError') return;
+          downloadBlob(pdfCache.blob, pdfCache.filename);
+          toast('✓ PDF saved to Downloads');
+        });
+      return;
+    }
+    var btn = $('shareBtn');
+    btn.disabled = true;
+    toast('Preparing…');
+    prebuildPDF()
+      .then(function(cache){
+        btn.disabled = false;
+        if (canShareFile(cache.file)) { openShareModal(cache); }
+        else {
+          downloadBlob(cache.blob, cache.filename);
+          toast('✓ PDF saved to Downloads');
+        }
+      })
+      .catch(function(err){
+        btn.disabled = false;
+        setDebug('[Share] ERROR: ' + err.message);
+        toast('Share failed');
+      });
   }
 
   var toastTimer = null;
@@ -337,6 +828,6 @@
     t.textContent = msg;
     t.classList.add('is-on');
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){ t.classList.remove('is-on'); }, 2200);
+    toastTimer = setTimeout(function(){ t.classList.remove('is-on'); }, 3200);
   }
 })();
