@@ -10,6 +10,7 @@
   function init(){
     setDefaults();
     renderBizCard();
+    renderPremiumBanner();
     populateProductsDatalist();
     bindTabs();
     bindFields();
@@ -24,6 +25,7 @@
   function $(id){ return document.getElementById(id); }
   function setDebug(msg){ var el = $('debug'); if (el) el.textContent = msg; }
   function logDebug(msg){ try { console.log('[KW] ' + msg); } catch(e){} }
+  function isPremium(){ return window.KW && window.KW.isPremium && window.KW.isPremium(); }
   function escapeHtml(s){
     return String(s==null?'':s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -35,7 +37,6 @@
     catch(e){ return null; }
   }
 
-  /* ---------- BUSINESS CARD ---------- */
   function renderBizCard(){
     var p = getProfile();
     var wrap = $('bizCardWrap');
@@ -59,17 +60,112 @@
     var logoSrc = p.logo
       ? '<img src="' + p.logo + '" alt="logo" class="biz-card-logo-img">'
       : '<div class="biz-card-logo-ph">' + escapeHtml((p.businessName || 'B').charAt(0).toUpperCase()) + '</div>';
+    var premiumBadge = isPremium() ? '<span class="premium-badge">Premium</span>' : '';
 
     wrap.innerHTML =
       '<div class="biz-card">' +
         '<div class="biz-card-logo">' + logoSrc + '</div>' +
         '<div class="biz-card-info">' +
-          '<h3>' + escapeHtml(p.businessName) + '</h3>' +
+          '<h3>' + escapeHtml(p.businessName) + premiumBadge + '</h3>' +
           (metaParts.length ? '<p class="biz-card-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
           (contactParts.length ? '<p class="biz-card-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
         '</div>' +
         '<a href="profile.html" class="biz-card-edit" aria-label="Edit business">✏️</a>' +
       '</div>';
+  }
+
+  function renderPremiumBanner(){
+    var wrap = $('premiumBanner');
+    if (!wrap) return;
+    if (isPremium()){ wrap.innerHTML = ''; return; }
+    var used = window.KW ? window.KW.invoiceCount() : 0;
+    var limit = window.KW ? window.KW.FREE_LIMIT : 3;
+    var remaining = Math.max(0, limit - used);
+
+    wrap.innerHTML =
+      '<div class="premium-banner">' +
+        '<div class="premium-banner-icon">⭐</div>' +
+        '<div class="premium-banner-body">' +
+          '<h3>Free plan — ' + remaining + ' invoice' + (remaining === 1 ? '' : 's') + ' remaining</h3>' +
+          '<p>Upgrade to remove watermark & get unlimited invoices.</p>' +
+        '</div>' +
+        '<button class="premium-banner-btn" id="upgradeBtn">Upgrade</button>' +
+      '</div>';
+    var btn = $('upgradeBtn');
+    if (btn) btn.addEventListener('click', openUpgradeModal);
+  }
+
+  function openUpgradeModal(){
+    var existing = document.querySelector('.kw-overlay');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var overlay = document.createElement('div');
+    overlay.className = 'kw-overlay';
+    overlay.innerHTML =
+      '<div class="kw-modal" id="kwUpgradeModal">' +
+        '<h3>⭐ Upgrade to Premium</h3>' +
+        '<p>Unlock unlimited invoices & remove the "Made with KaamWala" watermark.</p>' +
+        '<div class="kw-price-grid">' +
+          '<div class="kw-price-box featured">' +
+            '<div class="per">Monthly</div>' +
+            '<div class="amt">Rs 499</div>' +
+            '<div class="note">per month</div>' +
+          '</div>' +
+          '<div class="kw-price-box">' +
+            '<div class="per">Yearly</div>' +
+            '<div class="amt">Rs 3,999</div>' +
+            '<div class="note">save 33%</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="kw-section-title">How to pay</div>' +
+        '<div class="kw-cta-row">' +
+          '<strong>1.</strong> Send Rs 499 (or Rs 3,999) to:<br>' +
+          '📱 <strong>Easypaisa:</strong> 0342 5681324<br>' +
+          '📱 <strong>JazzCash:</strong> 0342 5681324<br>' +
+          '<strong>2.</strong> WhatsApp your payment screenshot to <strong>0342 5681324</strong><br>' +
+          '<strong>3.</strong> You\'ll receive a code — enter it below.' +
+        '</div>' +
+        '<div class="kw-section-title">Enter your code</div>' +
+        '<input type="text" id="kwCodeInput" placeholder="KW-XXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false">' +
+        '<div class="kw-msg" id="kwMsg" style="display:none"></div>' +
+        '<button class="kw-primary" id="kwActivate">Unlock Premium</button>' +
+        '<button class="kw-secondary" id="kwClose">Close</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    $('kwClose').addEventListener('click', close);
+
+    $('kwActivate').addEventListener('click', function(){
+      var code = ($('kwCodeInput').value || '').trim();
+      var msg = $('kwMsg');
+      if (!code){
+        msg.style.display = 'block';
+        msg.className = 'kw-msg kw-msg-err';
+        msg.textContent = 'Please enter a code';
+        return;
+      }
+      var res = window.KW ? window.KW.activate(code) : {ok:false, reason:'Not available'};
+      if (res.ok){
+        msg.style.display = 'block';
+        msg.className = 'kw-msg kw-msg-ok';
+        msg.textContent = '✓ Premium unlocked! Thank you.';
+        setTimeout(function(){ close(); refreshPremiumUI(); }, 1400);
+      } else {
+        msg.style.display = 'block';
+        msg.className = 'kw-msg kw-msg-err';
+        msg.textContent = '✗ ' + (res.reason || 'Invalid code');
+      }
+    });
+  }
+
+  function refreshPremiumUI(){
+    renderPremiumBanner();
+    renderBizCard();
+    renderPreview();
+    pdfCache = { signature:null, blob:null, file:null, filename:null };
+    schedulePrebuild();
   }
 
   function populateProductsDatalist(){
@@ -97,7 +193,6 @@
     return null;
   }
 
-  /* ---------- DEFAULTS ---------- */
   function setDefaults(){
     var today = new Date();
     var isoToday = today.toISOString().slice(0,10);
@@ -173,6 +268,8 @@
     $('saveBtn').addEventListener('click', saveInvoice);
     $('shareBtn').addEventListener('click', shareInvoice);
     $('pdfBtn').addEventListener('click', downloadPDF);
+    var printBtn = $('printBtn');
+    if (printBtn) printBtn.addEventListener('click', printInvoice);
   }
 
   function ensureAtLeastOne(){
@@ -383,6 +480,8 @@
       '</div>';
     }
 
+    var footerHtml = isPremium() ? '' : '<div class="inv-footer">Made with KaamWala</div>';
+
     el.innerHTML =
       letterhead +
       '<div class="inv-inv-row">' +
@@ -402,7 +501,7 @@
       '<div class="v grand">' + formatMoney(totals.total, cur) + '</div></div>' +
       payHtml +
       (d.invoice.notes ? '<div class="inv-notes">' + escapeHtml(d.invoice.notes) + '</div>' : '') +
-      '<div class="inv-footer">Made with KaamWala</div>';
+      footerHtml;
   }
 
   function saveInvoice(){
@@ -412,12 +511,15 @@
       if (!data.items.some(function(it){ return it.desc; })) {
         toast('Please add at least one item'); return;
       }
+
       var key = 'kw_invoices';
       var all = [];
       try { all = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){ all = []; }
       if (!Array.isArray(all)) all = [];
+
       var editingId = $('editingId') ? $('editingId').value : '';
       data.savedAt = new Date().toISOString();
+
       if (editingId){
         var found = false;
         for (var i = 0; i < all.length; i++){
@@ -432,19 +534,59 @@
         }
         localStorage.setItem(key, JSON.stringify(all));
         toast('✓ Invoice updated');
+        renderPremiumBanner();
       } else {
+        if (window.KW && !window.KW.canSaveNew()){
+          toast('Free limit reached — upgrade for unlimited');
+          setTimeout(openUpgradeModal, 800);
+          return;
+        }
         data.id = 'inv_' + Date.now();
         data.createdAt = data.savedAt;
         all.unshift(data);
-        if (all.length > 50) all = all.slice(0, 50);
+        if (isPremium()){
+          if (all.length > 500) all = all.slice(0, 500);
+        } else {
+          if (all.length > 50) all = all.slice(0, 50);
+        }
         localStorage.setItem(key, JSON.stringify(all));
         if ($('editingId')) $('editingId').value = data.id;
         if ($('topbarTitle')) $('topbarTitle').textContent = 'Editing Invoice';
         toast('✓ Invoice saved');
+        renderPremiumBanner();
       }
     } catch (err) {
       toast('Save failed: ' + err.message);
     }
+  }
+
+  /* ---------- PRINT ---------- */
+  function printInvoice(){
+    if (!validateForShare()) return;
+
+    var previewView = $('view-preview');
+    var wasHidden = previewView.classList.contains('is-hidden');
+
+    if (wasHidden){
+      // Activate preview tab programmatically
+      document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('is-active'); });
+      var previewTab = document.querySelector('.tab[data-tab="preview"]');
+      if (previewTab) previewTab.classList.add('is-active');
+      $('view-edit').classList.add('is-hidden');
+      previewView.classList.remove('is-hidden');
+      renderPreview();
+    }
+
+    toast('Opening print…');
+
+    // Let DOM repaint before opening print dialog
+    setTimeout(function(){
+      try {
+        window.print();
+      } catch(e){
+        toast('Print not supported on this browser');
+      }
+    }, 250);
   }
 
   function loadScript(src){
@@ -476,7 +618,6 @@
       var LIGHT = [226,232,240], BG = [248,250,252];
       var cur = d.invoice.currency;
 
-      // Letterhead
       if (d.from.logo) {
         try {
           var logoH = 18, logoW = 18;
@@ -513,7 +654,6 @@
       pdf.line(M, y, W-M, y);
       y += 8;
 
-      // Invoice row
       pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
       pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
       pdf.text('INVOICE', M, y);
@@ -528,7 +668,6 @@
       pdf.line(M, y, W-M, y);
       y += 8;
 
-      // Bill to
       pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
       pdf.text('BILL TO', M, y);
@@ -547,7 +686,6 @@
       }
       y += 6;
 
-      // Items
       var descX = M, qtyX = M + CW - 68, rateX = M + CW - 38, amtX = W - M;
       pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
@@ -595,7 +733,6 @@
       pdf.text(formatMoneyPlain(totals.total, cur), amtX, y, {align:'right'});
       y += 12;
 
-      // Payment with QR
       var payLines = [];
       if (d.payment.jazzcash) payLines.push('JazzCash: ' + d.payment.jazzcash);
       if (d.payment.easypaisa) payLines.push('Easypaisa: ' + d.payment.easypaisa);
@@ -604,15 +741,11 @@
       if (payLines.length || d.payment.qrImage){
         if (y > 220){ pdf.addPage(); y = 20; }
         var hasQr = !!d.payment.qrImage;
-        var qrSize = 30;   // mm
+        var qrSize = 30;
         var infoW = hasQr ? CW - qrSize - 8 : CW;
-        var boxH = Math.max(hasQr ? qrSize + 8 : 0,
-                            payLines.length * 4.5 + 12);
-
+        var boxH = Math.max(hasQr ? qrSize + 8 : 0, payLines.length * 4.5 + 12);
         pdf.setFillColor(BG[0],BG[1],BG[2]);
         pdf.rect(M, y, CW, boxH, 'F');
-
-        // Info side
         pdf.setFont('helvetica','bold'); pdf.setFontSize(9);
         pdf.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
         pdf.text('PAYMENT DETAILS', M + 4, y + 6);
@@ -622,8 +755,6 @@
           var ll = pdf.splitTextToSize(line, infoW - 8);
           pdf.text(ll[0], M + 4, y + 12 + i * 4.5);
         });
-
-        // QR side
         if (hasQr){
           try {
             var qx = M + CW - qrSize - 4;
@@ -649,10 +780,12 @@
         y += notesH;
       }
 
-      y += 10;
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
-      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-      pdf.text('Made with KaamWala', W/2, y, {align:'center'});
+      if (!isPremium()){
+        y += 10;
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+        pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+        pdf.text('Made with KaamWala', W/2, y, {align:'center'});
+      }
       return pdf;
     });
   }
@@ -661,6 +794,7 @@
     var d = readData();
     return JSON.stringify({
       f: d.from, t: d.to, i: d.invoice, p: d.payment,
+      prem: isPremium(),
       it: d.items.map(function(x){ return [x.desc, x.qty, x.rate]; })
     });
   }
@@ -733,44 +867,21 @@
       .then(function(){ btn.disabled = false; });
   }
 
-  function injectModalCSS(){
-    if (document.getElementById('kw-modal-css')) return;
-    var css = document.createElement('style');
-    css.id = 'kw-modal-css';
-    css.textContent = [
-      '.kw-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100;',
-      'display:flex;align-items:flex-end;justify-content:center;padding:16px;}',
-      '.kw-modal{background:#fff;border-radius:16px;padding:20px;width:100%;',
-      'max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:kwup .25s ease;}',
-      '@keyframes kwup{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}',
-      '.kw-modal h3{margin:0 0 6px;font-size:1.15rem;font-weight:800;color:#0F172A;}',
-      '.kw-modal p{margin:0 0 16px;color:#64748B;font-size:.92rem;}',
-      '.kw-modal button{width:100%;}',
-      '.kw-modal .kw-share-btn{background:#0F766E;color:#fff;border:none;padding:14px;',
-      'border-radius:12px;font-weight:800;font-size:1rem;min-height:52px;cursor:pointer;',
-      'margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;}',
-      '.kw-modal .kw-cancel-btn{background:#F1F5F9;color:#475569;border:none;padding:12px;',
-      'border-radius:12px;font-weight:700;font-size:.95rem;min-height:48px;cursor:pointer;font-family:inherit;}'
-    ].join('');
-    document.head.appendChild(css);
-  }
-
   function openShareModal(cache){
-    injectModalCSS();
     var overlay = document.createElement('div');
     overlay.className = 'kw-overlay';
     overlay.innerHTML =
       '<div class="kw-modal">' +
         '<h3>✓ Invoice ready</h3>' +
         '<p>Tap below to share via WhatsApp, Email, or any app.</p>' +
-        '<button class="kw-share-btn" id="kwShareGo">📤 Open Share Menu</button>' +
-        '<button class="kw-cancel-btn" id="kwShareCancel">Cancel</button>' +
+        '<button class="kw-primary" id="kwShareGo">📤 Open Share Menu</button>' +
+        '<button class="kw-secondary" id="kwShareCancel">Cancel</button>' +
       '</div>';
     document.body.appendChild(overlay);
     function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
     overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-    overlay.querySelector('#kwShareCancel').addEventListener('click', close);
-    overlay.querySelector('#kwShareGo').addEventListener('click', function(){
+    $('kwShareCancel').addEventListener('click', close);
+    $('kwShareGo').addEventListener('click', function(){
       var d = readData();
       navigator.share({
         files: [cache.file],

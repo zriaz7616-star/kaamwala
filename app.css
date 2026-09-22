@@ -204,3 +204,120 @@ input,select,textarea,button{font-family:inherit;font-size:16px}
 
 /* ---------- QR PREVIEW IN PROFILE ---------- */
 .qr-preview img{image-rendering:pixelated}
+
+/* ---------- ACTION BAR: 2×2 GRID ---------- */
+.actionbar-btns{grid-template-columns:1fr 1fr}
+
+/* ---------- PRINT STYLES ---------- */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide every UI chrome */
+  .topbar,
+  .tabs,
+  .actionbar,
+  .debug,
+  .toast,
+  #bizCardWrap,
+  #premiumBanner,
+  #view-edit,
+  .kw-overlay,
+  .profile-hint,
+  #profileHint {
+    display: none !important;
+  }
+
+  /* Force preview to be visible */
+  #view-preview {
+    display: block !important;
+  }
+  #view-preview.is-hidden {
+    display: block !important;
+  }
+
+  .app {
+    padding: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  /* Strip all chrome from invoice */
+  .invoice {
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+
+  /* Preserve brand colors on paper */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Keep key blocks together */
+  .inv-letterhead,
+  .inv-client-block,
+  .inv-inv-row,
+  .inv-total,
+  .inv-payment,
+  .inv-notes,
+  .inv-footer {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .inv-table tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .inv-table thead {
+    display: table-header-group;
+  }
+
+  .inv-table {
+    page-break-inside: auto;
+  }
+
+  /* Slightly larger fonts for paper */
+  .inv-biz-name { font-size: 20pt; }
+  .inv-biz-meta,
+  .inv-biz-contact,
+  .inv-biz-address { font-size: 9pt; }
+  .inv-party-name { font-size: 12pt; }
+  .inv-party-line { font-size: 10pt; }
+  .inv-table { font-size: 11pt; }
+  .inv-table th { font-size: 9pt; }
+  .inv-inv-num { font-size: 13pt; }
+  .inv-inv-dates { font-size: 10pt; }
+  .inv-total { font-size: 11pt; }
+  .inv-total .grand .k,
+  .inv-total .grand .v { font-size: 13pt; }
+  .inv-notes { font-size: 10pt; }
+  .inv-payment-info { font-size: 10pt; }
+
+  /* Print payment QR at printable size */
+  .inv-payment-qr {
+    width: 110px !important;
+    height: 110px !important;
+  }
+
+  .inv-payment {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+}

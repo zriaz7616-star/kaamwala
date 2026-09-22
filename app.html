@@ -25,8 +25,8 @@
 
 <main class="app">
 
-<!-- BUSINESS CARD (readonly, tap to edit) -->
 <div id="bizCardWrap"></div>
+<div id="premiumBanner"></div>
 
 <datalist id="kwProducts"></datalist>
 
@@ -109,11 +109,13 @@
     <button id="saveBtn" class="btn btn-soft">💾 Save</button>
     <button id="shareBtn" class="btn btn-soft">📤 Share</button>
     <button id="pdfBtn" class="btn btn-primary">📄 PDF</button>
+    <button id="printBtn" class="btn btn-soft">🖨 Print</button>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
+<script src="premium.js"></script>
 <script src="app.js"></script>
 <script>
 (function(){
@@ -122,7 +124,6 @@
     try { raw = sessionStorage.getItem('kw_pending_load'); } catch(e){}
     if (!raw) return;
     try { sessionStorage.removeItem('kw_pending_load'); } catch(e){}
-
     setTimeout(function(){
       try {
         var d = JSON.parse(raw);
@@ -140,23 +141,19 @@
         setVal('invDate', d.invoice && d.invoice.date);
         setVal('invDue', d.invoice && d.invoice.due);
         setVal('invNotes', d.invoice && d.invoice.notes);
-
         var curEl = document.getElementById('invCurrency');
         if (curEl && d.invoice && d.invoice.currency){
           curEl.value = d.invoice.currency;
           curEl.dispatchEvent(new Event('change', {bubbles:true}));
         }
-
         if (d.id){
           var editEl = document.getElementById('editingId');
           if (editEl) editEl.value = d.id;
           var titleEl = document.getElementById('topbarTitle');
           if (titleEl) titleEl.textContent = 'Editing Invoice';
         }
-
         var removes = document.querySelectorAll('.item-row .remove-btn');
         for (var i = 0; i < removes.length; i++) removes[i].click();
-
         setTimeout(function(){
           var items = (d.items || []);
           items.forEach(function(it, idx){
@@ -169,7 +166,6 @@
             row.querySelector('.item-rate').value = (it.rate != null ? it.rate : 0);
             row.querySelector('.item-qty').dispatchEvent(new Event('input', {bubbles:true}));
           });
-
           var t = document.getElementById('toast');
           if (t){
             t.textContent = '✓ Invoice loaded — Save will update';
@@ -177,9 +173,7 @@
             setTimeout(function(){ t.classList.remove('is-on'); }, 3000);
           }
         }, 80);
-      } catch(err){
-        console.error('Load failed:', err);
-      }
+      } catch(err){ console.error('Load failed:', err); }
     }, 250);
   });
 })();
