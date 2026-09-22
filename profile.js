@@ -46,8 +46,8 @@
     renderProducts(p.products || []);
   }
 
+  /* ---------- LOGO ---------- */
   function bindLogo(){
-    $('pickLogoBtn').addEventListener('click', function(){ $('logoInput').click(); });
     $('logoInput').addEventListener('change', onLogoPicked);
     $('removeLogoBtn').addEventListener('click', function(){
       currentLogo = ''; renderLogoPreview(); toast('Logo removed');
@@ -69,8 +69,8 @@
     e.target.value = '';
   }
 
+  /* ---------- QR ---------- */
   function bindQr(){
-    $('pickQrBtn').addEventListener('click', function(){ $('qrInput').click(); });
     $('qrInput').addEventListener('change', onQrPicked);
     $('removeQrBtn').addEventListener('click', function(){
       currentQr = ''; var t = $('qrText'); if (t) t.value = '';
@@ -162,6 +162,7 @@
     else { el.innerHTML = '<span class="ph">No logo</span>'; }
   }
 
+  /* ---------- PRODUCTS ---------- */
   function bindProducts(){
     $('addProductBtn').addEventListener('click', function(){
       addProductRow({name:'', rate:''});
@@ -215,9 +216,11 @@
     return out;
   }
 
+  /* ---------- IMPORT ---------- */
   function bindImport(){
-    $('importFileBtn').addEventListener('click', function(){ $('importFileInput').click(); });
-    $('importFileInput').addEventListener('change', onImportFile);
+    var inp = $('importFileInput');
+    if (!inp) { console.error('importFileInput not found'); return; }
+    inp.addEventListener('change', onImportFile);
   }
 
   function setImportStatus(kind, msg){
@@ -236,9 +239,13 @@
 
   function onImportFile(e){
     var f = e.target.files && e.target.files[0];
-    if (!f) return;
+    if (!f) {
+      setImportStatus('err', 'Koi file select nahi hui.');
+      return;
+    }
     e.target.value = '';
     var name = (f.name || '').toLowerCase();
+
     if (name.endsWith('.pdf') || f.type === 'application/pdf'){
       setImportStatus('info', 'Reading PDF...');
       importFromPdf(f);
@@ -250,7 +257,7 @@
 
   function importFromSheet(file){
     if (!window.XLSX){
-      setImportStatus('err', 'Excel library not loaded. Refresh and try again.');
+      setImportStatus('err', 'Excel library load nahi hui. Internet check karke page refresh karein.');
       return;
     }
     var reader = new FileReader();
@@ -259,23 +266,23 @@
         var data = new Uint8Array(ev.target.result);
         var wb = window.XLSX.read(data, {type:'array'});
         if (!wb.SheetNames || wb.SheetNames.length === 0){
-          setImportStatus('err', 'File empty or unreadable.');
+          setImportStatus('err', 'File empty hai ya read nahi hui.');
           return;
         }
         var sheet = wb.Sheets[wb.SheetNames[0]];
         var rows = window.XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
         var products = extractProductsFromRows(rows);
         if (products.length === 0){
-          setImportStatus('err', 'No products found. Columns should be "Name" and "Rate".');
+          setImportStatus('err', 'Koi product nahi mila. Column headers "Name" aur "Rate" hone chahiye.');
           return;
         }
         applyImportedProducts(products);
-        setImportStatus('ok', products.length + ' products imported. Review below.');
+        setImportStatus('ok', products.length + ' products import ho gaye. Neeche review karein.');
       } catch(err){
         setImportStatus('err', 'Read error: ' + err.message);
       }
     };
-    reader.onerror = function(){ setImportStatus('err', 'File read failed.'); };
+    reader.onerror = function(){ setImportStatus('err', 'File read fail.'); };
     reader.readAsArrayBuffer(file);
   }
 
@@ -329,7 +336,7 @@
 
   function importFromPdf(file){
     if (!window.pdfjsLib){
-      setImportStatus('err', 'PDF library not loaded. Refresh and try again.');
+      setImportStatus('err', 'PDF library load nahi hui. Internet check karke refresh karein.');
       return;
     }
     var reader = new FileReader();
@@ -350,16 +357,16 @@
         var text = pages.join('\n');
         var products = extractProductsFromPdfText(text);
         if (products.length === 0){
-          setImportStatus('err', 'No products found in PDF. It may be a scanned image.');
+          setImportStatus('err', 'PDF se products nahi mile. Scanned PDF ho sakta hai.');
           return;
         }
         applyImportedProducts(products);
-        setImportStatus('ok', products.length + ' items found. Review and delete wrong rows.');
+        setImportStatus('ok', products.length + ' items mile. Review karein.');
       }).catch(function(err){
         setImportStatus('err', 'PDF error: ' + (err.message || err));
       });
     };
-    reader.onerror = function(){ setImportStatus('err', 'File read failed.'); };
+    reader.onerror = function(){ setImportStatus('err', 'File read fail.'); };
     reader.readAsArrayBuffer(file);
   }
 
@@ -410,6 +417,7 @@
     toast(products.length + ' products added. Save karein.');
   }
 
+  /* ---------- SAVE ---------- */
   function save(){
     var p = {
       businessName: $('pBusinessName').value.trim(),
@@ -435,7 +443,7 @@
       toast('Profile saved');
       setTimeout(function(){ location.href = 'app.html'; }, 900);
     } catch(e){
-      toast('Storage full - QR or logo chhota karein');
+      toast('Storage full - QR ya logo chhota karein');
     }
   }
 
