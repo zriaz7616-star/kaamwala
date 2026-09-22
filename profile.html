@@ -11,7 +11,6 @@
   padding:12px 14px;border-radius:12px;font-size:.9rem;margin-bottom:14px;line-height:1.45}
 .banner strong{color:#047857}
 .hint{color:#94A3B8;font-size:.78rem;margin-top:4px}
-
 .logo-box{display:flex;align-items:center;gap:14px}
 .logo-preview{width:80px;height:80px;border-radius:12px;background:#F1F5F9;
   border:2px dashed #CBD5E1;display:flex;align-items:center;justify-content:center;
@@ -25,14 +24,12 @@
 .logo-btn:active{background:#CCFBF1}
 .logo-remove{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA}
 .hidden-input{display:none}
-
 .qr-preview{width:180px;height:180px;border-radius:12px;background:#fff;
   border:2px dashed #CBD5E1;display:flex;align-items:center;justify-content:center;
   overflow:hidden;margin:0 auto 12px}
 .qr-preview img{width:100%;height:100%;object-fit:contain;padding:6px;background:#fff}
 .qr-preview .ph{font-size:.75rem;color:#94A3B8;text-align:center;padding:4px;line-height:1.2}
 .qr-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-
 .products-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .product-row{display:grid;grid-template-columns:1fr 100px 34px;gap:6px;align-items:center}
 .product-row input{width:100%;padding:10px 12px;border:1.5px solid #CBD5E1;border-radius:9px;
@@ -41,7 +38,16 @@
 .product-row .pr-del{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA;
   border-radius:8px;width:34px;height:44px;font-size:1.2rem;font-weight:700;
   cursor:pointer;padding:0;line-height:1;font-family:inherit}
-
+.import-btn{background:#EEF2FF;color:#4338CA;border:1.5px solid #C7D2FE;
+  padding:12px;border-radius:11px;font-weight:700;font-size:.9rem;cursor:pointer;
+  width:100%;font-family:inherit;min-height:48px;margin-bottom:8px}
+.import-btn:active{background:#E0E7FF}
+.import-status{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.85rem;
+  display:none;line-height:1.45}
+.import-status.show{display:block}
+.import-status.info{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE}
+.import-status.ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
+.import-status.err{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
 .profile-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:6px}
 .btn-danger{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA}
 </style>
@@ -66,8 +72,8 @@
     <div class="logo-box">
       <div class="logo-preview" id="logoPreview"><span class="ph">No logo</span></div>
       <div class="logo-actions">
-        <button type="button" class="logo-btn" id="pickLogoBtn">📷 Upload Logo</button>
-        <button type="button" class="logo-btn logo-remove" id="removeLogoBtn">🗑 Remove</button>
+        <button type="button" class="logo-btn" id="pickLogoBtn">Upload Logo</button>
+        <button type="button" class="logo-btn logo-remove" id="removeLogoBtn">Remove</button>
       </div>
     </div>
     <input type="file" id="logoInput" class="hidden-input" accept="image/*">
@@ -78,15 +84,15 @@
     <h2 class="section-title">Business Info</h2>
     <label class="field">
       <span>Business Name *</span>
-      <input type="text" id="pBusinessName" placeholder="e.g. Younas Sons Medicine Traders">
+      <input type="text" id="pBusinessName" placeholder="Business name">
     </label>
     <label class="field">
       <span>Owner / Your Name</span>
-      <input type="text" id="pOwnerName" placeholder="e.g. Zeeshan Riaz">
+      <input type="text" id="pOwnerName" placeholder="Your name">
     </label>
     <label class="field">
-      <span>License / Reg No. <small>(optional)</small></span>
-      <input type="text" id="pLicense" placeholder="e.g. NTN 3752117-9">
+      <span>License / Reg No. (optional)</span>
+      <input type="text" id="pLicense" placeholder="NTN / Reg No">
     </label>
   </div>
 
@@ -107,41 +113,34 @@
   </div>
 
   <div class="section">
-    <h2 class="section-title">Payment Details <small style="text-transform:none;font-weight:400;color:#94A3B8">(invoice par dikhengi)</small></h2>
+    <h2 class="section-title">Payment Details</h2>
     <label class="field">
       <span>JazzCash Number</span>
-      <input type="tel" id="pJazzcash" placeholder="e.g. 0300 1234567">
+      <input type="tel" id="pJazzcash" placeholder="0300 1234567">
     </label>
     <label class="field">
       <span>Easypaisa Number</span>
-      <input type="tel" id="pEasypaisa" placeholder="e.g. 0345 1234567">
+      <input type="tel" id="pEasypaisa" placeholder="0345 1234567">
     </label>
     <label class="field">
       <span>Bank Details</span>
-      <textarea id="pBank" rows="2" placeholder="Bank name, Account title, IBAN / Account #"></textarea>
+      <textarea id="pBank" rows="2" placeholder="Bank name, Account title, IBAN"></textarea>
     </label>
   </div>
 
   <div class="section">
     <h2 class="section-title">Payment QR Code</h2>
-    <div class="hint" style="margin-bottom:10px">
-      <strong>Best (payment):</strong> Easypaisa/JazzCash app se apna QR ka screenshot lein aur upload karein.<br>
-      <strong>Optional (info only):</strong> Neeche koi bhi text likhein — jaise business name, address, WhatsApp. Ye normal QR banega (payment ke liye nahi).
-    </div>
-
     <div class="qr-preview" id="qrPreview"><span class="ph">No QR yet</span></div>
-
     <div class="qr-actions">
-      <button type="button" class="logo-btn" id="pickQrBtn">📷 Upload Image</button>
-      <button type="button" class="logo-btn logo-remove" id="removeQrBtn">🗑 Remove</button>
+      <button type="button" class="logo-btn" id="pickQrBtn">Upload Image</button>
+      <button type="button" class="logo-btn logo-remove" id="removeQrBtn">Remove</button>
     </div>
     <input type="file" id="qrInput" class="hidden-input" accept="image/*">
-
     <label class="field" style="margin-top:8px">
       <span>Generate from text</span>
-      <input type="text" id="qrText" placeholder="e.g. 0300 7552962">
+      <input type="text" id="qrText" placeholder="Business name or link">
     </label>
-    <button type="button" class="btn btn-ghost" id="generateQrBtn">⚡ Generate QR</button>
+    <button type="button" class="btn btn-ghost" id="generateQrBtn">Generate QR</button>
   </div>
 
   <div class="section">
@@ -150,10 +149,10 @@
       <label class="field">
         <span>Default Currency</span>
         <select id="pCurrency">
-          <option value="PKR">PKR — Rupee</option>
-          <option value="USD">USD — Dollar</option>
-          <option value="AED">AED — Dirham</option>
-          <option value="GBP">GBP — Pound</option>
+          <option value="PKR">PKR - Rupee</option>
+          <option value="USD">USD - Dollar</option>
+          <option value="AED">AED - Dirham</option>
+          <option value="GBP">GBP - Pound</option>
         </select>
       </label>
       <label class="field">
@@ -165,15 +164,22 @@
 
   <div class="section">
     <h2 class="section-title">Products / Services</h2>
-    <div class="hint" style="margin-bottom:10px">Product add karein — invoice banate waqt dropdown se choose ho jayega aur rate khud bhar jayega.</div>
-    <div class="products-list" id="productsList"></div>
-    <button type="button" class="btn btn-ghost" id="addProductBtn">+ Add Product</button>
+    <div class="hint" style="margin-bottom:10px">Products add karein — invoice banate waqt dropdown se choose ho jayenge.</div>
+
+    <button type="button" class="import-btn" id="importFileBtn">Import from Excel / CSV / PDF</button>
+    <input type="file" id="importFileInput" class="hidden-input"
+      accept=".xlsx,.xls,.csv,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+
+    <div class="import-status" id="importStatus"></div>
+
+    <div class="products-list" id="productsList" style="margin-top:12px"></div>
+    <button type="button" class="btn btn-ghost" id="addProductBtn">+ Add Product Manually</button>
   </div>
 
   <div class="section profile-actions">
-    <button id="saveProfileBtn" class="btn btn-primary btn-block">💾 Save Profile</button>
-    <a href="app.html" class="btn btn-soft btn-block" style="text-decoration:none">← Back to Invoice</a>
-    <button id="clearProfileBtn" class="btn btn-danger btn-block">🗑 Delete Profile</button>
+    <button id="saveProfileBtn" class="btn btn-primary btn-block">Save Profile</button>
+    <a href="app.html" class="btn btn-soft btn-block" style="text-decoration:none">Back to Invoice</a>
+    <button id="clearProfileBtn" class="btn btn-danger btn-block">Delete Profile</button>
   </div>
 
 </main>
@@ -181,6 +187,8 @@
 <div id="toast" class="toast"></div>
 
 <script src="qrcode.min.js"></script>
+<script src="xlsx.full.min.js"></script>
+<script src="pdf.min.js"></script>
 <script src="profile.js"></script>
 </body>
 </html>
