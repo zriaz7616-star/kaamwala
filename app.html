@@ -128,67 +128,7 @@
 <script src="premium.js"></script>
 <script src="invoices-sync.js"></script>
 <script src="app.js"></script>
-<script>
-(function(){
-  window.addEventListener('load', function(){
-    var raw = null;
-    try { raw = sessionStorage.getItem('kw_pending_load'); } catch(e){}
-    if (!raw) return;
-    try { sessionStorage.removeItem('kw_pending_load'); } catch(e){}
-    setTimeout(function(){
-      try {
-        var d = JSON.parse(raw);
-        function setVal(id, v){
-          var el = document.getElementById(id);
-          if (!el) return;
-          el.value = v == null ? '' : v;
-          el.dispatchEvent(new Event('input', {bubbles:true}));
-        }
-        setVal('toName', d.to && d.to.name);
-        setVal('toEmail', d.to && d.to.email);
-        setVal('toPhone', d.to && d.to.phone);
-        setVal('toAddress', d.to && d.to.address);
-        setVal('invNumber', d.invoice && d.invoice.number);
-        setVal('invDate', d.invoice && d.invoice.date);
-        setVal('invDue', d.invoice && d.invoice.due);
-        setVal('invNotes', d.invoice && d.invoice.notes);
-        var curEl = document.getElementById('invCurrency');
-        if (curEl && d.invoice && d.invoice.currency){
-          curEl.value = d.invoice.currency;
-          curEl.dispatchEvent(new Event('change', {bubbles:true}));
-        }
-        if (d.id){
-          var editEl = document.getElementById('editingId');
-          if (editEl) editEl.value = d.id;
-          var titleEl = document.getElementById('topbarTitle');
-          if (titleEl) titleEl.textContent = 'Editing Invoice';
-        }
-        var removes = document.querySelectorAll('.item-row .remove-btn');
-        for (var i = 0; i < removes.length; i++) removes[i].click();
-        setTimeout(function(){
-          var items = (d.items || []);
-          items.forEach(function(it, idx){
-            if (idx > 0) document.getElementById('addItemBtn').click();
-            var rows = document.querySelectorAll('.item-row');
-            var row = rows[rows.length - 1];
-            if (!row) return;
-            row.querySelector('.item-desc').value = it.desc || '';
-            row.querySelector('.item-qty').value = (it.qty != null ? it.qty : 1);
-            row.querySelector('.item-rate').value = (it.rate != null ? it.rate : 0);
-            row.querySelector('.item-qty').dispatchEvent(new Event('input', {bubbles:true}));
-          });
-          var t = document.getElementById('toast');
-          if (t){
-            t.textContent = '✓ Invoice loaded — Save will update';
-            t.classList.add('is-on');
-            setTimeout(function(){ t.classList.remove('is-on'); }, 3000);
-          }
-        }, 80);
-      } catch(err){ console.error('Load failed:', err); }
-    }, 250);
-  });
-})();
-</script>
+
 <script>
 (function(){ if (window.FB) window.FB.requireLogin("auth.html"); })();
 </script>

@@ -628,11 +628,14 @@
   function handlePendingLoad(){
     var raw = null;
     try { raw = sessionStorage.getItem('kw_pending_load'); } catch(e){}
-    if (!raw) return;
+    if (!raw) { console.log('[KW] no pending data'); return; }
     try { sessionStorage.removeItem('kw_pending_load'); } catch(e){}
 
     try {
       var d = JSON.parse(raw);
+      console.log('[KW] Loaded pending:', d);
+      console.log('[KW] items:', d.items);
+
       function setVal(id, v){
         var el = $(id);
         if (!el) return;
@@ -656,23 +659,42 @@
         if ($('editingId')) $('editingId').value = d.id;
         if ($('topbarTitle')) $('topbarTitle').textContent = 'Editing Invoice';
       }
-      var removes = document.querySelectorAll('.item-row .remove-btn');
-      for (var i = 0; i < removes.length; i++) removes[i].click();
-      setTimeout(function(){
-        var items = (d.items || []);
-        items.forEach(function(it, idx){
-          if (idx > 0) $('addItemBtn').click();
-          var rows = document.querySelectorAll('.item-row');
-          var row = rows[rows.length - 1];
-          if (!row) return;
-          row.querySelector('.item-desc').value = it.desc || '';
-          row.querySelector('.item-qty').value = (it.qty != null ? it.qty : 1);
-          row.querySelector('.item-rate').value = (it.rate != null ? it.rate : 0);
-          row.querySelector('.item-qty').dispatchEvent(new Event('input', {bubbles:true}));
-        });
-        toast('✓ Invoice loaded');
-      }, 80);
-    } catch(e){ console.error('Load failed:', e); }
+
+      var items = d.items || [];
+      if (!Array.isArray(items)){
+        var arr = [];
+        var ks = Object.keys(items).sort(function(a,b){ return Number(a) - Number(b); });
+        ks.forEach(function(k){ if (items[k]) arr.push(items[k]); });
+        items = arr;
+      }
+
+      console.log('[KW] Normalized items:', items);
+
+      var itemsWrap = $('items');
+      while (itemsWrap.firstChild) itemsWrap.removeChild(itemsWrap.firstChild);
+
+      if (items.length === 0){
+        itemsWrap.appendChild(makeItemRow({desc:'', qty:1, rate:0}));
+        toast('Invoice loaded (0 items in data)');
+      } else {
+        for (var i = 0; i < items.length; i++){
+          var it = items[i];
+          var qty = (it && it.qty != null && !isNaN(parseFloat(it.qty))) ? parseFloat(it.qty) : 1;
+          var rate = (it && it.rate != null && !isNaN(parseFloat(it.rate))) ? parseFloat(it.rate) : 0;
+          var desc = (it && it.desc) ? String(it.desc) : '';
+          var newRow = makeItemRow({desc: desc, qty: qty, rate: rate});
+          itemsWrap.appendChild(newRow);
+        }
+        toast('Invoice loaded with ' + items.length + ' item(s)');
+      }
+
+      updateAmounts();
+      renderPreview();
+      schedulePrebuild();
+    } catch(e){
+      console.error('[KW] Load failed:', e);
+      toast('Load failed: ' + e.message);
+    }
   }
 
   /* ---------- PRINT ---------- */
