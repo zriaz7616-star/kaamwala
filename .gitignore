@@ -1,0 +1,18 @@
+# Private admin files — DO NOT push to GitHub
+admin.html
+admin.js
+new_fn.js
+new_upgrade_fn.js
+new_upgrade_fn.js
+/tmp/*
+
+# System files
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+
+# Sensitive configs (agar kabhi banayein)
+.env
+.env.local
+*serviceAccountKey*.json
