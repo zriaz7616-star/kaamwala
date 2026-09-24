@@ -121,8 +121,12 @@
 <script src="firebase-auth.js"></script>
 <script src="firebase-firestore.js"></script>
 <script src="firebase-config.js"></script>
+<script src="fb-data.js"></script>
+
+
 <script src="auth.js"></script>
 <script src="premium.js"></script>
+<script src="invoices-sync.js"></script>
 <script src="app.js"></script>
 <script>
 (function(){
@@ -184,6 +188,12 @@
     }, 250);
   });
 })();
+</script>
+<script>
+(function(){ if (window.FB) window.FB.requireLogin("auth.html"); })();
+</script>
+<script>
+(function(){ if (window.FB) window.FB.requireLogin("auth.html"); })();
 </script>
 </body>
 </html>

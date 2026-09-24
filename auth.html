@@ -39,12 +39,9 @@
 .auth-msg.err{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
 .auth-msg.ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
 .auth-msg.info{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE}
-.auth-foot{margin-top:18px;text-align:center;color:#94A3B8;font-size:.82rem}
-.auth-foot a{color:#0F766E;text-decoration:none;font-weight:600}
-.auth-fields{display:flex;flex-direction:column;gap:10px}
-.auth-fields.is-hidden{display:none}
 .auth-note{background:#FFFBEB;border:1px solid #FDE68A;color:#78350F;
-  padding:10px 12px;border-radius:10px;font-size:.8rem;line-height:1.4;margin-top:14px}
+  padding:12px 14px;border-radius:10px;font-size:.82rem;line-height:1.45;margin-top:16px}
+.auth-note strong{color:#92400E}
 </style>
 </head>
 <body>
@@ -55,7 +52,7 @@
     <div class="auth-brand">
       <div class="auth-logo">KW</div>
       <h1>Welcome to KaamWala</h1>
-      <p>Sign in to sync your invoices across devices</p>
+      <p>Sign in to access your invoices anywhere</p>
     </div>
 
     <div class="auth-tabs">
@@ -64,25 +61,14 @@
     </div>
 
     <form class="auth-form" id="authForm" autocomplete="on">
-
-      <div class="auth-fields" id="nameFieldWrap" style="display:none">
-        <input type="text" class="auth-input" id="nameInput" placeholder="Your name (optional)" autocomplete="name">
-      </div>
-
       <input type="email" class="auth-input" id="emailInput" placeholder="Email address" autocomplete="email" required>
       <input type="password" class="auth-input" id="passInput" placeholder="Password (min 6 characters)" autocomplete="current-password" required>
-
       <button type="submit" class="auth-submit" id="submitBtn">Sign In</button>
-
       <div class="auth-msg" id="authMsg"></div>
     </form>
 
     <div class="auth-note">
-      <strong>Why sign in?</strong> Free account — sync your business profile and invoices across phones. No spam, no data selling. You can skip and use the app offline too.
-    </div>
-
-    <div class="auth-foot">
-      <a href="app.html">← Skip & use offline</a>
+      <strong>Why sign in?</strong> Your business profile and invoices sync across all your devices. Free forever — no spam, no data selling.
     </div>
 
   </div>
@@ -93,6 +79,7 @@
 <script src="firebase-firestore.js"></script>
 <script src="firebase-config.js"></script>
 <script src="auth.js"></script>
+<script src="fb-data.js"></script>
 <script>
 (function(){
   'use strict';
@@ -105,7 +92,6 @@
     document.querySelectorAll('.auth-tab').forEach(function(t){
       t.classList.toggle('is-active', t.getAttribute('data-tab') === m);
     });
-    $('nameFieldWrap').style.display = (m === 'signup') ? 'block' : 'none';
     $('submitBtn').textContent = (m === 'signup') ? 'Create Account' : 'Sign In';
     $('passInput').setAttribute('autocomplete', m === 'signup' ? 'new-password' : 'current-password');
     hideMsg();
@@ -125,7 +111,6 @@
     m.className = 'auth-msg';
     m.textContent = '';
   }
-
   function setLoading(on){
     var b = $('submitBtn');
     b.disabled = !!on;
@@ -149,7 +134,7 @@
     var p = (mode === 'signup') ? H.signUp(email, pass) : H.signIn(email, pass);
 
     p.then(function(user){
-      showMsg('ok', '✓ ' + (mode === 'signup' ? 'Account ban gaya! ' : 'Signed in! ') + 'Redirecting…');
+      showMsg('ok', '✓ ' + (mode === 'signup' ? 'Account ban gaya! ' : 'Signed in! ') + 'Loading…');
       setTimeout(function(){ location.href = 'app.html'; }, 700);
     }).catch(function(err){
       showMsg('err', '✗ ' + window.KWAuthHelpers.friendlyError(err));

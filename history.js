@@ -1,13 +1,16 @@
 (function(){
   'use strict';
 
-  var STORAGE_KEY = 'kw_invoices';
+  var currentFilter = 'all';
+  var allInvoices = [];
 
-  document.addEventListener('DOMContentLoaded', init);
-
-  function init(){
-    render();
-  }
+  document.addEventListener('DOMContentLoaded', function(){
+    if (!window.FB) return;
+    window.FB.waitForAuth().then(function(u){
+      if (!u){ location.href = 'auth.html'; return; }
+      loadInvoices();
+    });
+  });
 
   function $(id){ return document.getElementById(id); }
 
@@ -17,27 +20,13 @@
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  function loadAll(){
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY) || '[]';
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch(e){ return []; }
-  }
-
-  function saveAll(arr){
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch(e){}
-  }
-
   var CURRENCY_SYMBOLS = {PKR:'Rs', USD:'$', AED:'AED', GBP:'GBP'};
-
   function formatMoney(n, cur){
     var sym = CURRENCY_SYMBOLS[cur] || (cur + ' ');
     var v = (Math.round((n||0)*100)/100).toLocaleString('en-US',
       {minimumFractionDigits:2, maximumFractionDigits:2});
     return sym + ' ' + v;
   }
-
   function formatDateShort(iso){
     if (!iso) return '—';
     try {
@@ -45,28 +34,38 @@
       return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     } catch(e){ return iso; }
   }
-
   function totalsOf(inv){
     var sub = (inv.items || []).reduce(function(s,it){ return s + (it.amount||0); }, 0);
     return {subtotal:sub, total:sub};
   }
 
+  function loadInvoices(){
+    var wrap = $('listWrap');
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">☁️</div><h2>Loading from cloud…</h2></div>';
+    window.FB.getInvoices().then(function(list){
+      allInvoices = list || [];
+      render();
+    }).catch(function(err){
+      console.error(err);
+      wrap.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h2>Could not load invoices</h2><p>Check internet and try again.</p></div>';
+    });
+  }
+
   function render(){
     var wrap = $('listWrap');
-    var all = loadAll();
 
-    if (all.length === 0){
+    if (allInvoices.length === 0){
       wrap.innerHTML =
         '<div class="empty">' +
           '<div class="empty-icon">📄</div>' +
           '<h2>No saved invoices yet</h2>' +
-          '<p>Create your first invoice in the builder. Saved invoices will appear here.</p>' +
+          '<p>Create your first invoice. Saved invoices appear here and sync across devices.</p>' +
           '<a href="app.html" class="btn btn-primary">+ Create Invoice</a>' +
         '</div>';
       return;
     }
 
-    wrap.innerHTML = all.map(function(inv){
+    wrap.innerHTML = allInvoices.map(function(inv){
       var cur = (inv.invoice && inv.invoice.currency) || 'PKR';
       var t = totalsOf(inv);
       var invNum = (inv.invoice && inv.invoice.number) || 'INV';
@@ -107,18 +106,15 @@
   }
 
   function loadIntoEditor(id){
-    var all = loadAll();
     var inv = null;
-    for (var i = 0; i < all.length; i++){
-      if (all[i].id === id){ inv = all[i]; break; }
+    for (var i = 0; i < allInvoices.length; i++){
+      if (allInvoices[i].id === id){ inv = allInvoices[i]; break; }
     }
-    if (!inv) { toast('Invoice not found'); return; }
+    if (!inv){ toast('Invoice not found'); return; }
     try {
       sessionStorage.setItem('kw_pending_load', JSON.stringify(inv));
       location.href = 'app.html?from=history';
-    } catch(e){
-      toast('Could not load');
-    }
+    } catch(e){ toast('Could not load'); }
   }
 
   function confirmDelete(id){
@@ -140,12 +136,14 @@
       if (!b) return;
       var ans = b.getAttribute('data-ans');
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-      if (ans === 'yes'){
-        var all = loadAll().filter(function(x){ return x.id !== id; });
-        saveAll(all);
+      if (ans !== 'yes') return;
+      window.FB.deleteInvoice(id).then(function(){
+        allInvoices = allInvoices.filter(function(x){ return x.id !== id; });
         toast('✓ Invoice deleted');
         render();
-      }
+      }).catch(function(err){
+        toast('Delete failed: ' + (err.message || ''));
+      });
     });
   }
 

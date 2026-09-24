@@ -5,89 +5,73 @@
   var pdfCache = { signature: null, blob: null, file: null, filename: null };
   var prebuildTimer = null;
 
-  // Global state for current user + premium
   var currentUser = null;
+  var currentProfile = null;
   var cloudPremium = false;
+  var invoiceCount = 0;
 
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', function(){
+    if (!window.FB){ alert('Firebase not loaded'); return; }
+    window.FB.waitForAuth().then(function(u){
+      if (!u){ location.href = 'auth.html'; return; }
+      currentUser = u;
+      return Promise.all([
+        window.FB.getProfile(),
+        window.FB.getPremiumStatus(),
+        window.FB.getInvoices()
+      ]);
+    }).then(function(res){
+      if (!res) return;
+      currentProfile = res[0] || {};
+      cloudPremium = !!(res[1] && res[1].premium);
+      invoiceCount = (res[2] || []).length;
+      bootUI();
+    }).catch(function(err){
+      console.error('Boot failed:', err);
+      setDebug('Boot error: ' + (err.message || ''));
+    });
+  });
 
-  function init(){
-    setDefaults();
+  function bootUI(){
     bindAccount();
-    initAuth();
-    renderBizCard();
-    renderPremiumBanner();
-    populateProductsDatalist();
     bindTabs();
     bindFields();
     bindItems();
     bindActions();
+    setDefaults();
+    renderBizCard();
+    renderPremiumBanner();
+    populateProductsDatalist();
     renderItems();
     renderPreview();
     setDebug('Ready. Prebuilding PDF…');
     setTimeout(schedulePrebuild, 300);
+    setTimeout(handlePendingLoad, 200);
   }
 
   function $(id){ return document.getElementById(id); }
   function setDebug(msg){ var el = $('debug'); if (el) el.textContent = msg; }
   function logDebug(msg){ try { console.log('[KW] ' + msg); } catch(e){} }
+  function isPremium(){ return cloudPremium || (window.KW && window.KW.isPremium && window.KW.isPremium()); }
   function escapeHtml(s){
     return String(s==null?'':s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  /* ---------- AUTH ---------- */
+  /* ---------- ACCOUNT ---------- */
   function bindAccount(){
     var btn = $('accountBtn');
     if (btn){
       btn.addEventListener('click', function(e){
         e.preventDefault();
-        if (currentUser) openAccountMenu();
-        else location.href = 'auth.html';
+        openAccountMenu();
       });
     }
   }
 
-  function initAuth(){
-    if (!window.KWAuthHelpers || !window.KWAuth || !window.KWAuth.ready){
-      renderAccountBar();
-      return;
-    }
-    window.KWAuthHelpers.onUser(function(user){
-      currentUser = user || null;
-      if (user){
-        // Fetch premium status from Firestore
-        window.KWAuthHelpers.getUserDoc(user.uid).then(function(doc){
-          cloudPremium = !!(doc && doc.premium);
-          refreshAfterAuth();
-        }).catch(function(){
-          cloudPremium = false;
-          refreshAfterAuth();
-        });
-      } else {
-        cloudPremium = false;
-        refreshAfterAuth();
-      }
-      renderAccountBar();
-    });
-  }
-
-  function refreshAfterAuth(){
-    renderBizCard();
-    renderPremiumBanner();
-    renderPreview();
-    pdfCache = { signature:null, blob:null, file:null, filename:null };
-    schedulePrebuild();
-  }
-
-  function renderAccountBar(){
-    var wrap = $('accountBar');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-  }
-
   function openAccountMenu(){
+    if (!currentUser) return;
     var existing = document.querySelector('.kw-overlay');
     if (existing) existing.parentNode.removeChild(existing);
 
@@ -97,7 +81,7 @@
       '<div class="kw-modal">' +
         '<h3>👤 Your Account</h3>' +
         '<p style="margin-bottom:10px">Signed in as<br><strong style="color:#0F172A">' + escapeHtml(currentUser.email) + '</strong></p>' +
-        (cloudPremium ? '<div style="background:#ECFDF5;color:#065F46;padding:10px 12px;border-radius:10px;font-size:.85rem;margin-bottom:12px;font-weight:700;text-align:center">⭐ Premium Active</div>' : '') +
+        (isPremium() ? '<div style="background:#ECFDF5;color:#065F46;padding:10px 12px;border-radius:10px;font-size:.85rem;margin-bottom:12px;font-weight:700;text-align:center">⭐ Premium Active</div>' : '') +
         '<button class="kw-primary" id="kwLogout">Sign Out</button>' +
         '<button class="kw-secondary" id="kwCloseAcc">Close</button>' +
       '</div>';
@@ -106,32 +90,18 @@
     overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
     $('kwCloseAcc').addEventListener('click', close);
     $('kwLogout').addEventListener('click', function(){
-      window.KWAuthHelpers.signOut().then(function(){
-        close();
-        location.reload();
+      window.FB.logout().then(function(){
+        location.href = 'auth.html';
       });
     });
   }
 
-  /* ---------- PREMIUM ---------- */
-  function isPremium(){
-    // Cloud premium (if logged in) takes priority
-    if (currentUser && cloudPremium) return true;
-    // Fallback to local code (for offline users)
-    return window.KW && window.KW.isPremium && window.KW.isPremium();
-  }
-
-  function getProfile(){
-    try { return JSON.parse(localStorage.getItem('kw_profile') || 'null'); }
-    catch(e){ return null; }
-  }
-
   /* ---------- BUSINESS CARD ---------- */
   function renderBizCard(){
-    var p = getProfile();
+    var p = currentProfile || {};
     var wrap = $('bizCardWrap');
     if (!wrap) return;
-    if (!p || !p.businessName){
+    if (!p.businessName){
       wrap.innerHTML =
         '<div class="biz-card biz-card-empty">' +
           '<div class="biz-card-empty-icon">🏢</div>' +
@@ -164,14 +134,12 @@
       '</div>';
   }
 
+  /* ---------- PREMIUM BANNER ---------- */
   function renderPremiumBanner(){
     var wrap = $('premiumBanner');
     if (!wrap) return;
     if (isPremium()){ wrap.innerHTML = ''; return; }
-    var used = window.KW ? window.KW.invoiceCount() : 0;
-    var limit = window.KW ? window.KW.FREE_LIMIT : 3;
-    var remaining = Math.max(0, limit - used);
-
+    var remaining = Math.max(0, 3 - invoiceCount);
     wrap.innerHTML =
       '<div class="premium-banner">' +
         '<div class="premium-banner-icon">⭐</div>' +
@@ -185,214 +153,10 @@
     if (btn) btn.addEventListener('click', openUpgradeModal);
   }
 
-  function openUpgradeModal(){
-  var existing = document.querySelector('.kw-overlay');
-  if (existing) existing.parentNode.removeChild(existing);
-
-  var overlay = document.createElement('div');
-  overlay.className = 'kw-overlay';
-  overlay.innerHTML =
-    '<div class="kw-modal" id="kwUpgradeModal">' +
-      '<h3>⭐ Upgrade to Premium</h3>' +
-      '<p>Unlock unlimited invoices & remove the "Made with KaamWala" watermark.</p>' +
-      '<div class="kw-section-title">Choose your plan</div>' +
-      '<div class="kw-price-grid">' +
-        '<label class="kw-price-opt">' +
-          '<input type="radio" name="kwPlan" value="monthly" checked>' +
-          '<span class="kw-price-box">' +
-            '<span class="per">Monthly</span>' +
-            '<span class="amt">Rs 499</span>' +
-            '<span class="note">per month</span>' +
-          '</span>' +
-        '</label>' +
-        '<label class="kw-price-opt">' +
-          '<input type="radio" name="kwPlan" value="yearly">' +
-          '<span class="kw-price-box">' +
-            '<span class="per">Yearly</span>' +
-            '<span class="amt">Rs 3,999</span>' +
-            '<span class="note">save 33%</span>' +
-          '</span>' +
-        '</label>' +
-      '</div>' +
-      '<div class="kw-section-title">How to pay</div>' +
-      '<div class="kw-cta-row">' +
-        '<strong>1.</strong> Send <strong id="kwPayAmount">Rs 499</strong> (<span id="kwPayPlan">Monthly</span>) to:<br>' +
-        '📱 <strong>Easypaisa:</strong> 0342 5681324<br>' +
-        '📱 <strong>Raast ID:</strong> 0300 7552962<br>' +
-        '<strong>2.</strong> WhatsApp your payment screenshot to <strong>0342 5681324</strong><br>' +
-        '<strong>3.</strong> You\'ll receive a code — enter it below.' +
-      '</div>' +
-      '<div class="kw-section-title">Enter your code</div>' +
-      '<input type="text" id="kwCodeInput" placeholder="KW-XXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" autocapitalize="characters">' +
-      '<div class="kw-msg" id="kwMsg" style="display:none"></div>' +
-      '<button class="kw-primary" id="kwActivate">Unlock Premium</button>' +
-      '<button class="kw-secondary" id="kwClose">Close</button>' +
-    '</div>';
-  document.body.appendChild(overlay);
-
-  function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
-  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-  $('kwClose').addEventListener('click', close);
-
-  function updatePay(plan){
-    var amt = $('kwPayAmount');
-    var lbl = $('kwPayPlan');
-    if (!amt || !lbl) return;
-    if (plan === 'yearly'){ amt.textContent = 'Rs 3,999'; lbl.textContent = 'Yearly'; }
-    else { amt.textContent = 'Rs 499'; lbl.textContent = 'Monthly'; }
-  }
-
-  var radios = overlay.querySelectorAll('input[name="kwPlan"]');
-  for (var i = 0; i < radios.length; i++){
-    radios[i].addEventListener('change', function(){
-      updatePay(this.value);
-    });
-  }
-
-  $('kwActivate').addEventListener('click', function(){
-    var code = ($('kwCodeInput').value || '').trim();
-    var msg = $('kwMsg');
-    if (!code){
-      msg.style.display = 'block';
-      msg.className = 'kw-msg kw-msg-err';
-      msg.textContent = 'Please enter a code';
-      return;
-    }
-    var res = window.KW ? window.KW.activate(code) : {ok:false, reason:'Not available'};
-    if (res.ok){
-      msg.style.display = 'block';
-      msg.className = 'kw-msg kw-msg-ok';
-      msg.textContent = '✓ Premium unlocked!';
-      setTimeout(function(){ close(); refreshAfterAuth(); }, 1200);
-    } else {
-      msg.style.display = 'block';
-      msg.className = 'kw-msg kw-msg-err';
-      msg.textContent = '✗ ' + (res.reason || 'Invalid code');
-    }
-  });
-}
-
-  function refreshAfterAuth(){
-    renderBizCard();
-    renderPremiumBanner();
-    renderPreview();
-    pdfCache = { signature:null, blob:null, file:null, filename:null };
-    schedulePrebuild();
-  }
-
-  function renderAccountBar(){
-    var wrap = $('accountBar');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-  }
-
-  function openAccountMenu(){
-    var existing = document.querySelector('.kw-overlay');
-    if (existing) existing.parentNode.removeChild(existing);
-
-    var overlay = document.createElement('div');
-    overlay.className = 'kw-overlay';
-    overlay.innerHTML =
-      '<div class="kw-modal">' +
-        '<h3>👤 Your Account</h3>' +
-        '<p style="margin-bottom:10px">Signed in as<br><strong style="color:#0F172A">' + escapeHtml(currentUser.email) + '</strong></p>' +
-        (cloudPremium ? '<div style="background:#ECFDF5;color:#065F46;padding:10px 12px;border-radius:10px;font-size:.85rem;margin-bottom:12px;font-weight:700;text-align:center">⭐ Premium Active</div>' : '') +
-        '<button class="kw-primary" id="kwLogout">Sign Out</button>' +
-        '<button class="kw-secondary" id="kwCloseAcc">Close</button>' +
-      '</div>';
-    document.body.appendChild(overlay);
-    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
-    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-    $('kwCloseAcc').addEventListener('click', close);
-    $('kwLogout').addEventListener('click', function(){
-      window.KWAuthHelpers.signOut().then(function(){
-        close();
-        location.reload();
-      });
-    });
-  }
-
-  /* ---------- PREMIUM ---------- */
-  function isPremium(){
-    // Cloud premium (if logged in) takes priority
-    if (currentUser && cloudPremium) return true;
-    // Fallback to local code (for offline users)
-    return window.KW && window.KW.isPremium && window.KW.isPremium();
-  }
-
-  function getProfile(){
-    try { return JSON.parse(localStorage.getItem('kw_profile') || 'null'); }
-    catch(e){ return null; }
-  }
-
-  /* ---------- BUSINESS CARD ---------- */
-  function renderBizCard(){
-    var p = getProfile();
-    var wrap = $('bizCardWrap');
-    if (!wrap) return;
-    if (!p || !p.businessName){
-      wrap.innerHTML =
-        '<div class="biz-card biz-card-empty">' +
-          '<div class="biz-card-empty-icon">🏢</div>' +
-          '<div class="biz-card-empty-body">' +
-            '<h3>Setup your business</h3>' +
-            '<p>Add name, logo, contact & payment — har invoice par automatic aayengi.</p>' +
-          '</div>' +
-          '<a href="profile.html" class="biz-card-setup-btn">Set up →</a>' +
-        '</div>';
-      return;
-    }
-    var metaParts = [];
-    if (p.ownerName && p.ownerName !== p.businessName) metaParts.push(p.ownerName);
-    if (p.license) metaParts.push(p.license);
-    var contactParts = [p.phone, p.email].filter(Boolean);
-    var logoSrc = p.logo
-      ? '<img src="' + p.logo + '" alt="logo" class="biz-card-logo-img">'
-      : '<div class="biz-card-logo-ph">' + escapeHtml((p.businessName || 'B').charAt(0).toUpperCase()) + '</div>';
-    var premiumBadge = isPremium() ? '<span class="premium-badge">Premium</span>' : '';
-
-    wrap.innerHTML =
-      '<div class="biz-card">' +
-        '<div class="biz-card-logo">' + logoSrc + '</div>' +
-        '<div class="biz-card-info">' +
-          '<h3>' + escapeHtml(p.businessName) + premiumBadge + '</h3>' +
-          (metaParts.length ? '<p class="biz-card-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
-          (contactParts.length ? '<p class="biz-card-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
-        '</div>' +
-        '<a href="profile.html" class="biz-card-edit" aria-label="Edit business">✏️</a>' +
-      '</div>';
-  }
-
-  function renderPremiumBanner(){
-    var wrap = $('premiumBanner');
-    if (!wrap) return;
-    if (isPremium()){ wrap.innerHTML = ''; return; }
-    var used = window.KW ? window.KW.invoiceCount() : 0;
-    var limit = window.KW ? window.KW.FREE_LIMIT : 3;
-    var remaining = Math.max(0, limit - used);
-
-    wrap.innerHTML =
-      '<div class="premium-banner">' +
-        '<div class="premium-banner-icon">⭐</div>' +
-        '<div class="premium-banner-body">' +
-          '<h3>Free plan — ' + remaining + ' invoice' + (remaining === 1 ? '' : 's') + ' remaining</h3>' +
-          '<p>Upgrade to remove watermark & get unlimited invoices.</p>' +
-        '</div>' +
-        '<button class="premium-banner-btn" id="upgradeBtn">Upgrade</button>' +
-      '</div>';
-    var btn = $('upgradeBtn');
-    if (btn) btn.addEventListener('click', openUpgradeModal);
-  }
-
+  /* ---------- UPGRADE MODAL ---------- */
   function openUpgradeModal(){
     var existing = document.querySelector('.kw-overlay');
     if (existing) existing.parentNode.removeChild(existing);
-
-    var selectedPlan = 'monthly';
-    var plans = {
-      monthly: { label: 'Monthly', amount: 'Rs 499' },
-      yearly:  { label: 'Yearly',  amount: 'Rs 3,999' }
-    };
 
     var overlay = document.createElement('div');
     overlay.className = 'kw-overlay';
@@ -419,10 +183,10 @@
           '📱 <strong>Easypaisa:</strong> 0342 5681324<br>' +
           '📱 <strong>Raast ID:</strong> 0300 7552962<br>' +
           '<strong>2.</strong> WhatsApp your payment screenshot to <strong>0342 5681324</strong><br>' +
-          '<strong>3.</strong> You\'ll receive a code — enter it below.' +
+          '<strong>3.</strong> Admin approves your account — premium activates automatically.' +
         '</div>' +
-        '<div class="kw-section-title">Enter your code</div>' +
-        '<input type="text" id="kwCodeInput" placeholder="KW-XXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" autocapitalize="characters" inputmode="text">' +
+        '<div class="kw-section-title">Have a code? (optional)</div>' +
+        '<input type="text" id="kwCodeInput" placeholder="KW-XXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" autocapitalize="characters">' +
         '<div class="kw-msg" id="kwMsg" style="display:none"></div>' +
         '<button class="kw-primary" id="kwActivate">Unlock Premium</button>' +
         '<button class="kw-secondary" id="kwClose">Close</button>' +
@@ -433,33 +197,20 @@
     overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
     $('kwClose').addEventListener('click', close);
 
-    function selectPlan(plan){
-      selectedPlan = plan;
-      var boxes = overlay.querySelectorAll('.kw-price-box');
-      for (var i = 0; i < boxes.length; i++){
-        boxes[i].classList.toggle('is-selected', boxes[i].getAttribute('data-plan') === plan);
-      }
-      var p = plans[plan];
-      var amtEl = $('kwPayAmount');
-      var plEl = $('kwPayPlan');
-      if (amtEl) amtEl.textContent = p.amount;
-      if (plEl) plEl.textContent = p.label;
-    }
-
     var planBoxes = overlay.querySelectorAll('.kw-price-box');
+    function updatePay(plan){
+      for (var i = 0; i < planBoxes.length; i++){
+        planBoxes[i].classList.toggle('is-selected', planBoxes[i].getAttribute('data-plan') === plan);
+      }
+      var amt = $('kwPayAmount'), lbl = $('kwPayPlan');
+      if (plan === 'yearly'){ if (amt) amt.textContent = 'Rs 3,999'; if (lbl) lbl.textContent = 'Yearly'; }
+      else { if (amt) amt.textContent = 'Rs 499'; if (lbl) lbl.textContent = 'Monthly'; }
+    }
     for (var i = 0; i < planBoxes.length; i++){
       (function(box){
         var plan = box.getAttribute('data-plan');
-        box.onclick = function(ev){
-          ev.preventDefault();
-          ev.stopPropagation();
-          selectPlan(plan);
-        };
-        box.ontouchend = function(ev){
-          ev.preventDefault();
-          ev.stopPropagation();
-          selectPlan(plan);
-        };
+        box.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); updatePay(plan); };
+        box.ontouchend = function(ev){ ev.preventDefault(); ev.stopPropagation(); updatePay(plan); };
       })(planBoxes[i]);
     }
 
@@ -469,15 +220,15 @@
       if (!code){
         msg.style.display = 'block';
         msg.className = 'kw-msg kw-msg-err';
-        msg.textContent = 'Please enter a code';
+        msg.textContent = 'Enter code, or contact admin for approval.';
         return;
       }
       var res = window.KW ? window.KW.activate(code) : {ok:false, reason:'Not available'};
       if (res.ok){
         msg.style.display = 'block';
         msg.className = 'kw-msg kw-msg-ok';
-        msg.textContent = '✓ Premium unlocked!';
-        setTimeout(function(){ close(); refreshAfterAuth(); }, 1200);
+        msg.textContent = '✓ Premium unlocked (local)! Sync cloud next login.';
+        setTimeout(function(){ close(); refreshUI(); }, 1400);
       } else {
         msg.style.display = 'block';
         msg.className = 'kw-msg kw-msg-err';
@@ -486,7 +237,7 @@
     });
   }
 
-  function refreshAfterAuth(){
+  function refreshUI(){
     renderBizCard();
     renderPremiumBanner();
     renderPreview();
@@ -494,182 +245,13 @@
     schedulePrebuild();
   }
 
-  function renderAccountBar(){
-    var wrap = $('accountBar');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-  }
-
-  function openAccountMenu(){
-    var existing = document.querySelector('.kw-overlay');
-    if (existing) existing.parentNode.removeChild(existing);
-
-    var overlay = document.createElement('div');
-    overlay.className = 'kw-overlay';
-    overlay.innerHTML =
-      '<div class="kw-modal">' +
-        '<h3>👤 Your Account</h3>' +
-        '<p style="margin-bottom:10px">Signed in as<br><strong style="color:#0F172A">' + escapeHtml(currentUser.email) + '</strong></p>' +
-        (cloudPremium ? '<div style="background:#ECFDF5;color:#065F46;padding:10px 12px;border-radius:10px;font-size:.85rem;margin-bottom:12px;font-weight:700;text-align:center">⭐ Premium Active</div>' : '') +
-        '<button class="kw-primary" id="kwLogout">Sign Out</button>' +
-        '<button class="kw-secondary" id="kwCloseAcc">Close</button>' +
-      '</div>';
-    document.body.appendChild(overlay);
-    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
-    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-    $('kwCloseAcc').addEventListener('click', close);
-    $('kwLogout').addEventListener('click', function(){
-      window.KWAuthHelpers.signOut().then(function(){
-        close();
-        location.reload();
-      });
-    });
-  }
-
-  /* ---------- PREMIUM ---------- */
-  function isPremium(){
-    // Cloud premium (if logged in) takes priority
-    if (currentUser && cloudPremium) return true;
-    // Fallback to local code (for offline users)
-    return window.KW && window.KW.isPremium && window.KW.isPremium();
-  }
-
-  function getProfile(){
-    try { return JSON.parse(localStorage.getItem('kw_profile') || 'null'); }
-    catch(e){ return null; }
-  }
-
-  /* ---------- BUSINESS CARD ---------- */
-  function renderBizCard(){
-    var p = getProfile();
-    var wrap = $('bizCardWrap');
-    if (!wrap) return;
-    if (!p || !p.businessName){
-      wrap.innerHTML =
-        '<div class="biz-card biz-card-empty">' +
-          '<div class="biz-card-empty-icon">🏢</div>' +
-          '<div class="biz-card-empty-body">' +
-            '<h3>Setup your business</h3>' +
-            '<p>Add name, logo, contact & payment — har invoice par automatic aayengi.</p>' +
-          '</div>' +
-          '<a href="profile.html" class="biz-card-setup-btn">Set up →</a>' +
-        '</div>';
-      return;
-    }
-    var metaParts = [];
-    if (p.ownerName && p.ownerName !== p.businessName) metaParts.push(p.ownerName);
-    if (p.license) metaParts.push(p.license);
-    var contactParts = [p.phone, p.email].filter(Boolean);
-    var logoSrc = p.logo
-      ? '<img src="' + p.logo + '" alt="logo" class="biz-card-logo-img">'
-      : '<div class="biz-card-logo-ph">' + escapeHtml((p.businessName || 'B').charAt(0).toUpperCase()) + '</div>';
-    var premiumBadge = isPremium() ? '<span class="premium-badge">Premium</span>' : '';
-
-    wrap.innerHTML =
-      '<div class="biz-card">' +
-        '<div class="biz-card-logo">' + logoSrc + '</div>' +
-        '<div class="biz-card-info">' +
-          '<h3>' + escapeHtml(p.businessName) + premiumBadge + '</h3>' +
-          (metaParts.length ? '<p class="biz-card-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
-          (contactParts.length ? '<p class="biz-card-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
-        '</div>' +
-        '<a href="profile.html" class="biz-card-edit" aria-label="Edit business">✏️</a>' +
-      '</div>';
-  }
-
-  function renderPremiumBanner(){
-    var wrap = $('premiumBanner');
-    if (!wrap) return;
-    if (isPremium()){ wrap.innerHTML = ''; return; }
-    var used = window.KW ? window.KW.invoiceCount() : 0;
-    var limit = window.KW ? window.KW.FREE_LIMIT : 3;
-    var remaining = Math.max(0, limit - used);
-
-    wrap.innerHTML =
-      '<div class="premium-banner">' +
-        '<div class="premium-banner-icon">⭐</div>' +
-        '<div class="premium-banner-body">' +
-          '<h3>Free plan — ' + remaining + ' invoice' + (remaining === 1 ? '' : 's') + ' remaining</h3>' +
-          '<p>Upgrade to remove watermark & get unlimited invoices.</p>' +
-        '</div>' +
-        '<button class="premium-banner-btn" id="upgradeBtn">Upgrade</button>' +
-      '</div>';
-    var btn = $('upgradeBtn');
-    if (btn) btn.addEventListener('click', openUpgradeModal);
-  }
-
-  function openUpgradeModal(){
-    var existing = document.querySelector('.kw-overlay');
-    if (existing) existing.parentNode.removeChild(existing);
-
-    var overlay = document.createElement('div');
-    overlay.className = 'kw-overlay';
-    overlay.innerHTML =
-      '<div class="kw-modal" id="kwUpgradeModal">' +
-        '<h3>⭐ Upgrade to Premium</h3>' +
-        '<p>Unlock unlimited invoices & remove the "Made with KaamWala" watermark.</p>' +
-        '<div class="kw-price-grid">' +
-          '<div class="kw-price-box featured">' +
-            '<div class="per">Monthly</div>' +
-            '<div class="amt">Rs 499</div>' +
-            '<div class="note">per month</div>' +
-          '</div>' +
-          '<div class="kw-price-box">' +
-            '<div class="per">Yearly</div>' +
-            '<div class="amt">Rs 3,999</div>' +
-            '<div class="note">save 33%</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="kw-section-title">How to pay</div>' +
-        '<div class="kw-cta-row">' +
-          '<strong>1.</strong> Send Rs 499 (or Rs 3,999) to:<br>' +
-          '📱 <strong>Easypaisa:</strong> 0342 5681324<br>' +
-          '📱 <strong>Raast ID:</strong> 0300 7552962<br>' +
-          '<strong>2.</strong> WhatsApp your payment screenshot to <strong>0342 5681324</strong><br>' +
-          '<strong>3.</strong> You\'ll receive a code — enter it below.' +
-        '</div>' +
-        '<div class="kw-section-title">Enter your code</div>' +
-        '<input type="text" id="kwCodeInput" placeholder="KW-XXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false">' +
-        '<div class="kw-msg" id="kwMsg" style="display:none"></div>' +
-        '<button class="kw-primary" id="kwActivate">Unlock Premium</button>' +
-        '<button class="kw-secondary" id="kwClose">Close</button>' +
-      '</div>';
-    document.body.appendChild(overlay);
-
-    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
-    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-    $('kwClose').addEventListener('click', close);
-
-    $('kwActivate').addEventListener('click', function(){
-      var code = ($('kwCodeInput').value || '').trim();
-      var msg = $('kwMsg');
-      if (!code){
-        msg.style.display = 'block';
-        msg.className = 'kw-msg kw-msg-err';
-        msg.textContent = 'Please enter a code';
-        return;
-      }
-      var res = window.KW ? window.KW.activate(code) : {ok:false, reason:'Not available'};
-      if (res.ok){
-        msg.style.display = 'block';
-        msg.className = 'kw-msg kw-msg-ok';
-        msg.textContent = '✓ Premium unlocked!';
-        setTimeout(function(){ close(); refreshAfterAuth(); }, 1200);
-      } else {
-        msg.style.display = 'block';
-        msg.className = 'kw-msg kw-msg-err';
-        msg.textContent = '✗ ' + (res.reason || 'Invalid code');
-      }
-    });
-  }
-
   /* ---------- PRODUCTS ---------- */
   function populateProductsDatalist(){
-    var p = getProfile();
+    var p = currentProfile || {};
     var dl = $('kwProducts');
     if (!dl) return;
     dl.innerHTML = '';
-    if (!p || !p.products || !p.products.length) return;
+    if (!p.products || !p.products.length) return;
     p.products.forEach(function(prod){
       if (!prod.name) return;
       var opt = document.createElement('option');
@@ -679,8 +261,8 @@
   }
 
   function findProduct(name){
-    var p = getProfile();
-    if (!p || !p.products) return null;
+    var p = currentProfile || {};
+    if (!p.products) return null;
     var needle = String(name || '').trim().toLowerCase();
     if (!needle) return null;
     for (var i = 0; i < p.products.length; i++){
@@ -697,14 +279,14 @@
     due.setDate(due.getDate() + 14);
     $('invDate').value = isoToday;
     $('invDue').value = due.toISOString().slice(0,10);
-    var p = getProfile();
-    var prefix = (p && p.prefix) ? p.prefix : 'INV';
+    var prefix = (currentProfile && currentProfile.prefix) ? currentProfile.prefix : 'INV';
     if (!$('invNumber').value){
       $('invNumber').value = prefix + '-' + String(Date.now()).slice(-5);
     }
-    if (p && p.currency && $('invCurrency')) $('invCurrency').value = p.currency;
+    if (currentProfile && currentProfile.currency && $('invCurrency')) $('invCurrency').value = currentProfile.currency;
   }
 
+  /* ---------- TABS / FIELDS / ITEMS ---------- */
   function bindTabs(){
     document.querySelectorAll('.tab').forEach(function(t){
       t.addEventListener('click', function(){
@@ -740,7 +322,7 @@
     var itemsWrap = $('items');
     itemsWrap.addEventListener('input', function(e){
       var t = e.target;
-      if (t.matches('.item-desc,.item-qty,.item-rate')) {
+      if (t.matches('.item-desc,.item-qty,.item-rate')){
         updateAmounts();
         renderPreview();
         schedulePrebuild();
@@ -748,9 +330,9 @@
     });
     itemsWrap.addEventListener('click', function(e){
       var t = e.target;
-      if (t.classList.contains('remove-btn')) {
+      if (t.classList.contains('remove-btn')){
         var row = t.closest('.item-row');
-        if (row && row.parentNode) {
+        if (row && row.parentNode){
           row.parentNode.removeChild(row);
           ensureAtLeastOne();
           updateAmounts();
@@ -771,22 +353,19 @@
 
   function ensureAtLeastOne(){
     var wrap = $('items');
-    if (wrap.querySelectorAll('.item-row').length === 0) {
+    if (wrap.querySelectorAll('.item-row').length === 0){
       wrap.appendChild(makeItemRow({desc:'', qty:1, rate:0}));
     }
   }
 
-  function addItem(item){
-    $('items').appendChild(makeItemRow(item));
-  }
+  function addItem(item){ $('items').appendChild(makeItemRow(item)); }
 
   function makeItemRow(item){
     var row = document.createElement('div');
     row.className = 'item-row';
 
     var desc = document.createElement('input');
-    desc.type = 'text';
-    desc.className = 'item-desc';
+    desc.type = 'text'; desc.className = 'item-desc';
     desc.placeholder = 'Type product or service name';
     desc.value = item.desc || '';
     desc.setAttribute('list', 'kwProducts');
@@ -832,22 +411,21 @@
       }
     });
 
-    row.appendChild(desc);
-    row.appendChild(grid);
+    row.appendChild(desc); row.appendChild(grid);
     return row;
   }
 
   function readData(){
-    var p = getProfile();
+    var p = currentProfile || {};
     var data = {
       from: {
-        name: p ? p.businessName : '',
-        ownerName: p ? p.ownerName : '',
-        license: p ? p.license : '',
-        email: p ? p.email : '',
-        phone: p ? p.phone : '',
-        address: p ? p.address : '',
-        logo: p ? (p.logo || '') : ''
+        name: p.businessName || '',
+        ownerName: p.ownerName || '',
+        license: p.license || '',
+        email: p.email || '',
+        phone: p.phone || '',
+        address: p.address || '',
+        logo: p.logo || ''
       },
       to: { name: $('toName').value.trim(), email: $('toEmail').value.trim(),
             phone: $('toPhone').value.trim(), address: $('toAddress').value.trim() },
@@ -855,10 +433,10 @@
                  due: $('invDue').value, currency: $('invCurrency').value,
                  notes: $('invNotes').value.trim() },
       payment: {
-        jazzcash: p ? (p.jazzcash || '') : '',
-        easypaisa: p ? (p.easypaisa || '') : '',
-        bank: p ? (p.bank || '') : '',
-        qrImage: p ? (p.qrImage || '') : ''
+        jazzcash: p.jazzcash || '',
+        easypaisa: p.easypaisa || '',
+        bank: p.bank || '',
+        qrImage: p.qrImage || ''
       },
       items: []
     };
@@ -910,12 +488,13 @@
 
   function renderItems(){
     var wrap = $('items');
-    if (wrap.querySelectorAll('.item-row').length === 0) {
+    if (wrap.querySelectorAll('.item-row').length === 0){
       wrap.appendChild(makeItemRow({desc:'', qty:1, rate:0}));
     }
     updateAmounts();
   }
 
+  /* ---------- PREVIEW ---------- */
   function renderPreview(){
     var d = readData();
     var totals = calcTotals(d.items);
@@ -924,7 +503,7 @@
 
     var itemsHtml = '';
     var hasItems = d.items.some(function(it){ return it.desc || it.qty || it.rate; });
-    if (hasItems) {
+    if (hasItems){
       itemsHtml = d.items.map(function(it){
         return '<tr>' +
           '<td>' + (escapeHtml(it.desc) || '<span style="color:#94A3B8">—</span>') + '</td>' +
@@ -962,8 +541,8 @@
       '</div>';
 
     var payLines = [];
-    if (d.payment.jazzcash) payLines.push('<div><strong>JazzCash:</strong> ' + escapeHtml(d.payment.jazzcash) + '</div>');
     if (d.payment.easypaisa) payLines.push('<div><strong>Easypaisa:</strong> ' + escapeHtml(d.payment.easypaisa) + '</div>');
+    if (d.payment.jazzcash) payLines.push('<div><strong>Raast ID:</strong> ' + escapeHtml(d.payment.jazzcash) + '</div>');
     if (d.payment.bank) payLines.push('<div><strong>Bank:</strong> ' + escapeHtml(d.payment.bank) + '</div>');
 
     var payHtml = '';
@@ -1001,57 +580,99 @@
       footerHtml;
   }
 
+  /* ---------- SAVE ---------- */
   function saveInvoice(){
-    try {
-      var data = readData();
-      if (!data.to.name) { toast('Please add a client name'); return; }
-      if (!data.items.some(function(it){ return it.desc; })) {
-        toast('Please add at least one item'); return;
-      }
-      var key = 'kw_invoices';
-      var all = [];
-      try { all = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){ all = []; }
-      if (!Array.isArray(all)) all = [];
-      var editingId = $('editingId') ? $('editingId').value : '';
-      data.savedAt = new Date().toISOString();
-      if (editingId){
-        var found = false;
-        for (var i = 0; i < all.length; i++){
-          if (all[i].id === editingId){
-            data.id = editingId;
-            data.createdAt = all[i].createdAt || all[i].savedAt || data.savedAt;
-            all[i] = data; found = true; break;
-          }
-        }
-        if (!found){
-          data.id = editingId; data.createdAt = data.savedAt; all.unshift(data);
-        }
-        localStorage.setItem(key, JSON.stringify(all));
-        toast('✓ Invoice updated');
-        renderPremiumBanner();
-      } else {
-        if (!isPremium() && window.KW && !window.KW.canSaveNew()){
-          toast('Free limit reached — upgrade for unlimited');
-          setTimeout(openUpgradeModal, 800);
-          return;
-        }
-        data.id = 'inv_' + Date.now();
-        data.createdAt = data.savedAt;
-        all.unshift(data);
-        if (isPremium()){
-          if (all.length > 500) all = all.slice(0, 500);
-        } else {
-          if (all.length > 50) all = all.slice(0, 50);
-        }
-        localStorage.setItem(key, JSON.stringify(all));
-        if ($('editingId')) $('editingId').value = data.id;
-        if ($('topbarTitle')) $('topbarTitle').textContent = 'Editing Invoice';
-        toast('✓ Invoice saved');
-        renderPremiumBanner();
-      }
-    } catch (err) {
-      toast('Save failed: ' + err.message);
+    var data = readData();
+    if (!data.to.name){ toast('Please add a client name'); return; }
+    if (!data.items.some(function(it){ return it.desc; })){
+      toast('Please add at least one item'); return;
     }
+
+    var editingId = $('editingId') ? $('editingId').value : '';
+    var now = new Date().toISOString();
+
+    if (editingId){
+      data.id = editingId;
+      data.createdAt = data.createdAt || now;
+      data.savedAt = now;
+      doSave(data, false);
+    } else {
+      if (!isPremium() && invoiceCount >= 3){
+        toast('Free limit reached — upgrade for unlimited');
+        setTimeout(openUpgradeModal, 800);
+        return;
+      }
+      data.id = 'inv_' + Date.now();
+      data.createdAt = now;
+      data.savedAt = now;
+      doSave(data, true);
+    }
+  }
+
+  function doSave(data, isNew){
+    var btn = $('saveBtn');
+    btn.disabled = true;
+    toast('Saving to cloud…');
+    window.FB.saveInvoice(data).then(function(){
+      if (isNew) invoiceCount++;
+      if ($('editingId')) $('editingId').value = data.id;
+      if ($('topbarTitle')) $('topbarTitle').textContent = 'Editing Invoice';
+      toast(isNew ? '✓ Invoice saved' : '✓ Invoice updated');
+      renderPremiumBanner();
+    }).catch(function(err){
+      toast('Save failed: ' + (err.message || ''));
+    }).then(function(){ btn.disabled = false; });
+  }
+
+  /* ---------- PENDING LOAD (from history) ---------- */
+  function handlePendingLoad(){
+    var raw = null;
+    try { raw = sessionStorage.getItem('kw_pending_load'); } catch(e){}
+    if (!raw) return;
+    try { sessionStorage.removeItem('kw_pending_load'); } catch(e){}
+
+    try {
+      var d = JSON.parse(raw);
+      function setVal(id, v){
+        var el = $(id);
+        if (!el) return;
+        el.value = v == null ? '' : v;
+        el.dispatchEvent(new Event('input', {bubbles:true}));
+      }
+      setVal('toName', d.to && d.to.name);
+      setVal('toEmail', d.to && d.to.email);
+      setVal('toPhone', d.to && d.to.phone);
+      setVal('toAddress', d.to && d.to.address);
+      setVal('invNumber', d.invoice && d.invoice.number);
+      setVal('invDate', d.invoice && d.invoice.date);
+      setVal('invDue', d.invoice && d.invoice.due);
+      setVal('invNotes', d.invoice && d.invoice.notes);
+      var curEl = $('invCurrency');
+      if (curEl && d.invoice && d.invoice.currency){
+        curEl.value = d.invoice.currency;
+        curEl.dispatchEvent(new Event('change', {bubbles:true}));
+      }
+      if (d.id){
+        if ($('editingId')) $('editingId').value = d.id;
+        if ($('topbarTitle')) $('topbarTitle').textContent = 'Editing Invoice';
+      }
+      var removes = document.querySelectorAll('.item-row .remove-btn');
+      for (var i = 0; i < removes.length; i++) removes[i].click();
+      setTimeout(function(){
+        var items = (d.items || []);
+        items.forEach(function(it, idx){
+          if (idx > 0) $('addItemBtn').click();
+          var rows = document.querySelectorAll('.item-row');
+          var row = rows[rows.length - 1];
+          if (!row) return;
+          row.querySelector('.item-desc').value = it.desc || '';
+          row.querySelector('.item-qty').value = (it.qty != null ? it.qty : 1);
+          row.querySelector('.item-rate').value = (it.rate != null ? it.rate : 0);
+          row.querySelector('.item-qty').dispatchEvent(new Event('input', {bubbles:true}));
+        });
+        toast('✓ Invoice loaded');
+      }, 80);
+    } catch(e){ console.error('Load failed:', e); }
   }
 
   /* ---------- PRINT ---------- */
@@ -1069,11 +690,11 @@
     }
     toast('Opening print…');
     setTimeout(function(){
-      try { window.print(); }
-      catch(e){ toast('Print not supported'); }
+      try { window.print(); } catch(e){ toast('Print not supported'); }
     }, 250);
   }
 
+  /* ---------- PDF ---------- */
   function loadScript(src){
     return new Promise(function(resolve, reject){
       var s = document.createElement('script');
@@ -1083,7 +704,6 @@
       document.head.appendChild(s);
     });
   }
-
   function ensureJsPDF(){
     if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
     return loadScript('jspdf.umd.min.js')
@@ -1103,7 +723,7 @@
       var LIGHT = [226,232,240], BG = [248,250,252];
       var cur = d.invoice.currency;
 
-      if (d.from.logo) {
+      if (d.from.logo){
         try {
           var logoH = 18, logoW = 18;
           pdf.addImage(d.from.logo, 'JPEG', W/2 - logoW/2, y, logoW, logoH);
@@ -1120,15 +740,9 @@
       var metaParts = [];
       if (d.from.ownerName && d.from.ownerName !== d.from.name) metaParts.push(d.from.ownerName);
       if (d.from.license) metaParts.push('License: ' + d.from.license);
-      if (metaParts.length){
-        pdf.text(metaParts.join('  •  '), W/2, y, {align:'center'});
-        y += 4;
-      }
+      if (metaParts.length){ pdf.text(metaParts.join('  •  '), W/2, y, {align:'center'}); y += 4; }
       var contactParts = [d.from.phone, d.from.email].filter(Boolean);
-      if (contactParts.length){
-        pdf.text(contactParts.join('  |  '), W/2, y, {align:'center'});
-        y += 4;
-      }
+      if (contactParts.length){ pdf.text(contactParts.join('  |  '), W/2, y, {align:'center'}); y += 4; }
       if (d.from.address){
         var addrL = pdf.splitTextToSize(d.from.address, CW - 40);
         addrL.forEach(function(line, i){ pdf.text(line, W/2, y + i*4, {align:'center'}); });
@@ -1150,16 +764,13 @@
       pdf.text('Due: ' + formatDate(d.invoice.due), W - M, y, {align:'right'});
       y += 4;
       pdf.setDrawColor(LIGHT[0],LIGHT[1],LIGHT[2]);
-      pdf.line(M, y, W-M, y);
-      y += 8;
+      pdf.line(M, y, W-M, y); y += 8;
 
       pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-      pdf.text('BILL TO', M, y);
-      y += 5;
+      pdf.text('BILL TO', M, y); y += 5;
       pdf.setFontSize(11); pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
-      pdf.text(d.to.name || 'Client', M, y);
-      y += 5;
+      pdf.text(d.to.name || 'Client', M, y); y += 5;
       pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
       if (d.to.email){ pdf.text(d.to.email, M, y); y += 4; }
@@ -1219,8 +830,8 @@
       y += 12;
 
       var payLines = [];
-      if (d.payment.jazzcash) payLines.push('JazzCash: ' + d.payment.jazzcash);
       if (d.payment.easypaisa) payLines.push('Easypaisa: ' + d.payment.easypaisa);
+      if (d.payment.jazzcash) payLines.push('Raast ID: ' + d.payment.jazzcash);
       if (d.payment.bank) payLines.push('Bank: ' + d.payment.bank);
 
       if (payLines.length || d.payment.qrImage){
@@ -1322,13 +933,10 @@
 
   function validateForShare(){
     var d = readData();
-    if (!d.to.name) { toast('Add a client name first'); return false; }
-    if (!d.items.some(function(it){ return it.desc; })) {
-      toast('Add at least one item first'); return false;
-    }
+    if (!d.to.name){ toast('Add a client name first'); return false; }
+    if (!d.items.some(function(it){ return it.desc; })){ toast('Add at least one item first'); return false; }
     return true;
   }
-
   function canShareFile(file){
     return typeof navigator.share === 'function' &&
            typeof navigator.canShare === 'function' &&
@@ -1385,7 +993,7 @@
   function shareInvoice(){
     if (!validateForShare()) return;
     var sig = dataSignature();
-    if (pdfCache.signature === sig && pdfCache.file && canShareFile(pdfCache.file)) {
+    if (pdfCache.signature === sig && pdfCache.file && canShareFile(pdfCache.file)){
       var d = readData();
       navigator.share({
         files: [pdfCache.file],
@@ -1405,11 +1013,8 @@
     prebuildPDF()
       .then(function(cache){
         btn.disabled = false;
-        if (canShareFile(cache.file)) { openShareModal(cache); }
-        else {
-          downloadBlob(cache.blob, cache.filename);
-          toast('✓ PDF saved to Downloads');
-        }
+        if (canShareFile(cache.file)){ openShareModal(cache); }
+        else { downloadBlob(cache.blob, cache.filename); toast('✓ PDF saved to Downloads'); }
       })
       .catch(function(err){
         btn.disabled = false;
@@ -1421,6 +1026,7 @@
   var toastTimer = null;
   function toast(msg){
     var t = $('toast');
+    if (!t) return;
     t.textContent = msg;
     t.classList.add('is-on');
     if (toastTimer) clearTimeout(toastTimer);

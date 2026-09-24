@@ -1,31 +1,43 @@
 (function(){
   'use strict';
 
-  var KEY = 'kw_profile';
   var currentLogo = '';
   var currentQr = '';
 
-  document.addEventListener('DOMContentLoaded', init);
-
-  function init(){
+  document.addEventListener('DOMContentLoaded', function(){
     if (window.pdfjsLib){
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
     }
-    loadProfile();
     bindLogo();
     bindQr();
     bindProducts();
     bindImport();
     document.getElementById('saveProfileBtn').addEventListener('click', save);
     document.getElementById('clearProfileBtn').addEventListener('click', clearProfile);
-  }
+
+    // Load profile from Firebase after auth
+    if (window.FB){
+      window.FB.waitForAuth().then(function(u){
+        if (!u){ location.href = 'auth.html'; return; }
+        return window.FB.getProfile();
+      }).then(function(p){
+        if (!p) { renderProducts([]); return; }
+        fillForm(p);
+        currentLogo = p.logo || '';
+        currentQr = p.qrImage || '';
+        renderLogoPreview();
+        renderQrPreview();
+        renderProducts(p.products || []);
+      }).catch(function(err){
+        console.error('Profile load failed:', err);
+        renderProducts([]);
+      });
+    }
+  });
 
   function $(id){ return document.getElementById(id); }
 
-  function loadProfile(){
-    var p = null;
-    try { p = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){}
-    if (!p) { renderProducts([]); return; }
+  function fillForm(p){
     function set(id, v){ var el = $(id); if (el) el.value = v == null ? '' : v; }
     set('pBusinessName', p.businessName);
     set('pOwnerName', p.ownerName);
@@ -39,11 +51,6 @@
     set('pCurrency', p.currency || 'PKR');
     set('pPrefix', p.prefix || 'INV');
     set('qrText', p.qrText || '');
-    currentLogo = p.logo || '';
-    currentQr = p.qrImage || '';
-    renderLogoPreview();
-    renderQrPreview();
-    renderProducts(p.products || []);
   }
 
   /* ---------- LOGO ---------- */
@@ -229,7 +236,6 @@
     el.className = 'import-status show ' + kind;
     el.textContent = msg;
   }
-
   function clearImportStatus(){
     var el = $('importStatus');
     if (!el) return;
@@ -239,13 +245,9 @@
 
   function onImportFile(e){
     var f = e.target.files && e.target.files[0];
-    if (!f) {
-      setImportStatus('err', 'Koi file select nahi hui.');
-      return;
-    }
+    if (!f) { setImportStatus('err', 'Koi file select nahi hui.'); return; }
     e.target.value = '';
     var name = (f.name || '').toLowerCase();
-
     if (name.endsWith('.pdf') || f.type === 'application/pdf'){
       setImportStatus('info', 'Reading PDF...');
       importFromPdf(f);
@@ -256,28 +258,23 @@
   }
 
   function importFromSheet(file){
-    if (!window.XLSX){
-      setImportStatus('err', 'Excel library load nahi hui. Internet check karke page refresh karein.');
-      return;
-    }
+    if (!window.XLSX){ setImportStatus('err', 'Excel library load nahi hui.'); return; }
     var reader = new FileReader();
     reader.onload = function(ev){
       try {
         var data = new Uint8Array(ev.target.result);
         var wb = window.XLSX.read(data, {type:'array'});
         if (!wb.SheetNames || wb.SheetNames.length === 0){
-          setImportStatus('err', 'File empty hai ya read nahi hui.');
-          return;
+          setImportStatus('err', 'File empty.'); return;
         }
         var sheet = wb.Sheets[wb.SheetNames[0]];
         var rows = window.XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
         var products = extractProductsFromRows(rows);
         if (products.length === 0){
-          setImportStatus('err', 'Koi product nahi mila. Column headers "Name" aur "Rate" hone chahiye.');
-          return;
+          setImportStatus('err', 'Koi product nahi mila.'); return;
         }
         applyImportedProducts(products);
-        setImportStatus('ok', products.length + ' products import ho gaye. Neeche review karein.');
+        setImportStatus('ok', products.length + ' products import ho gaye.');
       } catch(err){
         setImportStatus('err', 'Read error: ' + err.message);
       }
@@ -305,13 +302,12 @@
     var out = [];
     if (nameCol >= 0){
       for (var i = headerIdx + 1; i < rows.length; i++){
-        var row = rows[i] || [];
-        var nm = String(row[nameCol] == null ? '' : row[nameCol]).trim();
+        var row2 = rows[i] || [];
+        var nm = String(row2[nameCol] == null ? '' : row2[nameCol]).trim();
         if (!nm) continue;
         var rv = 0;
         if (rateCol >= 0){
-          var rawRate = row[rateCol];
-          rv = parseFloat(String(rawRate == null ? '' : rawRate).replace(/[^0-9.\-]/g,'')) || 0;
+          rv = parseFloat(String(row2[rateCol] == null ? '' : row2[rateCol]).replace(/[^0-9.\-]/g,'')) || 0;
         }
         out.push({ name: nm, rate: rv });
       }
@@ -335,10 +331,7 @@
   }
 
   function importFromPdf(file){
-    if (!window.pdfjsLib){
-      setImportStatus('err', 'PDF library load nahi hui. Internet check karke refresh karein.');
-      return;
-    }
+    if (!window.pdfjsLib){ setImportStatus('err', 'PDF library load nahi hui.'); return; }
     var reader = new FileReader();
     reader.onload = function(ev){
       var data = new Uint8Array(ev.target.result);
@@ -357,11 +350,10 @@
         var text = pages.join('\n');
         var products = extractProductsFromPdfText(text);
         if (products.length === 0){
-          setImportStatus('err', 'PDF se products nahi mile. Scanned PDF ho sakta hai.');
-          return;
+          setImportStatus('err', 'PDF se products nahi mile.'); return;
         }
         applyImportedProducts(products);
-        setImportStatus('ok', products.length + ' items mile. Review karein.');
+        setImportStatus('ok', products.length + ' items mile.');
       }).catch(function(err){
         setImportStatus('err', 'PDF error: ' + (err.message || err));
       });
@@ -372,8 +364,7 @@
 
   function extractProductsFromPdfText(text){
     var lines = String(text || '').split(/\s{2,}|\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 2; });
-    var out = [];
-    var seen = {};
+    var out = [], seen = {};
     lines.forEach(function(line){
       var m = line.match(/^(.+?)\s+((?:Rs\.?\s*)?[0-9][0-9,]*(?:\.[0-9]+)?)\s*$/i);
       if (!m){
@@ -402,17 +393,13 @@
   }
 
   function applyImportedProducts(products){
-    products.forEach(function(p){
-      addProductRow({ name: p.name, rate: p.rate });
-    });
+    products.forEach(function(p){ addProductRow({ name: p.name, rate: p.rate }); });
     var wrap = $('productsList');
     var rows = wrap.querySelectorAll('.product-row');
     for (var i = 0; i < rows.length; i++){
       var nm = rows[i].querySelector('.pr-name').value.trim();
       var rt = rows[i].querySelector('.pr-rate').value.trim();
-      if (!nm && !rt && rows.length > 1){
-        rows[i].parentNode.removeChild(rows[i]);
-      }
+      if (!nm && !rt && rows.length > 1) rows[i].parentNode.removeChild(rows[i]);
     }
     toast(products.length + ' products added. Save karein.');
   }
@@ -438,27 +425,33 @@
       savedAt: new Date().toISOString()
     };
     if (!p.businessName){ toast('Please enter a business name'); return; }
-    try {
-      localStorage.setItem(KEY, JSON.stringify(p));
-      toast('Profile saved');
+    var btn = $('saveProfileBtn');
+    btn.disabled = true;
+    toast('Saving to cloud…');
+    window.FB.saveProfile(p).then(function(){
+      toast('✓ Profile saved');
       setTimeout(function(){ location.href = 'app.html'; }, 900);
-    } catch(e){
-      toast('Storage full - QR ya logo chhota karein');
-    }
+    }).catch(function(err){
+      btn.disabled = false;
+      toast('Save failed: ' + (err.message || ''));
+    });
   }
 
   function clearProfile(){
     if (!confirm('Delete profile? Saved invoices are not affected.')) return;
-    try { localStorage.removeItem(KEY); } catch(e){}
-    ['pBusinessName','pOwnerName','pLicense','pEmail','pPhone','pAddress',
-     'pJazzcash','pEasypaisa','pBank','pPrefix','qrText']
-      .forEach(function(id){ var el = $(id); if (el) el.value = ''; });
-    var cur = $('pCurrency'); if (cur) cur.value = 'PKR';
-    currentLogo = ''; currentQr = '';
-    renderLogoPreview(); renderQrPreview();
-    renderProducts([]);
-    clearImportStatus();
-    toast('Profile deleted');
+    window.FB.clearProfile().then(function(){
+      currentLogo = ''; currentQr = '';
+      renderLogoPreview(); renderQrPreview();
+      renderProducts([]);
+      clearImportStatus();
+      ['pBusinessName','pOwnerName','pLicense','pEmail','pPhone','pAddress',
+       'pJazzcash','pEasypaisa','pBank','pPrefix','qrText']
+        .forEach(function(id){ var el = $(id); if (el) el.value = ''; });
+      var cur = $('pCurrency'); if (cur) cur.value = 'PKR';
+      toast('Profile deleted');
+    }).catch(function(err){
+      toast('Delete failed: ' + (err.message || ''));
+    });
   }
 
   var tTimer = null;
