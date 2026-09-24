@@ -5,10 +5,16 @@
   var pdfCache = { signature: null, blob: null, file: null, filename: null };
   var prebuildTimer = null;
 
+  // Global state for current user + premium
+  var currentUser = null;
+  var cloudPremium = false;
+
   document.addEventListener('DOMContentLoaded', init);
 
   function init(){
     setDefaults();
+    bindAccount();
+    initAuth();
     renderBizCard();
     renderPremiumBanner();
     populateProductsDatalist();
@@ -25,11 +31,94 @@
   function $(id){ return document.getElementById(id); }
   function setDebug(msg){ var el = $('debug'); if (el) el.textContent = msg; }
   function logDebug(msg){ try { console.log('[KW] ' + msg); } catch(e){} }
-  function isPremium(){ return window.KW && window.KW.isPremium && window.KW.isPremium(); }
   function escapeHtml(s){
     return String(s==null?'':s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  /* ---------- AUTH ---------- */
+  function bindAccount(){
+    var btn = $('accountBtn');
+    if (btn){
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        if (currentUser) openAccountMenu();
+        else location.href = 'auth.html';
+      });
+    }
+  }
+
+  function initAuth(){
+    if (!window.KWAuthHelpers || !window.KWAuth || !window.KWAuth.ready){
+      renderAccountBar();
+      return;
+    }
+    window.KWAuthHelpers.onUser(function(user){
+      currentUser = user || null;
+      if (user){
+        // Fetch premium status from Firestore
+        window.KWAuthHelpers.getUserDoc(user.uid).then(function(doc){
+          cloudPremium = !!(doc && doc.premium);
+          refreshAfterAuth();
+        }).catch(function(){
+          cloudPremium = false;
+          refreshAfterAuth();
+        });
+      } else {
+        cloudPremium = false;
+        refreshAfterAuth();
+      }
+      renderAccountBar();
+    });
+  }
+
+  function refreshAfterAuth(){
+    renderBizCard();
+    renderPremiumBanner();
+    renderPreview();
+    pdfCache = { signature:null, blob:null, file:null, filename:null };
+    schedulePrebuild();
+  }
+
+  function renderAccountBar(){
+    var wrap = $('accountBar');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+  }
+
+  function openAccountMenu(){
+    var existing = document.querySelector('.kw-overlay');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var overlay = document.createElement('div');
+    overlay.className = 'kw-overlay';
+    overlay.innerHTML =
+      '<div class="kw-modal">' +
+        '<h3>👤 Your Account</h3>' +
+        '<p style="margin-bottom:10px">Signed in as<br><strong style="color:#0F172A">' + escapeHtml(currentUser.email) + '</strong></p>' +
+        (cloudPremium ? '<div style="background:#ECFDF5;color:#065F46;padding:10px 12px;border-radius:10px;font-size:.85rem;margin-bottom:12px;font-weight:700;text-align:center">⭐ Premium Active</div>' : '') +
+        '<button class="kw-primary" id="kwLogout">Sign Out</button>' +
+        '<button class="kw-secondary" id="kwCloseAcc">Close</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    $('kwCloseAcc').addEventListener('click', close);
+    $('kwLogout').addEventListener('click', function(){
+      window.KWAuthHelpers.signOut().then(function(){
+        close();
+        location.reload();
+      });
+    });
+  }
+
+  /* ---------- PREMIUM ---------- */
+  function isPremium(){
+    // Cloud premium (if logged in) takes priority
+    if (currentUser && cloudPremium) return true;
+    // Fallback to local code (for offline users)
+    return window.KW && window.KW.isPremium && window.KW.isPremium();
   }
 
   function getProfile(){
@@ -37,6 +126,420 @@
     catch(e){ return null; }
   }
 
+  /* ---------- BUSINESS CARD ---------- */
+  function renderBizCard(){
+    var p = getProfile();
+    var wrap = $('bizCardWrap');
+    if (!wrap) return;
+    if (!p || !p.businessName){
+      wrap.innerHTML =
+        '<div class="biz-card biz-card-empty">' +
+          '<div class="biz-card-empty-icon">🏢</div>' +
+          '<div class="biz-card-empty-body">' +
+            '<h3>Setup your business</h3>' +
+            '<p>Add name, logo, contact & payment — har invoice par automatic aayengi.</p>' +
+          '</div>' +
+          '<a href="profile.html" class="biz-card-setup-btn">Set up →</a>' +
+        '</div>';
+      return;
+    }
+    var metaParts = [];
+    if (p.ownerName && p.ownerName !== p.businessName) metaParts.push(p.ownerName);
+    if (p.license) metaParts.push(p.license);
+    var contactParts = [p.phone, p.email].filter(Boolean);
+    var logoSrc = p.logo
+      ? '<img src="' + p.logo + '" alt="logo" class="biz-card-logo-img">'
+      : '<div class="biz-card-logo-ph">' + escapeHtml((p.businessName || 'B').charAt(0).toUpperCase()) + '</div>';
+    var premiumBadge = isPremium() ? '<span class="premium-badge">Premium</span>' : '';
+
+    wrap.innerHTML =
+      '<div class="biz-card">' +
+        '<div class="biz-card-logo">' + logoSrc + '</div>' +
+        '<div class="biz-card-info">' +
+          '<h3>' + escapeHtml(p.businessName) + premiumBadge + '</h3>' +
+          (metaParts.length ? '<p class="biz-card-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
+          (contactParts.length ? '<p class="biz-card-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
+        '</div>' +
+        '<a href="profile.html" class="biz-card-edit" aria-label="Edit business">✏️</a>' +
+      '</div>';
+  }
+
+  function renderPremiumBanner(){
+    var wrap = $('premiumBanner');
+    if (!wrap) return;
+    if (isPremium()){ wrap.innerHTML = ''; return; }
+    var used = window.KW ? window.KW.invoiceCount() : 0;
+    var limit = window.KW ? window.KW.FREE_LIMIT : 3;
+    var remaining = Math.max(0, limit - used);
+
+    wrap.innerHTML =
+      '<div class="premium-banner">' +
+        '<div class="premium-banner-icon">⭐</div>' +
+        '<div class="premium-banner-body">' +
+          '<h3>Free plan — ' + remaining + ' invoice' + (remaining === 1 ? '' : 's') + ' remaining</h3>' +
+          '<p>Upgrade to remove watermark & get unlimited invoices.</p>' +
+        '</div>' +
+        '<button class="premium-banner-btn" id="upgradeBtn">Upgrade</button>' +
+      '</div>';
+    var btn = $('upgradeBtn');
+    if (btn) btn.addEventListener('click', openUpgradeModal);
+  }
+
+  function openUpgradeModal(){
+  var existing = document.querySelector('.kw-overlay');
+  if (existing) existing.parentNode.removeChild(existing);
+
+  var overlay = document.createElement('div');
+  overlay.className = 'kw-overlay';
+  overlay.innerHTML =
+    '<div class="kw-modal" id="kwUpgradeModal">' +
+      '<h3>⭐ Upgrade to Premium</h3>' +
+      '<p>Unlock unlimited invoices & remove the "Made with KaamWala" watermark.</p>' +
+      '<div class="kw-section-title">Choose your plan</div>' +
+      '<div class="kw-price-grid">' +
+        '<label class="kw-price-opt">' +
+          '<input type="radio" name="kwPlan" value="monthly" checked>' +
+          '<span class="kw-price-box">' +
+            '<span class="per">Monthly</span>' +
+            '<span class="amt">Rs 499</span>' +
+            '<span class="note">per month</span>' +
+          '</span>' +
+        '</label>' +
+        '<label class="kw-price-opt">' +
+          '<input type="radio" name="kwPlan" value="yearly">' +
+          '<span class="kw-price-box">' +
+            '<span class="per">Yearly</span>' +
+            '<span class="amt">Rs 3,999</span>' +
+            '<span class="note">save 33%</span>' +
+          '</span>' +
+        '</label>' +
+      '</div>' +
+      '<div class="kw-section-title">How to pay</div>' +
+      '<div class="kw-cta-row">' +
+        '<strong>1.</strong> Send <strong id="kwPayAmount">Rs 499</strong> (<span id="kwPayPlan">Monthly</span>) to:<br>' +
+        '📱 <strong>Easypaisa:</strong> 0342 5681324<br>' +
+        '📱 <strong>Raast ID:</strong> 0300 7552962<br>' +
+        '<strong>2.</strong> WhatsApp your payment screenshot to <strong>0342 5681324</strong><br>' +
+        '<strong>3.</strong> You\'ll receive a code — enter it below.' +
+      '</div>' +
+      '<div class="kw-section-title">Enter your code</div>' +
+      '<input type="text" id="kwCodeInput" placeholder="KW-XXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" autocapitalize="characters">' +
+      '<div class="kw-msg" id="kwMsg" style="display:none"></div>' +
+      '<button class="kw-primary" id="kwActivate">Unlock Premium</button>' +
+      '<button class="kw-secondary" id="kwClose">Close</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+
+  function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+  $('kwClose').addEventListener('click', close);
+
+  function updatePay(plan){
+    var amt = $('kwPayAmount');
+    var lbl = $('kwPayPlan');
+    if (!amt || !lbl) return;
+    if (plan === 'yearly'){ amt.textContent = 'Rs 3,999'; lbl.textContent = 'Yearly'; }
+    else { amt.textContent = 'Rs 499'; lbl.textContent = 'Monthly'; }
+  }
+
+  var radios = overlay.querySelectorAll('input[name="kwPlan"]');
+  for (var i = 0; i < radios.length; i++){
+    radios[i].addEventListener('change', function(){
+      updatePay(this.value);
+    });
+  }
+
+  $('kwActivate').addEventListener('click', function(){
+    var code = ($('kwCodeInput').value || '').trim();
+    var msg = $('kwMsg');
+    if (!code){
+      msg.style.display = 'block';
+      msg.className = 'kw-msg kw-msg-err';
+      msg.textContent = 'Please enter a code';
+      return;
+    }
+    var res = window.KW ? window.KW.activate(code) : {ok:false, reason:'Not available'};
+    if (res.ok){
+      msg.style.display = 'block';
+      msg.className = 'kw-msg kw-msg-ok';
+      msg.textContent = '✓ Premium unlocked!';
+      setTimeout(function(){ close(); refreshAfterAuth(); }, 1200);
+    } else {
+      msg.style.display = 'block';
+      msg.className = 'kw-msg kw-msg-err';
+      msg.textContent = '✗ ' + (res.reason || 'Invalid code');
+    }
+  });
+}
+
+  function refreshAfterAuth(){
+    renderBizCard();
+    renderPremiumBanner();
+    renderPreview();
+    pdfCache = { signature:null, blob:null, file:null, filename:null };
+    schedulePrebuild();
+  }
+
+  function renderAccountBar(){
+    var wrap = $('accountBar');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+  }
+
+  function openAccountMenu(){
+    var existing = document.querySelector('.kw-overlay');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var overlay = document.createElement('div');
+    overlay.className = 'kw-overlay';
+    overlay.innerHTML =
+      '<div class="kw-modal">' +
+        '<h3>👤 Your Account</h3>' +
+        '<p style="margin-bottom:10px">Signed in as<br><strong style="color:#0F172A">' + escapeHtml(currentUser.email) + '</strong></p>' +
+        (cloudPremium ? '<div style="background:#ECFDF5;color:#065F46;padding:10px 12px;border-radius:10px;font-size:.85rem;margin-bottom:12px;font-weight:700;text-align:center">⭐ Premium Active</div>' : '') +
+        '<button class="kw-primary" id="kwLogout">Sign Out</button>' +
+        '<button class="kw-secondary" id="kwCloseAcc">Close</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    $('kwCloseAcc').addEventListener('click', close);
+    $('kwLogout').addEventListener('click', function(){
+      window.KWAuthHelpers.signOut().then(function(){
+        close();
+        location.reload();
+      });
+    });
+  }
+
+  /* ---------- PREMIUM ---------- */
+  function isPremium(){
+    // Cloud premium (if logged in) takes priority
+    if (currentUser && cloudPremium) return true;
+    // Fallback to local code (for offline users)
+    return window.KW && window.KW.isPremium && window.KW.isPremium();
+  }
+
+  function getProfile(){
+    try { return JSON.parse(localStorage.getItem('kw_profile') || 'null'); }
+    catch(e){ return null; }
+  }
+
+  /* ---------- BUSINESS CARD ---------- */
+  function renderBizCard(){
+    var p = getProfile();
+    var wrap = $('bizCardWrap');
+    if (!wrap) return;
+    if (!p || !p.businessName){
+      wrap.innerHTML =
+        '<div class="biz-card biz-card-empty">' +
+          '<div class="biz-card-empty-icon">🏢</div>' +
+          '<div class="biz-card-empty-body">' +
+            '<h3>Setup your business</h3>' +
+            '<p>Add name, logo, contact & payment — har invoice par automatic aayengi.</p>' +
+          '</div>' +
+          '<a href="profile.html" class="biz-card-setup-btn">Set up →</a>' +
+        '</div>';
+      return;
+    }
+    var metaParts = [];
+    if (p.ownerName && p.ownerName !== p.businessName) metaParts.push(p.ownerName);
+    if (p.license) metaParts.push(p.license);
+    var contactParts = [p.phone, p.email].filter(Boolean);
+    var logoSrc = p.logo
+      ? '<img src="' + p.logo + '" alt="logo" class="biz-card-logo-img">'
+      : '<div class="biz-card-logo-ph">' + escapeHtml((p.businessName || 'B').charAt(0).toUpperCase()) + '</div>';
+    var premiumBadge = isPremium() ? '<span class="premium-badge">Premium</span>' : '';
+
+    wrap.innerHTML =
+      '<div class="biz-card">' +
+        '<div class="biz-card-logo">' + logoSrc + '</div>' +
+        '<div class="biz-card-info">' +
+          '<h3>' + escapeHtml(p.businessName) + premiumBadge + '</h3>' +
+          (metaParts.length ? '<p class="biz-card-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
+          (contactParts.length ? '<p class="biz-card-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
+        '</div>' +
+        '<a href="profile.html" class="biz-card-edit" aria-label="Edit business">✏️</a>' +
+      '</div>';
+  }
+
+  function renderPremiumBanner(){
+    var wrap = $('premiumBanner');
+    if (!wrap) return;
+    if (isPremium()){ wrap.innerHTML = ''; return; }
+    var used = window.KW ? window.KW.invoiceCount() : 0;
+    var limit = window.KW ? window.KW.FREE_LIMIT : 3;
+    var remaining = Math.max(0, limit - used);
+
+    wrap.innerHTML =
+      '<div class="premium-banner">' +
+        '<div class="premium-banner-icon">⭐</div>' +
+        '<div class="premium-banner-body">' +
+          '<h3>Free plan — ' + remaining + ' invoice' + (remaining === 1 ? '' : 's') + ' remaining</h3>' +
+          '<p>Upgrade to remove watermark & get unlimited invoices.</p>' +
+        '</div>' +
+        '<button class="premium-banner-btn" id="upgradeBtn">Upgrade</button>' +
+      '</div>';
+    var btn = $('upgradeBtn');
+    if (btn) btn.addEventListener('click', openUpgradeModal);
+  }
+
+  function openUpgradeModal(){
+    var existing = document.querySelector('.kw-overlay');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var selectedPlan = 'monthly';
+    var plans = {
+      monthly: { label: 'Monthly', amount: 'Rs 499' },
+      yearly:  { label: 'Yearly',  amount: 'Rs 3,999' }
+    };
+
+    var overlay = document.createElement('div');
+    overlay.className = 'kw-overlay';
+    overlay.innerHTML =
+      '<div class="kw-modal" id="kwUpgradeModal">' +
+        '<h3>⭐ Upgrade to Premium</h3>' +
+        '<p>Unlock unlimited invoices & remove the "Made with KaamWala" watermark.</p>' +
+        '<div class="kw-section-title">Choose your plan</div>' +
+        '<div class="kw-price-grid">' +
+          '<button type="button" class="kw-price-box is-selected" data-plan="monthly">' +
+            '<div class="per">Monthly</div>' +
+            '<div class="amt">Rs 499</div>' +
+            '<div class="note">per month</div>' +
+          '</button>' +
+          '<button type="button" class="kw-price-box" data-plan="yearly">' +
+            '<div class="per">Yearly</div>' +
+            '<div class="amt">Rs 3,999</div>' +
+            '<div class="note">save 33%</div>' +
+          '</button>' +
+        '</div>' +
+        '<div class="kw-section-title">How to pay</div>' +
+        '<div class="kw-cta-row">' +
+          '<strong>1.</strong> Send <strong id="kwPayAmount">Rs 499</strong> (<span id="kwPayPlan">Monthly</span>) to:<br>' +
+          '📱 <strong>Easypaisa:</strong> 0342 5681324<br>' +
+          '📱 <strong>Raast ID:</strong> 0300 7552962<br>' +
+          '<strong>2.</strong> WhatsApp your payment screenshot to <strong>0342 5681324</strong><br>' +
+          '<strong>3.</strong> You\'ll receive a code — enter it below.' +
+        '</div>' +
+        '<div class="kw-section-title">Enter your code</div>' +
+        '<input type="text" id="kwCodeInput" placeholder="KW-XXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" autocapitalize="characters" inputmode="text">' +
+        '<div class="kw-msg" id="kwMsg" style="display:none"></div>' +
+        '<button class="kw-primary" id="kwActivate">Unlock Premium</button>' +
+        '<button class="kw-secondary" id="kwClose">Close</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    $('kwClose').addEventListener('click', close);
+
+    function selectPlan(plan){
+      selectedPlan = plan;
+      var boxes = overlay.querySelectorAll('.kw-price-box');
+      for (var i = 0; i < boxes.length; i++){
+        boxes[i].classList.toggle('is-selected', boxes[i].getAttribute('data-plan') === plan);
+      }
+      var p = plans[plan];
+      var amtEl = $('kwPayAmount');
+      var plEl = $('kwPayPlan');
+      if (amtEl) amtEl.textContent = p.amount;
+      if (plEl) plEl.textContent = p.label;
+    }
+
+    var planBoxes = overlay.querySelectorAll('.kw-price-box');
+    for (var i = 0; i < planBoxes.length; i++){
+      (function(box){
+        var plan = box.getAttribute('data-plan');
+        box.onclick = function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          selectPlan(plan);
+        };
+        box.ontouchend = function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          selectPlan(plan);
+        };
+      })(planBoxes[i]);
+    }
+
+    $('kwActivate').addEventListener('click', function(){
+      var code = ($('kwCodeInput').value || '').trim();
+      var msg = $('kwMsg');
+      if (!code){
+        msg.style.display = 'block';
+        msg.className = 'kw-msg kw-msg-err';
+        msg.textContent = 'Please enter a code';
+        return;
+      }
+      var res = window.KW ? window.KW.activate(code) : {ok:false, reason:'Not available'};
+      if (res.ok){
+        msg.style.display = 'block';
+        msg.className = 'kw-msg kw-msg-ok';
+        msg.textContent = '✓ Premium unlocked!';
+        setTimeout(function(){ close(); refreshAfterAuth(); }, 1200);
+      } else {
+        msg.style.display = 'block';
+        msg.className = 'kw-msg kw-msg-err';
+        msg.textContent = '✗ ' + (res.reason || 'Invalid code');
+      }
+    });
+  }
+
+  function refreshAfterAuth(){
+    renderBizCard();
+    renderPremiumBanner();
+    renderPreview();
+    pdfCache = { signature:null, blob:null, file:null, filename:null };
+    schedulePrebuild();
+  }
+
+  function renderAccountBar(){
+    var wrap = $('accountBar');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+  }
+
+  function openAccountMenu(){
+    var existing = document.querySelector('.kw-overlay');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var overlay = document.createElement('div');
+    overlay.className = 'kw-overlay';
+    overlay.innerHTML =
+      '<div class="kw-modal">' +
+        '<h3>👤 Your Account</h3>' +
+        '<p style="margin-bottom:10px">Signed in as<br><strong style="color:#0F172A">' + escapeHtml(currentUser.email) + '</strong></p>' +
+        (cloudPremium ? '<div style="background:#ECFDF5;color:#065F46;padding:10px 12px;border-radius:10px;font-size:.85rem;margin-bottom:12px;font-weight:700;text-align:center">⭐ Premium Active</div>' : '') +
+        '<button class="kw-primary" id="kwLogout">Sign Out</button>' +
+        '<button class="kw-secondary" id="kwCloseAcc">Close</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    $('kwCloseAcc').addEventListener('click', close);
+    $('kwLogout').addEventListener('click', function(){
+      window.KWAuthHelpers.signOut().then(function(){
+        close();
+        location.reload();
+      });
+    });
+  }
+
+  /* ---------- PREMIUM ---------- */
+  function isPremium(){
+    // Cloud premium (if logged in) takes priority
+    if (currentUser && cloudPremium) return true;
+    // Fallback to local code (for offline users)
+    return window.KW && window.KW.isPremium && window.KW.isPremium();
+  }
+
+  function getProfile(){
+    try { return JSON.parse(localStorage.getItem('kw_profile') || 'null'); }
+    catch(e){ return null; }
+  }
+
+  /* ---------- BUSINESS CARD ---------- */
   function renderBizCard(){
     var p = getProfile();
     var wrap = $('bizCardWrap');
@@ -121,7 +624,7 @@
         '<div class="kw-cta-row">' +
           '<strong>1.</strong> Send Rs 499 (or Rs 3,999) to:<br>' +
           '📱 <strong>Easypaisa:</strong> 0342 5681324<br>' +
-          '📱 <strong>JazzCash:</strong> 0342 5681324<br>' +
+          '📱 <strong>Raast ID:</strong> 0300 7552962<br>' +
           '<strong>2.</strong> WhatsApp your payment screenshot to <strong>0342 5681324</strong><br>' +
           '<strong>3.</strong> You\'ll receive a code — enter it below.' +
         '</div>' +
@@ -150,8 +653,8 @@
       if (res.ok){
         msg.style.display = 'block';
         msg.className = 'kw-msg kw-msg-ok';
-        msg.textContent = '✓ Premium unlocked! Thank you.';
-        setTimeout(function(){ close(); refreshPremiumUI(); }, 1400);
+        msg.textContent = '✓ Premium unlocked!';
+        setTimeout(function(){ close(); refreshAfterAuth(); }, 1200);
       } else {
         msg.style.display = 'block';
         msg.className = 'kw-msg kw-msg-err';
@@ -160,14 +663,7 @@
     });
   }
 
-  function refreshPremiumUI(){
-    renderPremiumBanner();
-    renderBizCard();
-    renderPreview();
-    pdfCache = { signature:null, blob:null, file:null, filename:null };
-    schedulePrebuild();
-  }
-
+  /* ---------- PRODUCTS ---------- */
   function populateProductsDatalist(){
     var p = getProfile();
     var dl = $('kwProducts');
@@ -193,6 +689,7 @@
     return null;
   }
 
+  /* ---------- DEFAULTS ---------- */
   function setDefaults(){
     var today = new Date();
     var isoToday = today.toISOString().slice(0,10);
@@ -511,15 +1008,12 @@
       if (!data.items.some(function(it){ return it.desc; })) {
         toast('Please add at least one item'); return;
       }
-
       var key = 'kw_invoices';
       var all = [];
       try { all = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){ all = []; }
       if (!Array.isArray(all)) all = [];
-
       var editingId = $('editingId') ? $('editingId').value : '';
       data.savedAt = new Date().toISOString();
-
       if (editingId){
         var found = false;
         for (var i = 0; i < all.length; i++){
@@ -536,7 +1030,7 @@
         toast('✓ Invoice updated');
         renderPremiumBanner();
       } else {
-        if (window.KW && !window.KW.canSaveNew()){
+        if (!isPremium() && window.KW && !window.KW.canSaveNew()){
           toast('Free limit reached — upgrade for unlimited');
           setTimeout(openUpgradeModal, 800);
           return;
@@ -563,12 +1057,9 @@
   /* ---------- PRINT ---------- */
   function printInvoice(){
     if (!validateForShare()) return;
-
     var previewView = $('view-preview');
     var wasHidden = previewView.classList.contains('is-hidden');
-
     if (wasHidden){
-      // Activate preview tab programmatically
       document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('is-active'); });
       var previewTab = document.querySelector('.tab[data-tab="preview"]');
       if (previewTab) previewTab.classList.add('is-active');
@@ -576,16 +1067,10 @@
       previewView.classList.remove('is-hidden');
       renderPreview();
     }
-
     toast('Opening print…');
-
-    // Let DOM repaint before opening print dialog
     setTimeout(function(){
-      try {
-        window.print();
-      } catch(e){
-        toast('Print not supported on this browser');
-      }
+      try { window.print(); }
+      catch(e){ toast('Print not supported'); }
     }, 250);
   }
 

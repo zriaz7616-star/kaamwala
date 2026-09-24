@@ -14,6 +14,7 @@
   <h1 class="topbar-title" id="topbarTitle">New Invoice</h1>
   <a href="history.html" style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.2rem;color:#0F766E" aria-label="Saved invoices" title="Saved invoices">📋</a>
   <a href="profile.html" style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.2rem;color:#0F766E" aria-label="Business profile" title="Business profile">🏢</a>
+  <a href="#" id="accountBtn" style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.15rem;color:#0F766E;background:transparent;border:none;cursor:pointer;font-family:inherit" aria-label="Account" title="Account">👤</a>
 </header>
 
 <input type="hidden" id="editingId" value="">
@@ -25,6 +26,7 @@
 
 <main class="app">
 
+<div id="accountBar"></div>
 <div id="bizCardWrap"></div>
 <div id="premiumBanner"></div>
 
@@ -115,6 +117,11 @@
 
 <div id="toast" class="toast"></div>
 
+<script src="firebase-app.js"></script>
+<script src="firebase-auth.js"></script>
+<script src="firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
 <script src="premium.js"></script>
 <script src="app.js"></script>
 <script>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<title>Sign In — KaamWala</title>
+<link rel="stylesheet" href="app.css">
+<style>
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:linear-gradient(180deg,#F0FDFA 0%,#F8FAFC 100%)}
+.auth-card{background:#fff;border:1px solid #E2E8F0;border-radius:18px;padding:24px;
+  width:100%;max-width:420px;box-shadow:0 10px 40px rgba(15,118,110,.08)}
+.auth-brand{text-align:center;margin-bottom:22px}
+.auth-logo{display:inline-flex;width:56px;height:56px;align-items:center;justify-content:center;
+  background:#0F766E;color:#fff;border-radius:15px;font-size:1.4rem;font-weight:800;
+  margin-bottom:12px;letter-spacing:.5px}
+.auth-brand h1{margin:0 0 4px;font-size:1.5rem;font-weight:800;color:#0F172A;
+  letter-spacing:-.01em}
+.auth-brand p{margin:0;color:#64748B;font-size:.9rem}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;
+  background:#F1F5F9;border-radius:11px;padding:4px;margin-bottom:18px}
+.auth-tab{padding:10px 8px;border:none;background:transparent;border-radius:8px;
+  font-weight:700;font-size:.92rem;cursor:pointer;color:#64748B;font-family:inherit;
+  min-height:44px}
+.auth-tab.is-active{background:#fff;color:#0F766E;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.auth-form{display:flex;flex-direction:column;gap:12px}
+.auth-input{width:100%;padding:13px 14px;border:1.5px solid #CBD5E1;border-radius:11px;
+  font-size:16px;background:#fff;color:#0F172A;font-family:inherit;min-height:48px}
+.auth-input:focus{outline:none;border-color:#0F766E;box-shadow:0 0 0 3px rgba(15,118,110,.12)}
+.auth-submit{background:#0F766E;color:#fff;border:none;padding:14px;border-radius:12px;
+  font-weight:800;font-size:1rem;min-height:52px;cursor:pointer;font-family:inherit;
+  margin-top:4px}
+.auth-submit:active{background:#115E59}
+.auth-submit:disabled{opacity:.6;cursor:not-allowed}
+.auth-msg{margin-top:12px;padding:11px 14px;border-radius:10px;font-size:.88rem;
+  line-height:1.45;font-weight:600;display:none}
+.auth-msg.show{display:block}
+.auth-msg.err{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
+.auth-msg.ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
+.auth-msg.info{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE}
+.auth-foot{margin-top:18px;text-align:center;color:#94A3B8;font-size:.82rem}
+.auth-foot a{color:#0F766E;text-decoration:none;font-weight:600}
+.auth-fields{display:flex;flex-direction:column;gap:10px}
+.auth-fields.is-hidden{display:none}
+.auth-note{background:#FFFBEB;border:1px solid #FDE68A;color:#78350F;
+  padding:10px 12px;border-radius:10px;font-size:.8rem;line-height:1.4;margin-top:14px}
+</style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="auth-brand">
+      <div class="auth-logo">KW</div>
+      <h1>Welcome to KaamWala</h1>
+      <p>Sign in to sync your invoices across devices</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab is-active" data-tab="signin">Sign In</button>
+      <button class="auth-tab" data-tab="signup">Sign Up</button>
+    </div>
+
+    <form class="auth-form" id="authForm" autocomplete="on">
+
+      <div class="auth-fields" id="nameFieldWrap" style="display:none">
+        <input type="text" class="auth-input" id="nameInput" placeholder="Your name (optional)" autocomplete="name">
+      </div>
+
+      <input type="email" class="auth-input" id="emailInput" placeholder="Email address" autocomplete="email" required>
+      <input type="password" class="auth-input" id="passInput" placeholder="Password (min 6 characters)" autocomplete="current-password" required>
+
+      <button type="submit" class="auth-submit" id="submitBtn">Sign In</button>
+
+      <div class="auth-msg" id="authMsg"></div>
+    </form>
+
+    <div class="auth-note">
+      <strong>Why sign in?</strong> Free account — sync your business profile and invoices across phones. No spam, no data selling. You can skip and use the app offline too.
+    </div>
+
+    <div class="auth-foot">
+      <a href="app.html">← Skip & use offline</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="firebase-app.js"></script>
+<script src="firebase-auth.js"></script>
+<script src="firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var mode = 'signin';
+  var $ = function(id){ return document.getElementById(id); };
+
+  function setMode(m){
+    mode = m;
+    document.querySelectorAll('.auth-tab').forEach(function(t){
+      t.classList.toggle('is-active', t.getAttribute('data-tab') === m);
+    });
+    $('nameFieldWrap').style.display = (m === 'signup') ? 'block' : 'none';
+    $('submitBtn').textContent = (m === 'signup') ? 'Create Account' : 'Sign In';
+    $('passInput').setAttribute('autocomplete', m === 'signup' ? 'new-password' : 'current-password');
+    hideMsg();
+  }
+
+  document.querySelectorAll('.auth-tab').forEach(function(t){
+    t.addEventListener('click', function(){ setMode(t.getAttribute('data-tab')); });
+  });
+
+  function showMsg(kind, text){
+    var m = $('authMsg');
+    m.className = 'auth-msg show ' + kind;
+    m.textContent = text;
+  }
+  function hideMsg(){
+    var m = $('authMsg');
+    m.className = 'auth-msg';
+    m.textContent = '';
+  }
+
+  function setLoading(on){
+    var b = $('submitBtn');
+    b.disabled = !!on;
+    b.textContent = on
+      ? (mode === 'signup' ? 'Creating account…' : 'Signing in…')
+      : (mode === 'signup' ? 'Create Account' : 'Sign In');
+  }
+
+  $('authForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = $('emailInput').value.trim();
+    var pass = $('passInput').value;
+    if (!email || !pass){ showMsg('err', 'Email aur password dono bharein.'); return; }
+    if (mode === 'signup' && pass.length < 6){
+      showMsg('err', 'Password kam se kam 6 characters ka hona chahiye.'); return;
+    }
+    setLoading(true);
+    hideMsg();
+
+    var H = window.KWAuthHelpers;
+    var p = (mode === 'signup') ? H.signUp(email, pass) : H.signIn(email, pass);
+
+    p.then(function(user){
+      showMsg('ok', '✓ ' + (mode === 'signup' ? 'Account ban gaya! ' : 'Signed in! ') + 'Redirecting…');
+      setTimeout(function(){ location.href = 'app.html'; }, 700);
+    }).catch(function(err){
+      showMsg('err', '✗ ' + window.KWAuthHelpers.friendlyError(err));
+      setLoading(false);
+    });
+  });
+
+  // If already signed in, go to app
+  if (window.KWAuthHelpers){
+    window.KWAuthHelpers.onUser(function(user){
+      if (user) location.href = 'app.html';
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
