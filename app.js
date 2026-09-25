@@ -1001,7 +1001,7 @@
       navigator.share({
         files: [cache.file],
         title: 'Invoice ' + (d.invoice.number || ''),
-        text: 'Invoice from ' + (d.from.name || 'KaamWala')
+        text: 'Invoice ' + (d.invoice.number || '') + ' from ' + (d.from.name || 'KaamWala') + '\n\nGenerated with KaamWala — free invoice maker for Pakistan\nhttps://zriaz7616-star.github.io/kaamwala/'
       }).then(function(){ close(); toast('✓ Shared'); })
         .catch(function(err){
           close();
@@ -1020,7 +1020,7 @@
       navigator.share({
         files: [pdfCache.file],
         title: 'Invoice ' + (d.invoice.number || ''),
-        text: 'Invoice from ' + (d.from.name || 'KaamWala')
+        text: 'Invoice ' + (d.invoice.number || '') + ' from ' + (d.from.name || 'KaamWala') + '\n\nGenerated with KaamWala — free invoice maker for Pakistan\nhttps://zriaz7616-star.github.io/kaamwala/'
       }).then(function(){ toast('✓ Shared'); })
         .catch(function(err){
           if (err && err.name === 'AbortError') return;
