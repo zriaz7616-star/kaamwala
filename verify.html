@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<title>Verify Email — KaamWala</title>
+<link rel="stylesheet" href="app.css">
+<style>
+.verify-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:linear-gradient(180deg,#F0FDFA 0%,#F8FAFC 100%)}
+.verify-card{background:#fff;border:1px solid #E2E8F0;border-radius:18px;padding:26px 22px;
+  width:100%;max-width:440px;box-shadow:0 10px 40px rgba(15,118,110,.08);text-align:center}
+.vicon{display:inline-flex;width:64px;height:64px;align-items:center;justify-content:center;
+  background:#FEF3C7;border-radius:50%;font-size:1.8rem;margin-bottom:14px}
+.verify-card h1{margin:0 0 8px;font-size:1.4rem;font-weight:800;color:#0F172A;
+  letter-spacing:-.01em;line-height:1.2}
+.verify-card p{margin:0 0 12px;color:#475569;font-size:.92rem;line-height:1.55}
+.verify-card .email{font-weight:700;color:#0F766E;word-break:break-all}
+.vbtn{display:block;width:100%;padding:13px 16px;border:none;border-radius:12px;
+  font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;min-height:52px;
+  margin-top:10px;text-decoration:none;line-height:1.4;box-sizing:border-box}
+.vbtn-primary{background:#0F766E;color:#fff}
+.vbtn-primary:active{background:#115E59}
+.vbtn-primary:disabled{opacity:.6;cursor:not-allowed}
+.vbtn-secondary{background:#F1F5F9;color:#475569}
+.vbtn-link{background:transparent;color:#0F766E;text-decoration:underline;
+  font-weight:600;font-size:.9rem;margin-top:14px;display:inline-block;cursor:pointer;
+  border:none;font-family:inherit;padding:8px}
+.vmsg{margin-top:14px;padding:11px 14px;border-radius:10px;font-size:.88rem;
+  line-height:1.45;font-weight:600;display:none;text-align:left}
+.vmsg.show{display:block}
+.vmsg.err{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
+.vmsg.ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
+.vmsg.info{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE}
+.vsteps{text-align:left;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;
+  padding:14px 16px;margin:14px 0;font-size:.85rem;color:#475569;line-height:1.6}
+.vsteps strong{color:#0F172A}
+.vsteps ol{margin:8px 0 0;padding-left:20px}
+.vsteps li{margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<div class="verify-wrap">
+  <div class="verify-card">
+
+    <div class="vicon">📧</div>
+    <h1>Verify your email</h1>
+    <p>Hum ne aapko verification email bheji hai:</p>
+    <p class="email" id="emailDisplay">…</p>
+
+    <div class="vsteps">
+      <strong>Kya karna hai:</strong>
+      <ol>
+        <li>Apna email inbox kholein</li>
+        <li>KaamWala ki email dhundhein (<em>Spam folder</em> bhi check karein)</li>
+        <li>"Verify Email" button dabayein</li>
+        <li>Wapas yahan aakar "I've verified" dabayein</li>
+      </ol>
+    </div>
+
+    <button class="vbtn vbtn-primary" id="checkBtn">✓ I've verified — Continue</button>
+    <button class="vbtn vbtn-secondary" id="resendBtn">📨 Resend verification email</button>
+
+    <div class="vmsg" id="vMsg"></div>
+
+    <button class="vbtn-link" id="logoutBtn">← Use different account</button>
+
+  </div>
+</div>
+
+<script src="firebase-app.js"></script>
+<script src="firebase-auth.js"></script>
+<script src="firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var autoCheckTimer = null;
+
+  function showMsg(kind, text){
+    var m = $('vMsg');
+    m.className = 'vmsg show ' + kind;
+    m.innerHTML = text;
+  }
+  function hideMsg(){
+    var m = $('vMsg');
+    m.className = 'vmsg';
+    m.innerHTML = '';
+  }
+
+  function setEmail(email){
+    $('emailDisplay').textContent = email || 'unknown';
+  }
+
+  function checkAuth(){
+    if (!window.KWAuth || !window.KWAuth.ready){
+      showMsg('err', 'Firebase load nahi hua. Page refresh karein.');
+      return;
+    }
+    window.KWAuth.auth.onAuthStateChanged(function(user){
+      if (!user){
+        location.href = 'auth.html';
+        return;
+      }
+      // If already verified → go to app
+      if (user.emailVerified){
+        location.href = 'app.html';
+        return;
+      }
+      setEmail(user.email);
+      startAutoCheck();
+    });
+  }
+
+  function startAutoCheck(){
+    if (autoCheckTimer) clearInterval(autoCheckTimer);
+    // Every 5 seconds, check if verified
+    autoCheckTimer = setInterval(function(){
+      window.KWAuthHelpers.reloadUser().then(function(u){
+        if (u && u.emailVerified){
+          clearInterval(autoCheckTimer);
+          showMsg('ok', '✓ Email verified! Redirecting…');
+          setTimeout(function(){ location.href = 'app.html'; }, 800);
+        }
+      }).catch(function(){});
+    }, 5000);
+  }
+
+  $('checkBtn').addEventListener('click', function(){
+    $('checkBtn').disabled = true;
+    $('checkBtn').textContent = 'Checking…';
+    hideMsg();
+    window.KWAuthHelpers.reloadUser().then(function(u){
+      $('checkBtn').disabled = false;
+      $('checkBtn').textContent = '✓ I\'ve verified — Continue';
+      if (u && u.emailVerified){
+        showMsg('ok', '✓ Verified! Redirecting…');
+        setTimeout(function(){ location.href = 'app.html'; }, 700);
+      } else {
+        showMsg('err', '✗ Abhi tak verify nahi hui. Email inbox (aur spam) check karein, phir "I\'ve verified" dobara dabayein.');
+      }
+    }).catch(function(err){
+      $('checkBtn').disabled = false;
+      $('checkBtn').textContent = '✓ I\'ve verified — Continue';
+      showMsg('err', '✗ Error: ' + (err.message || ''));
+    });
+  });
+
+  $('resendBtn').addEventListener('click', function(){
+    $('resendBtn').disabled = true;
+    $('resendBtn').textContent = 'Sending…';
+    hideMsg();
+    window.KWAuthHelpers.sendVerificationEmail()
+      .then(function(){
+        $('resendBtn').disabled = false;
+        $('resendBtn').textContent = '📨 Resend verification email';
+        showMsg('ok', '✓ Email bhej diya gaya. Inbox check karein.');
+      })
+      .catch(function(err){
+        $('resendBtn').disabled = false;
+        $('resendBtn').textContent = '📨 Resend verification email';
+        showMsg('err', '✗ ' + window.KWAuthHelpers.friendlyError(err));
+      });
+  });
+
+  $('logoutBtn').addEventListener('click', function(){
+    window.KWAuthHelpers.signOut().then(function(){
+      location.href = 'auth.html';
+    });
+  });
+
+  if (window.KWAuth) checkAuth();
+})();
+</script>
+
+</body>
+</html>

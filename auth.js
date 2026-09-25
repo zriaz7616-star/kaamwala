@@ -12,15 +12,21 @@
     var A = ensureReady();
     return A.auth.createUserWithEmailAndPassword(email, password)
       .then(function(cred){
-        // Create user doc in Firestore
-        return A.db.collection('users').doc(cred.user.uid).set({
-          email: email,
-          premium: false,
-          plan: 'free',
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function(){
-          return cred.user;
+        var u = cred.user;
+        // Send verification email
+        var sendPromise = u.sendEmailVerification().catch(function(err){
+          console.error('Verification email failed:', err);
         });
+        return sendPromise.then(function(){
+          return A.db.collection('users').doc(u.uid).set({
+            email: email,
+            uid: u.uid,
+            premium: false,
+            plan: 'free',
+            emailVerified: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }).then(function(){ return u; });
       });
   }
 
@@ -52,6 +58,34 @@
     return A.db.collection('users').doc(uid).set(data, {merge:true});
   }
 
+  /* ---------- EMAIL VERIFICATION ---------- */
+  function sendVerificationEmail(){
+    var A = ensureReady();
+    var u = A.auth.currentUser;
+    if (!u) return Promise.reject(new Error('Not signed in'));
+    return u.sendEmailVerification();
+  }
+
+  function reloadUser(){
+    var A = ensureReady();
+    var u = A.auth.currentUser;
+    if (!u) return Promise.resolve(null);
+    return u.reload().then(function(){ return A.auth.currentUser; });
+  }
+
+  function isVerified(){
+    var A = ensureReady();
+    var u = A.auth.currentUser;
+    return !!(u && u.emailVerified);
+  }
+
+  /* ---------- PASSWORD RESET ---------- */
+  function sendPasswordReset(email){
+    var A = ensureReady();
+    if (!email) return Promise.reject(new Error('Email required'));
+    return A.auth.sendPasswordResetEmail(email);
+  }
+
   function friendlyError(err){
     if (!err) return 'Unknown error';
     var code = err.code || '';
@@ -63,7 +97,9 @@
       'auth/wrong-password': 'Password galat hai.',
       'auth/invalid-credential': 'Email ya password galat hai.',
       'auth/too-many-requests': 'Bohat zyada koshishein. Kuch der baad try karein.',
-      'auth/network-request-failed': 'Internet connection check karein.'
+      'auth/network-request-failed': 'Internet connection check karein.',
+      'auth/missing-email': 'Email address daalein.',
+      'auth/user-disabled': 'Ye account disable hai.'
     };
     return map[code] || (err.message || 'Error aaya');
   }
@@ -75,6 +111,10 @@
     onUser: onUser,
     getUserDoc: getUserDoc,
     updateUserDoc: updateUserDoc,
+    sendVerificationEmail: sendVerificationEmail,
+    reloadUser: reloadUser,
+    isVerified: isVerified,
+    sendPasswordReset: sendPasswordReset,
     friendlyError: friendlyError
   };
 })();

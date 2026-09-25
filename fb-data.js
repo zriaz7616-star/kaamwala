@@ -46,6 +46,10 @@
         location.href = redirectTo || 'auth.html';
         return null;
       }
+      if (!u.emailVerified){
+        location.href = 'verify.html';
+        return null;
+      }
       return u;
     });
   }
@@ -71,6 +75,7 @@
     if (!u) return Promise.reject(new Error('Not logged in'));
     cacheSet('kw_profile', profile);
     return db().collection('users').doc(u.uid).set({
+      email: u.email || '',
       profile: profile,
       profileUpdatedAt: new Date().toISOString()
     }, {merge:true});
@@ -115,8 +120,12 @@
     // strip heavy blobs (logo/qr stored in profile, re-attached on read)
     if (clean.from) clean.from.logo = '';
     if (clean.payment) clean.payment.qrImage = '';
-    return db().collection('users').doc(u.uid).collection('invoices').doc(inv.id)
-      .set(clean)
+    var userDocRef = db().collection('users').doc(u.uid);
+    return userDocRef.set({ email: u.email || '', uid: u.uid }, {merge:true})
+      .then(function(){
+        return db().collection('users').doc(u.uid).collection('invoices').doc(inv.id)
+          .set(clean);
+      })
       .then(function(){
         // update cache
         var arr = cacheGet('kw_invoices', []) || [];
@@ -151,9 +160,16 @@
     return db().collection('users').doc(u.uid).get()
       .then(function(snap){
         var d = snap.exists ? snap.data() : {};
+        var isPremium = !!d.premium;
+        var expiresAt = d.expiresAt || null;
+        if (isPremium && expiresAt){
+          var expTime = new Date(expiresAt).getTime();
+          if (expTime && expTime < Date.now()) isPremium = false;
+        }
         return {
-          premium: !!d.premium,
-          plan: d.plan || 'free',
+          premium: isPremium,
+          plan: isPremium ? (d.plan || 'premium') : 'free',
+          expiresAt: expiresAt,
           approvedAt: d.approvedAt || null
         };
       })
