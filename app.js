@@ -83,6 +83,7 @@
         '<h3>👤 Your Account</h3>' +
         '<p style="margin-bottom:10px">Signed in as<br><strong style="color:#0F172A">' + escapeHtml(currentUser.email) + '</strong></p>' +
         (isPremium() ? '<div style="background:#ECFDF5;color:#065F46;padding:10px 12px;border-radius:10px;font-size:.85rem;margin-bottom:12px;font-weight:700;text-align:center">⭐ Premium Active</div>' : '') +
+        '<a href="https://wa.me/923007552962?text=KaamWala%20Feedback%3A%20" target="_blank" rel="noopener" class="kw-secondary" style="display:block;text-align:center;text-decoration:none;background:#25D366;color:#fff;font-weight:700;padding:12px;border-radius:12px;margin-top:8px">💬 Send Feedback</a>' +
         '<button class="kw-primary" id="kwLogout">Sign Out</button>' +
         '<button class="kw-secondary" id="kwCloseAcc">Close</button>' +
       '</div>';
