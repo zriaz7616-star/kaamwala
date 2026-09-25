@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /kaamwala/
+Allow: /kaamwala/index.html
+Allow: /kaamwala/privacy.html
+Allow: /kaamwala/terms.html
+
+Disallow: /kaamwala/app.html
+Disallow: /kaamwala/profile.html
+Disallow: /kaamwala/history.html
+Disallow: /kaamwala/auth.html
+Disallow: /kaamwala/verify.html
+Disallow: /kaamwala/admin.html
+
+Sitemap: https://zriaz7616-star.github.io/kaamwala/sitemap.xml
