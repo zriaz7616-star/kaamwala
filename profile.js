@@ -1,3 +1,30 @@
+
+// KW_ERROR_DISPLAY — visible error banner
+window.addEventListener('error', function(e){
+  try {
+    var el = document.getElementById('__kw_err');
+    if (!el){
+      el = document.createElement('div');
+      el.id = '__kw_err';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#FEF2F2;color:#991B1B;padding:12px;z-index:99999;font-size:13px;font-family:monospace;border-bottom:2px solid #DC2626;max-height:50vh;overflow:auto;white-space:pre-wrap';
+      document.body.appendChild(el);
+    }
+    el.textContent = 'ERR: ' + (e.message || 'unknown') + '\n' + (e.filename || '') + ':' + (e.lineno || '') + ':' + (e.colno || '');
+  } catch(_){}
+});
+window.addEventListener('unhandledrejection', function(e){
+  try {
+    var el = document.getElementById('__kw_err');
+    if (!el){
+      el = document.createElement('div');
+      el.id = '__kw_err';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#FEF2F2;color:#991B1B;padding:12px;z-index:99999;font-size:13px;font-family:monospace;border-bottom:2px solid #DC2626;max-height:50vh;overflow:auto;white-space:pre-wrap';
+      document.body.appendChild(el);
+    }
+    el.textContent = 'ERR (async): ' + (e.reason && e.reason.message || e.reason || 'unknown');
+  } catch(_){}
+});
+
 (function(){
   'use strict';
 
@@ -12,6 +39,7 @@
     bindQr();
     bindProducts();
     bindImport();
+    bindCategory();
     document.getElementById('saveProfileBtn').addEventListener('click', save);
     document.getElementById('clearProfileBtn').addEventListener('click', clearProfile);
 
@@ -50,6 +78,7 @@
     set('pBank', p.bank);
     set('pCurrency', p.currency || 'PKR');
     set('pPrefix', p.prefix || 'INV');
+    set('pCategory', p.category || '');
     set('qrText', p.qrText || '');
   }
 
@@ -404,6 +433,62 @@
     toast(products.length + ' products added. Save karein.');
   }
 
+  /* ---------- CATEGORY TEMPLATES ---------- */
+  function bindCategory(){
+    var sel = $('pCategory');
+    var btn = $('loadTemplateBtn');
+    if (!sel){ console.error('pCategory not found'); return; }
+    if (!btn){ console.error('loadTemplateBtn not found'); return; }
+
+    // Populate dropdown from KW_CATEGORIES
+    if (window.KW_CATEGORIES){
+      var keys = Object.keys(window.KW_CATEGORIES);
+      keys.forEach(function(k){
+        var c = window.KW_CATEGORIES[k];
+        var opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = c.icon + '  ' + c.label;
+        sel.appendChild(opt);
+      });
+      console.log('[KW] Loaded ' + keys.length + ' categories');
+    } else {
+      console.error('KW_CATEGORIES not loaded');
+    }
+
+    btn.addEventListener('click', function(){
+      var key = sel.value;
+      if (!key){
+        toast('Pehle category select karein');
+        return;
+      }
+      var cat = window.KW_CATEGORIES[key];
+      if (!cat || !cat.products || !cat.products.length){
+        toast('Is category mein abhi koi template nahi');
+        return;
+      }
+      if (!confirm('Add ' + cat.products.length + ' products from "' + cat.label + '" template?\n\nAap inhe baad mein edit/delete kar sakte hain.')) return;
+      applyTemplate(cat.products);
+      toast('✓ ' + cat.products.length + ' products added');
+    });
+  }
+
+  function applyTemplate(products){
+    var wrap = $('productsList');
+    // Remove empty placeholder rows
+    var existingRows = wrap.querySelectorAll('.product-row');
+    for (var i = 0; i < existingRows.length; i++){
+      var nm = existingRows[i].querySelector('.pr-name').value.trim();
+      var rt = existingRows[i].querySelector('.pr-rate').value.trim();
+      if (!nm && !rt) existingRows[i].parentNode.removeChild(existingRows[i]);
+    }
+    // Add template products
+    products.forEach(function(p){
+      var name = Array.isArray(p) ? p[0] : (p.name || '');
+      var rate = Array.isArray(p) ? p[1] : (p.rate || 0);
+      addProductRow({ name: name, rate: rate });
+    });
+  }
+
   /* ---------- SAVE ---------- */
   function save(){
     var p = {
@@ -420,6 +505,7 @@
       qrText: $('qrText').value.trim(),
       currency: $('pCurrency').value,
       prefix: ($('pPrefix').value.trim() || 'INV').toUpperCase(),
+      category: ($('pCategory') && $('pCategory').value) || '',
       logo: currentLogo || '',
       products: collectProducts(),
       savedAt: new Date().toISOString()

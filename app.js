@@ -47,6 +47,7 @@
     setDebug('Ready. Prebuilding PDF…');
     setTimeout(schedulePrebuild, 300);
     setTimeout(handlePendingLoad, 200);
+    applyCategoryMode();
   }
 
   function $(id){ return document.getElementById(id); }
@@ -347,6 +348,8 @@
     $('saveBtn').addEventListener('click', saveInvoice);
     $('shareBtn').addEventListener('click', shareInvoice);
     $('pdfBtn').addEventListener('click', downloadPDF);
+    var searchBtn = $('searchProductBtn');
+    if (searchBtn) searchBtn.addEventListener('click', openSearchModal);
     var printBtn = $('printBtn');
     if (printBtn) printBtn.addEventListener('click', printInvoice);
   }
@@ -1043,6 +1046,132 @@
         setDebug('[Share] ERROR: ' + err.message);
         toast('Share failed');
       });
+  }
+
+  function applyCategoryMode(){
+    try {
+      var cat = (currentProfile && currentProfile.category) || '';
+      var isFreelancer = !cat || cat === 'freelancer';
+
+      var ids = ['invoiceDetailsSection', 'toEmailField', 'toAddressField'];
+      ids.forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) el.style.display = isFreelancer ? '' : 'none';
+      });
+
+      var title = document.getElementById('billToTitle');
+      if (title) title.textContent = isFreelancer ? 'Bill To' : 'Customer Details';
+
+      if (!isFreelancer){
+        var numEl = document.getElementById('invNumber');
+        var dateEl = document.getElementById('invDate');
+        var dueEl = document.getElementById('invDue');
+        var prefix = (currentProfile && currentProfile.prefix) ? currentProfile.prefix : 'INV';
+        if (numEl && !numEl.value) numEl.value = prefix + '-' + String(Date.now()).slice(-5);
+        var today = new Date().toISOString().slice(0,10);
+        if (dateEl && !dateEl.value) dateEl.value = today;
+        if (dueEl && !dueEl.value) dueEl.value = today;
+      }
+      console.log('[KW] Mode: ' + (isFreelancer ? 'freelancer' : 'shop:' + cat));
+    } catch(e){ console.error('applyCategoryMode error:', e); }
+  }
+
+  /* ---------- SEARCH MODAL ---------- */
+  function openSearchModal(){
+    var modal = $('kwSearchModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    var input = $('kwSearchInput');
+    if (input){ input.value = ''; input.focus(); }
+    renderSearchResults('');
+  }
+
+  function closeSearchModal(){
+    var modal = $('kwSearchModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function renderSearchResults(query){
+    var listEl = $('kwSearchList');
+    if (!listEl) return;
+
+    var p = currentProfile || {};
+    var products = (p.products || []).filter(function(x){ return x && x.name; });
+
+    if (products.length === 0){
+      listEl.innerHTML = '<div style="text-align:center;padding:30px 16px;color:#94A3B8;font-size:.9rem">' +
+        '<div style="font-size:2rem;margin-bottom:8px">📭</div>' +
+        'Aapki product list khaali hai.<br>Profile page par jayein aur products add karein.' +
+        '<br><br><a href="profile.html" style="color:#0F766E;font-weight:700">Go to Profile →</a>' +
+        '</div>';
+      return;
+    }
+
+    var q = String(query || '').trim().toLowerCase();
+    var filtered = q ? products.filter(function(x){
+      return String(x.name || '').toLowerCase().indexOf(q) !== -1;
+    }) : products.slice(0, 100);
+
+    if (filtered.length === 0){
+      listEl.innerHTML = '<div style="text-align:center;padding:30px 16px;color:#94A3B8;font-size:.9rem">' +
+        '<div style="font-size:2rem;margin-bottom:8px">🔍</div>' +
+        'Koi product nahi mila: <strong>' + escapeHtml(query) + '</strong>' +
+        '</div>';
+      return;
+    }
+
+    var html = '';
+    filtered.forEach(function(item){
+      var name = item.name || '';
+      var rate = item.rate != null ? item.rate : 0;
+      html += '<button type="button" class="kw-search-item" data-name="' + escapeHtml(name) + '" data-rate="' + rate + '"' +
+        ' style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;' +
+        'padding:14px 16px;background:#fff;border:1px solid #E2E8F0;border-radius:12px;margin-bottom:8px;' +
+        'cursor:pointer;font-family:inherit;text-align:left;min-height:56px">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:700;color:#0F172A;font-size:.98rem;word-break:break-word">' + escapeHtml(name) + '</div>' +
+          '<div style="color:#64748B;font-size:.85rem;margin-top:2px">Rs ' + (Math.round(rate*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + '</div>' +
+        '</div>' +
+        '<div style="color:#0F766E;font-size:1.3rem;font-weight:800">+</div>' +
+      '</button>';
+    });
+    listEl.innerHTML = html;
+
+    // Bind click handlers
+    listEl.querySelectorAll('.kw-search-item').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var name = btn.getAttribute('data-name');
+        var rate = parseFloat(btn.getAttribute('data-rate')) || 0;
+        addItemAndFill(name, rate);
+        closeSearchModal();
+      });
+    });
+  }
+
+  function addItemAndFill(name, rate){
+    // Check if an empty row exists — if yes, use it
+    var rows = document.querySelectorAll('.item-row');
+    var targetRow = null;
+    for (var i = 0; i < rows.length; i++){
+      var d = rows[i].querySelector('.item-desc').value.trim();
+      if (!d){ targetRow = rows[i]; break; }
+    }
+    if (!targetRow){
+      addItem({desc:'', qty:1, rate:0});
+      var allRows = document.querySelectorAll('.item-row');
+      targetRow = allRows[allRows.length - 1];
+    }
+    if (!targetRow) return;
+    targetRow.querySelector('.item-desc').value = name;
+    var qtyEl = targetRow.querySelector('.item-qty');
+    var rateEl = targetRow.querySelector('.item-rate');
+    if (qtyEl && (!qtyEl.value || parseFloat(qtyEl.value) === 0)) qtyEl.value = 1;
+    if (rateEl) rateEl.value = rate;
+    if (rateEl) rateEl.dispatchEvent(new Event('input', {bubbles:true}));
+
+    // Scroll to item row
+    try { targetRow.scrollIntoView({behavior:'smooth', block:'center'}); } catch(e){}
+    toast('✓ ' + name + ' added');
   }
 
   var toastTimer = null;

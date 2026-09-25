@@ -131,6 +131,25 @@
   </div>
 
   <div class="section">
+    <h2 class="section-title">Business Category</h2>
+    <div class="hint" style="margin-bottom:10px">
+      <strong>Tip:</strong> Apni category select karein — hum aapko common products ka <strong>template</strong> denge (typical Pakistani rates). Aap rates apne hisaab se <strong>edit</strong> kar sakte hain.
+    </div>
+    <label class="field">
+      <span>Select your business type</span>
+      <select id="pCategory">
+        <option value="">— Choose category —</option>
+      </select>
+    </label>
+    <button type="button" class="btn btn-soft btn-block" id="loadTemplateBtn" style="margin-top:8px">
+      📦 Load Product Template
+    </button>
+    <div class="hint" style="margin-top:6px">
+      Ye aapke current product list mein products add karega. Aap edit/delete kar sakte hain.
+    </div>
+  </div>
+
+  <div class="section">
     <h2 class="section-title">Contact</h2>
     <label class="field">
       <span>Email</span>
@@ -233,6 +252,7 @@
 <script src="firebase-config.js"></script>
 <script src="auth.js"></script>
 <script src="fb-data.js"></script>
+<script src="categories.js"></script>
 <script src="profile.js"></script>
 <script>
 (function(){ if (window.FB) window.FB.requireLogin("auth.html"); })();
