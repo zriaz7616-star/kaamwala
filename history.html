@@ -4,83 +4,100 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0F766E">
-<title>Saved Invoices — KaamWala</title>
-<link rel="stylesheet" href="app.css">
-<style>
-.history-list{display:flex;flex-direction:column;gap:10px}
-.inv-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:14px;
-  display:flex;flex-direction:column;gap:10px}
-.inv-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.inv-card-num{font-weight:800;color:#0F172A;font-size:1rem;margin:0}
-.inv-card-client{color:#64748B;font-size:.9rem;margin:2px 0 0}
-.inv-card-date{color:#94A3B8;font-size:.78rem;margin:0;text-align:right;white-space:nowrap}
-.inv-card-total{font-size:1.15rem;font-weight:800;color:#0F766E;margin:6px 0 0}
-.inv-card-meta{color:#94A3B8;font-size:.78rem;margin:0}
-.inv-card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.inv-card-actions button{min-height:44px;border-radius:10px;font-weight:700;
-  border:none;font-size:.92rem;cursor:pointer;font-family:inherit}
-.btn-load{background:#F0FDFA;color:#0F766E;border:1.5px solid #99F6E4!important}
-.btn-del{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA!important}
-.empty{text-align:center;padding:60px 20px;color:#64748B}
-.empty-icon{font-size:3rem;margin-bottom:10px}
-.empty h2{color:#0F172A;font-size:1.15rem;margin:0 0 6px}
-.empty p{margin:0 0 20px;font-size:.95rem}
-.empty .btn{display:inline-flex}
-.confirm-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100;
-  display:flex;align-items:center;justify-content:center;padding:20px}
-.confirm-box{background:#fff;border-radius:16px;padding:22px;max-width:340px;width:100%;
-  text-align:center}
-.confirm-box h3{margin:0 0 8px;font-size:1.15rem;color:#0F172A}
-.confirm-box p{margin:0 0 18px;color:#64748B;font-size:.92rem}
-.confirm-box .confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.confirm-box button{min-height:48px;border-radius:11px;font-weight:700;border:none;
-  cursor:pointer;font-size:.95rem;font-family:inherit}
-.confirm-yes{background:#DC2626;color:#fff}
-.confirm-no{background:#F1F5F9;color:#475569}
-</style>
-
-<meta name="description" content="Your saved invoices — KaamWala.">
-<meta name="robots" content="noindex, follow">
-<link rel="canonical" href="https://zriaz7616-star.github.io/kaamwala/history.html">
-<meta name="theme-color" content="#0F766E">
-
+<meta name="robots" content="noindex, nofollow">
+<title>Invoices — KaamWala</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="apple-touch-icon" href="favicon.svg">
 <link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="home.css">
+<style>
+.inv-card{background:#fff;border:1px solid #E2E8F0;border-radius:16px;
+  padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(15,23,42,0.03);
+  transition:transform 0.1s ease}
+body.dark .inv-card{background:#1E293B;border-color:#334155}
+.inv-card:active{transform:scale(0.99)}
+.inv-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.inv-num{font-weight:800;color:#0F766E;font-size:.95rem;margin:0;
+  letter-spacing:.3px}
+body.dark .inv-num{color:#5EEAD4}
+.inv-date{color:#94A3B8;font-size:.78rem;margin:0;font-weight:600}
+.inv-client{font-weight:700;color:#0F172A;font-size:1.05rem;margin:0 0 4px}
+body.dark .inv-client{color:#F1F5F9}
+.inv-meta-row{display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin-top:8px}
+.inv-amount{font-weight:800;color:#0F172A;font-size:1.15rem;margin:0;
+  letter-spacing:-.01em}
+body.dark .inv-amount{color:#F1F5F9}
+.inv-status-badge-sm{padding:3px 10px;border-radius:20px;font-size:.65rem;
+  font-weight:800;letter-spacing:.7px}
+.inv-status-badge-sm.paid{background:#ECFDF5;color:#065F46}
+.inv-status-badge-sm.unpaid{background:#FEF3C7;color:#B45309}
+.inv-status-badge-sm.overdue{background:#FEF2F2;color:#991B1B}
+body.dark .inv-status-badge-sm.paid{background:#064E3B;color:#6EE7B7}
+body.dark .inv-status-badge-sm.unpaid{background:#422006;color:#FBBF24}
+body.dark .inv-status-badge-sm.overdue{background:#450A0A;color:#FCA5A5}
+.inv-actions-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  margin-top:12px;padding-top:12px;border-top:1px solid #F1F5F9}
+body.dark .inv-actions-row{border-top-color:#334155}
+.inv-action-btn{padding:10px;border-radius:10px;font-weight:700;font-size:.85rem;
+  border:1.5px solid;cursor:pointer;font-family:inherit;min-height:44px;
+  display:flex;align-items:center;justify-content:center;gap:6px}
+.inv-action-btn.open{background:#F0FDFA;color:#0F766E;border-color:#99F6E4}
+body.dark .inv-action-btn.open{background:#064E3B;color:#5EEAD4;border-color:#065F46}
+.inv-action-btn.del{background:#FEF2F2;color:#DC2626;border-color:#FECACA}
+body.dark .inv-action-btn.del{background:#450A0A;color:#FCA5A5;border-color:#7F1D1D}
+.inv-action-btn:active{transform:scale(0.97)}
+.kw-filter-row{display:flex;gap:8px;padding:14px 16px 4px;max-width:640px;
+  margin:0 auto;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kw-filter-btn{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #E2E8F0;
+  background:#fff;color:#64748B;font-weight:700;font-size:.82rem;cursor:pointer;
+  font-family:inherit;min-height:38px;white-space:nowrap}
+body.dark .kw-filter-btn{background:#1E293B;border-color:#334155;color:#94A3B8}
+.kw-filter-btn.active{background:#0F766E;color:#fff;border-color:#0F766E}
+body.dark .kw-filter-btn.active{background:#0F766E;color:#fff}
+</style>
 </head>
 <body>
 
-<header class="topbar">
-  <a href="app.html" class="brand" aria-label="Back">
-    <span class="mark">KW</span>
+<div id="listRoot">
+  <div class="kw-loading">
+    <div class="kw-spinner"></div>
+    <div>Loading invoices…</div>
+  </div>
+</div>
+
+<nav class="kw-nav" id="bottomNav" style="display:none">
+  <a href="home.html" class="kw-nav-item">
+    <span class="kw-nav-icon">🏠</span>
+    <span class="kw-nav-label">Home</span>
   </a>
-  <h1 class="topbar-title">Saved Invoices</h1>
-  <a href="app.html" style="width:36px;height:36px;display:inline-flex;align-items:center;
-     justify-content:center;text-decoration:none;font-size:1.4rem;color:#0F766E" aria-label="New invoice">+</a>
-</header>
+  <a href="products.html" class="kw-nav-item">
+    <span class="kw-nav-icon">📦</span>
+    <span class="kw-nav-label">Products</span>
+  </a>
+  <a href="app.html" class="kw-nav-item new-inv">
+    <span class="kw-nav-icon">+</span>
+    <span class="kw-nav-label">New</span>
+  </a>
+  <a href="customers.html" class="kw-nav-item">
+    <span class="kw-nav-icon">👥</span>
+    <span class="kw-nav-label">Customers</span>
+  </a>
+  <a href="settings.html" class="kw-nav-item">
+    <span class="kw-nav-icon">⚙️</span>
+    <span class="kw-nav-label">Settings</span>
+  </a>
+</nav>
 
-<main class="app">
-  <div id="listWrap" class="history-list"></div>
-</main>
+<div id="toast" class="kw-inv-toast"></div>
 
-<div id="toast" class="toast"></div>
-
-
-
-
-
-
-<script src="invoices-sync.js"></script>
 <script src="firebase-app.js"></script>
 <script src="firebase-auth.js"></script>
 <script src="firebase-firestore.js"></script>
 <script src="firebase-config.js"></script>
 <script src="auth.js"></script>
+<script src="theme.js"></script>
+<script src="i18n.js"></script>
 <script src="fb-data.js"></script>
 <script src="history.js"></script>
-<script>
-(function(){ if (window.FB) window.FB.requireLogin("auth.html"); })();
-</script>
-<div style="text-align:center;padding:14px 0;border-top:1px solid #E2E8F0;margin-top:20px"><p style="margin:12px 0 0;font-size:.78rem"><a href="privacy.html" style="color:#0F766E;text-decoration:none;font-weight:600;margin:0 6px">Privacy</a><a href="terms.html" style="color:#0F766E;text-decoration:none;font-weight:600;margin:0 6px">Terms</a></p></div>
 </body>
 </html>

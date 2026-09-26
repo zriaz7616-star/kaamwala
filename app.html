@@ -4,93 +4,102 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0F766E">
-<title>KaamWala — Invoice Builder</title>
-<link rel="stylesheet" href="app.css">
-
-<meta name="description" content="Create your invoice — KaamWala Invoice Builder. Mobile-first, works offline, Urdu &amp; English support.">
-<meta name="robots" content="noindex, follow">
-<link rel="canonical" href="https://zriaz7616-star.github.io/kaamwala/app.html">
-<meta property="og:title" content="KaamWala — Invoice Builder">
-<meta property="og:description" content="Create professional invoices on your phone.">
-<meta property="og:url" content="https://zriaz7616-star.github.io/kaamwala/app.html">
-<meta name="theme-color" content="#0F766E">
-
+<meta name="robots" content="noindex, nofollow">
+<title>New Invoice — KaamWala</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="apple-touch-icon" href="favicon.svg">
 <link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="home.css">
 </head>
-<body>
+<body class="invoice-body">
 
-<header class="topbar">
-  <a href="index.html" class="brand"><span class="mark">KW</span></a>
-  <h1 class="topbar-title" id="topbarTitle">New Invoice</h1>
-  <a href="history.html" style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.2rem;color:#0F766E" aria-label="Saved invoices" title="Saved invoices">📋</a>
-  <a href="profile.html" style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.2rem;color:#0F766E" aria-label="Business profile" title="Business profile">🏢</a>
-  <a href="#" id="accountBtn" style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.15rem;color:#0F766E;background:transparent;border:none;cursor:pointer;font-family:inherit" aria-label="Account" title="Account">👤</a>
+<header class="kw-inv-topbar">
+  <a href="home.html" class="kw-inv-icon-btn" aria-label="Back">←</a>
+  <div class="kw-inv-topbar-title">
+    <div class="kw-inv-topbar-sub" id="topbarSub">Creating new invoice</div>
+    <div class="kw-inv-topbar-main" id="topbarTitle">New Invoice</div>
+  </div>
+  <a href="history.html" class="kw-inv-icon-btn" aria-label="History">📋</a>
 </header>
-<a href="https://wa.me/923007552962?text=KaamWala%20Feedback%3A%20" 
-   class="kw-feedback-fab" target="_blank" rel="noopener"
-   title="Send feedback on WhatsApp"
-   style="position:fixed;right:14px;bottom:190px;z-index:30;width:44px;height:44px;
-   border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;
-   justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.15);
-   text-decoration:none;font-size:1.3rem">💬</a>
+
+<div class="kw-inv-tabs">
+  <button type="button" class="kw-inv-tab is-active" data-tab="edit">
+    <span class="kw-inv-tab-icon">✏️</span> <span>Edit</span>
+  </button>
+  <button type="button" class="kw-inv-tab" data-tab="preview">
+    <span class="kw-inv-tab-icon">👁</span> <span>Preview</span>
+  </button>
+</div>
 
 <input type="hidden" id="editingId" value="">
 
-<nav class="tabs">
-  <button class="tab is-active" data-tab="edit">✏️ Edit</button>
-  <button class="tab" data-tab="preview">👁 Preview</button>
-</nav>
-
-<main class="app">
-
-<div id="accountBar"></div>
-<div id="bizCardWrap"></div>
-<div id="premiumBanner"></div>
-
+<main class="kw-inv-main">
 <datalist id="kwProducts"></datalist>
 
-<section id="view-edit" class="view">
+<section id="view-edit" class="kw-inv-view">
 
-  <div class="section">
-    <h2 class="section-title" id="billToTitle">Bill To</h2>
-    <label class="field">
-      <span>Client Name</span>
-      <input type="text" id="toName" placeholder="Client name">
-    </label>
-    <label class="field" id="toEmailField">
-      <span>Email</span>
-      <input type="email" id="toEmail" placeholder="client@example.com">
-    </label>
-    <label class="field">
-      <span>Phone</span>
-      <input type="tel" id="toPhone" placeholder="+92 3XX XXXXXXX">
-    </label>
-    <label class="field" id="toAddressField">
-      <span>Address <small>(optional)</small></span>
-      <textarea id="toAddress" rows="2" placeholder="Client address"></textarea>
-    </label>
+  <div class="kw-inv-card">
+    <div class="kw-inv-card-head">
+      <span class="kw-inv-card-icon">👤</span>
+      <div class="kw-inv-card-head-text">
+        <div class="kw-inv-card-title" id="billToTitle">CUSTOMER DETAILS</div>
+      </div>
+    </div>
+    <div class="kw-inv-fields">
+      <label class="kw-inv-field">
+        <span>Customer Name *</span>
+        <input type="text" id="toName" placeholder="e.g. Ali Khan">
+      </label>
+      <label class="kw-inv-field">
+        <span>Phone</span>
+        <input type="tel" id="toPhone" placeholder="+92 3XX XXXXXXX">
+      </label>
+      <label class="kw-inv-field" id="toEmailField">
+        <span>Email <small>(optional)</small></span>
+        <input type="email" id="toEmail" placeholder="client@example.com">
+      </label>
+      <label class="kw-inv-field" id="toAddressField">
+        <span>Address <small>(optional)</small></span>
+        <textarea id="toAddress" rows="2" placeholder="Street, City"></textarea>
+      </label>
+    </div>
   </div>
 
-  <div class="section" id="invoiceDetailsSection">
-    <h2 class="section-title">Invoice Details</h2>
-    <div class="row">
-      <label class="field">
+  <div class="kw-inv-card">
+    <div class="kw-inv-card-head">
+      <span class="kw-inv-card-icon">🛒</span>
+      <div class="kw-inv-card-head-text">
+        <div class="kw-inv-card-title">ITEMS</div>
+      </div>
+    </div>
+    <div id="items" class="kw-inv-items"></div>
+    <div class="kw-inv-items-actions">
+      <button type="button" id="searchProductBtn" class="kw-inv-btn-search">🔍 Search</button>
+      <button type="button" id="addItemBtn" class="kw-inv-btn-add">+ Add Item</button>
+    </div>
+  </div>
+
+  <div class="kw-inv-card" id="invoiceDetailsSection">
+    <div class="kw-inv-card-head">
+      <span class="kw-inv-card-icon">📄</span>
+      <div class="kw-inv-card-head-text">
+        <div class="kw-inv-card-title">INVOICE DETAILS</div>
+      </div>
+    </div>
+    <div class="kw-inv-fields">
+      <label class="kw-inv-field">
         <span>Invoice #</span>
         <input type="text" id="invNumber">
       </label>
-      <label class="field">
+      <label class="kw-inv-field">
         <span>Date</span>
         <input type="date" id="invDate">
       </label>
-    </div>
-    <div class="row">
-      <label class="field">
+      <label class="kw-inv-field">
         <span>Due Date</span>
         <input type="date" id="invDue">
       </label>
-      <label class="field">
+      <label class="kw-inv-field">
         <span>Currency</span>
         <select id="invCurrency">
           <option value="PKR">PKR — Rupee</option>
@@ -102,84 +111,104 @@
     </div>
   </div>
 
-  <div class="section">
-    <h2 class="section-title">Items</h2>
-    <div id="items"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-      <button id="searchProductBtn" class="btn btn-soft" type="button">🔍 Search Product</button>
-      <button id="addItemBtn" class="btn btn-ghost" type="button" style="margin-top:0">+ Add Item</button>
+  <div class="kw-inv-card" id="paymentStatusSection">
+    <div class="kw-inv-card-head">
+      <span class="kw-inv-card-icon">💰</span>
+      <div class="kw-inv-card-head-text">
+        <div class="kw-inv-card-title">PAYMENT STATUS</div>
+      </div>
+    </div>
+    <div class="kw-inv-fields">
+      <div class="kw-status-toggle">
+        <label class="kw-status-opt">
+          <input type="radio" name="payStatus" value="unpaid" checked>
+          <span class="kw-status-pill unpaid">
+            <span class="kw-status-dot"></span>
+            <span class="kw-status-text">Unpaid</span>
+          </span>
+        </label>
+        <label class="kw-status-opt">
+          <input type="radio" name="payStatus" value="paid">
+          <span class="kw-status-pill paid">
+            <span class="kw-status-dot"></span>
+            <span class="kw-status-text">Paid</span>
+          </span>
+        </label>
+      </div>
+      <div class="kw-status-hint" id="statusHint">Customer hasn't paid yet — amount due.</div>
     </div>
   </div>
 
-  <div class="section">
-    <h2 class="section-title">Notes</h2>
-    <label class="field">
-      <span>Notes <small>(optional)</small></span>
-      <textarea id="invNotes" rows="3" placeholder="Payment terms, thank you message..."></textarea>
-    </label>
+  <div class="kw-inv-card">
+    <div class="kw-inv-card-head">
+      <span class="kw-inv-card-icon">💬</span>
+      <div class="kw-inv-card-head-text">
+        <div class="kw-inv-card-title">NOTES</div>
+      </div>
+    </div>
+    <div class="kw-inv-fields">
+      <label class="kw-inv-field">
+        <span>Notes <small>(optional)</small></span>
+        <textarea id="invNotes" rows="3" placeholder="e.g. Payment due within 14 days."></textarea>
+      </label>
+    </div>
   </div>
 
 </section>
 
-<section id="view-preview" class="view is-hidden">
-  <div id="preview" class="invoice"></div>
+<section id="view-preview" class="kw-inv-view is-hidden">
+  <div id="preview" class="invoice-paper"></div>
 </section>
 
 </main>
 
-<div class="actionbar">
-  <div id="debug" class="debug"></div>
-  <div class="actionbar-btns">
-    <button id="saveBtn" class="btn btn-soft">💾 Save</button>
-    <button id="shareBtn" class="btn btn-soft">📤 Share</button>
-    <button id="pdfBtn" class="btn btn-primary">📄 PDF</button>
-    <button id="printBtn" class="btn btn-soft">🖨 Print</button>
+<div class="kw-inv-actionbar">
+  <div id="debug" class="kw-inv-debug"></div>
+  <div class="kw-inv-actionbar-btns">
+    <button id="pdfBtn" class="kw-inv-act kw-inv-act-primary">
+      <span class="kw-inv-act-icon">📄</span>
+      <span class="kw-inv-act-label">PDF</span>
+    </button>
+    <button id="shareBtn" class="kw-inv-act">
+      <span class="kw-inv-act-icon">📤</span>
+      <span class="kw-inv-act-label">Share</span>
+    </button>
+    <button id="printBtn" class="kw-inv-act">
+      <span class="kw-inv-act-icon">🖨</span>
+      <span class="kw-inv-act-label">Print</span>
+    </button>
+    <button id="saveBtn" class="kw-inv-act kw-inv-act-success">
+      <span class="kw-inv-act-icon">💾</span>
+      <span class="kw-inv-act-label">Save</span>
+    </button>
   </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<div id="kwSearchModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9999;align-items:flex-end;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.25)">
+    <div style="padding:16px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:800;color:#0F172A">🔍 Search Product</h3>
+      <button id="kwSearchClose" type="button" style="background:transparent;border:none;font-size:1.4rem;cursor:pointer;color:#64748B;padding:4px 10px;font-family:inherit">✕</button>
+    </div>
+    <div style="padding:12px 16px;border-bottom:1px solid #E2E8F0">
+      <input type="text" id="kwSearchInput" placeholder="Product ya service ka naam…" autocomplete="off"
+        style="width:100%;padding:12px 14px;border:1.5px solid #CBD5E1;border-radius:11px;font-size:16px;background:#fff;color:#0F172A;font-family:inherit;box-sizing:border-box;outline:none">
+    </div>
+    <div id="kwSearchList" style="flex:1;overflow-y:auto;padding:8px 16px 20px"></div>
+  </div>
+</div>
+
+<div id="toast" class="kw-inv-toast"></div>
 
 <script src="firebase-app.js"></script>
 <script src="firebase-auth.js"></script>
 <script src="firebase-firestore.js"></script>
 <script src="firebase-config.js"></script>
-<script src="fb-data.js"></script>
-
-
 <script src="auth.js"></script>
+<script src="theme.js"></script>
+<script src="i18n.js"></script>
+<script src="fb-data.js"></script>
 <script src="premium.js"></script>
-<script src="invoices-sync.js"></script>
 <script src="app.js"></script>
-
-<script>
-(function(){ if (window.FB) window.FB.requireLogin("auth.html"); })();
-</script>
-<script>
-(function(){ if (window.FB) window.FB.requireLogin("auth.html"); })();
-</script>
-<div style="text-align:center;padding:14px 0;border-top:1px solid #E2E8F0;margin-top:20px"><p style="margin:12px 0 0;font-size:.78rem"><a href="privacy.html" style="color:#0F766E;text-decoration:none;font-weight:600;margin:0 6px">Privacy</a><a href="terms.html" style="color:#0F766E;text-decoration:none;font-weight:600;margin:0 6px">Terms</a></p></div>
-
-<script>
-if ('serviceWorker' in navigator){
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(err){
-      console.log('SW registration failed:', err);
-    });
-  });
-}
-</script>
-<div id="kwSearchModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9999;align-items:flex-end;justify-content:center;padding:16px">
-      <div style="background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.25)">
-        <div style="padding:16px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;gap:10px">
-          <h3 style="margin:0;font-size:1.1rem;font-weight:800;color:#0F172A">🔍 Search Product</h3>
-          <button id="kwSearchClose" type="button" style="background:transparent;border:none;font-size:1.4rem;cursor:pointer;color:#64748B;padding:4px 10px;font-family:inherit">✕</button>
-        </div>
-        <div style="padding:12px 16px;border-bottom:1px solid #E2E8F0">
-          <input type="text" id="kwSearchInput" placeholder="Product ya service ka naam likhein…" autocomplete="off"
-            style="width:100%;padding:12px 14px;border:1.5px solid #CBD5E1;border-radius:11px;font-size:16px;background:#fff;color:#0F172A;font-family:inherit;box-sizing:border-box;outline:none">
-        </div>
-        <div id="kwSearchList" style="flex:1;overflow-y:auto;padding:8px 16px 20px"></div>
-      </div>
-    </div>
 </body>
 </html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<meta name="robots" content="noindex, nofollow">
+<title>Customers — KaamWala</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="home.css">
+</head>
+<body>
+
+<div id="customersRoot">
+  <div class="kw-loading">
+    <div class="kw-spinner"></div>
+    <div>Loading customers…</div>
+  </div>
+</div>
+
+<nav class="kw-nav" id="bottomNav" style="display:none">
+  <a href="home.html" class="kw-nav-item ">
+    <span class="kw-nav-icon">🏠</span>
+    <span class="kw-nav-label" data-i18n="home">Home</span>
+  </a>
+  <a href="products.html" class="kw-nav-item ">
+    <span class="kw-nav-icon">📦</span>
+    <span class="kw-nav-label" data-i18n="products">Products</span>
+  </a>
+  <a href="app.html" class="kw-nav-item new-inv">
+    <span class="kw-nav-icon">+</span>
+    <span class="kw-nav-label" data-i18n="new_invoice">New</span>
+  </a>
+  <a href="customers.html" class="kw-nav-item active">
+    <span class="kw-nav-icon">👥</span>
+    <span class="kw-nav-label" data-i18n="customers_nav">Customers</span>
+  </a>
+  <a href="settings.html" class="kw-nav-item ">
+    <span class="kw-nav-icon">⚙️</span>
+    <span class="kw-nav-label" data-i18n="settings">Settings</span>
+  </a>
+</nav>
+
+<script src="firebase-app.js"></script>
+<script src="firebase-auth.js"></script>
+<script src="firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
+<script src="fb-data.js"></script>
+<script src="customers.js"></script>
+</body>
+</html>

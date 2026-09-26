@@ -184,7 +184,7 @@
         setTimeout(function(){ location.href = 'verify.html'; }, 900);
       } else {
         showMsg('ok', '✓ Sign in successful! Loading…');
-        setTimeout(function(){ location.href = 'app.html'; }, 700);
+        setTimeout(function(){ location.href = 'home.html'; }, 700);
       }
     }).catch(function(err){
       showMsg('err', '✗ ' + window.KWAuthHelpers.friendlyError(err));
@@ -245,7 +245,7 @@
   if (window.KWAuthHelpers){
     window.KWAuthHelpers.onUser(function(user){
       if (user){
-        if (user.emailVerified) location.href = 'app.html';
+        if (user.emailVerified) location.href = 'home.html';
         else location.href = 'verify.html';
       }
     });

@@ -39,7 +39,7 @@ window.addEventListener('unhandledrejection', function(e){
     bindQr();
     bindProducts();
     bindImport();
-    bindCategory();
+    try { bindCategory(); } catch(e){ console.warn("bindCategory skipped:", e.message); }
     document.getElementById('saveProfileBtn').addEventListener('click', save);
     document.getElementById('clearProfileBtn').addEventListener('click', clearProfile);
 
@@ -200,13 +200,16 @@ window.addEventListener('unhandledrejection', function(e){
 
   /* ---------- PRODUCTS ---------- */
   function bindProducts(){
-    $('addProductBtn').addEventListener('click', function(){
+    var btn = $('addProductBtn');
+    if (!btn) return;  // Products moved to products.html
+    btn.addEventListener('click', function(){
       addProductRow({name:'', rate:''});
     });
   }
 
   function renderProducts(list){
     var wrap = $('productsList');
+    if (!wrap) return;  // Not on this page
     wrap.innerHTML = '';
     if (!list || list.length === 0){
       addProductRow({name:'', rate:''});
@@ -216,6 +219,8 @@ window.addEventListener('unhandledrejection', function(e){
   }
 
   function addProductRow(p){
+    var wrap = $('productsList');
+    if (!wrap) return;
     var row = document.createElement('div');
     row.className = 'product-row';
 
@@ -234,11 +239,11 @@ window.addEventListener('unhandledrejection', function(e){
     del.type = 'button'; del.className = 'pr-del'; del.textContent = '×';
     del.addEventListener('click', function(){
       if (row.parentNode) row.parentNode.removeChild(row);
-      if ($('productsList').children.length === 0) addProductRow({name:'', rate:''});
+      if (wrap.children.length === 0) addProductRow({name:'', rate:''});
     });
 
     row.appendChild(name); row.appendChild(rate); row.appendChild(del);
-    $('productsList').appendChild(row);
+    wrap.appendChild(row);
   }
 
   function collectProducts(){
@@ -255,7 +260,7 @@ window.addEventListener('unhandledrejection', function(e){
   /* ---------- IMPORT ---------- */
   function bindImport(){
     var inp = $('importFileInput');
-    if (!inp) { console.error('importFileInput not found'); return; }
+    if (!inp) return;  // Moved to products.html
     inp.addEventListener('change', onImportFile);
   }
 
@@ -437,36 +442,22 @@ window.addEventListener('unhandledrejection', function(e){
   function bindCategory(){
     var sel = $('pCategory');
     var btn = $('loadTemplateBtn');
-    if (!sel){ console.error('pCategory not found'); return; }
-    if (!btn){ console.error('loadTemplateBtn not found'); return; }
-
-    // Populate dropdown from KW_CATEGORIES
+    if (!sel || !btn) return;  // Elements removed — skip silently
     if (window.KW_CATEGORIES){
-      var keys = Object.keys(window.KW_CATEGORIES);
-      keys.forEach(function(k){
+      Object.keys(window.KW_CATEGORIES).forEach(function(k){
         var c = window.KW_CATEGORIES[k];
         var opt = document.createElement('option');
         opt.value = k;
         opt.textContent = c.icon + '  ' + c.label;
         sel.appendChild(opt);
       });
-      console.log('[KW] Loaded ' + keys.length + ' categories');
-    } else {
-      console.error('KW_CATEGORIES not loaded');
     }
-
     btn.addEventListener('click', function(){
       var key = sel.value;
-      if (!key){
-        toast('Pehle category select karein');
-        return;
-      }
+      if (!key){ toast('Pehle category select karein'); return; }
       var cat = window.KW_CATEGORIES[key];
-      if (!cat || !cat.products || !cat.products.length){
-        toast('Is category mein abhi koi template nahi');
-        return;
-      }
-      if (!confirm('Add ' + cat.products.length + ' products from "' + cat.label + '" template?\n\nAap inhe baad mein edit/delete kar sakte hain.')) return;
+      if (!cat || !cat.products) return;
+      if (!confirm('Add ' + cat.products.length + ' products from "' + cat.label + '"?')) return;
       applyTemplate(cat.products);
       toast('✓ ' + cat.products.length + ' products added');
     });

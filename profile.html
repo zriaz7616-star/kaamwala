@@ -89,6 +89,7 @@
 <header class="topbar">
   <a href="app.html" class="brand" aria-label="Back"><span class="mark">KW</span></a>
   <h1 class="topbar-title">Business Profile</h1>
+  <a href="home.html" class="kw-home-link" style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.15rem;color:#0F766E" aria-label="Home" title="Dashboard">🏠</a>
   <span style="width:36px"></span>
 </header>
 
@@ -128,25 +129,6 @@
       <span>License / Reg No. (optional)</span>
       <input type="text" id="pLicense" placeholder="NTN / Reg No">
     </label>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">Business Category</h2>
-    <div class="hint" style="margin-bottom:10px">
-      <strong>Tip:</strong> Apni category select karein — hum aapko common products ka <strong>template</strong> denge (typical Pakistani rates). Aap rates apne hisaab se <strong>edit</strong> kar sakte hain.
-    </div>
-    <label class="field">
-      <span>Select your business type</span>
-      <select id="pCategory">
-        <option value="">— Choose category —</option>
-      </select>
-    </label>
-    <button type="button" class="btn btn-soft btn-block" id="loadTemplateBtn" style="margin-top:8px">
-      📦 Load Product Template
-    </button>
-    <div class="hint" style="margin-top:6px">
-      Ye aapke current product list mein products add karega. Aap edit/delete kar sakte hain.
-    </div>
   </div>
 
   <div class="section">
@@ -215,22 +197,6 @@
         <input type="text" id="pPrefix" placeholder="INV" maxlength="8">
       </label>
     </div>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">Products / Services</h2>
-    <div class="hint" style="margin-bottom:10px">Products add karein — invoice banate waqt dropdown se choose ho jayenge.</div>
-
-    <label class="import-btn">
-      <span class="import-btn-label">Import from Excel / CSV / PDF</span>
-      <input type="file" id="importFileInput" class="file-input-hidden"
-        accept=".xlsx,.xls,.csv,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
-    </label>
-
-    <div class="import-status" id="importStatus"></div>
-
-    <div class="products-list" id="productsList" style="margin-top:12px"></div>
-    <button type="button" class="btn btn-ghost" id="addProductBtn">+ Add Product Manually</button>
   </div>
 
   <div class="section profile-actions">

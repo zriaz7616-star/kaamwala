@@ -38,8 +38,9 @@
     bindFields();
     bindItems();
     bindActions();
+    bindPaymentStatus();
     setDefaults();
-    renderBizCard();
+    /* renderBizCard removed */
     renderPremiumBanner();
     populateProductsDatalist();
     renderItems();
@@ -99,42 +100,7 @@
   }
 
   /* ---------- BUSINESS CARD ---------- */
-  function renderBizCard(){
-    var p = currentProfile || {};
-    var wrap = $('bizCardWrap');
-    if (!wrap) return;
-    if (!p.businessName){
-      wrap.innerHTML =
-        '<div class="biz-card biz-card-empty">' +
-          '<div class="biz-card-empty-icon">🏢</div>' +
-          '<div class="biz-card-empty-body">' +
-            '<h3>Setup your business</h3>' +
-            '<p>Add name, logo, contact & payment — har invoice par automatic aayengi.</p>' +
-          '</div>' +
-          '<a href="profile.html" class="biz-card-setup-btn">Set up →</a>' +
-        '</div>';
-      return;
-    }
-    var metaParts = [];
-    if (p.ownerName && p.ownerName !== p.businessName) metaParts.push(p.ownerName);
-    if (p.license) metaParts.push(p.license);
-    var contactParts = [p.phone, p.email].filter(Boolean);
-    var logoSrc = p.logo
-      ? '<img src="' + p.logo + '" alt="logo" class="biz-card-logo-img">'
-      : '<div class="biz-card-logo-ph">' + escapeHtml((p.businessName || 'B').charAt(0).toUpperCase()) + '</div>';
-    var premiumBadge = isPremium() ? '<span class="premium-badge">Premium</span>' : '';
-
-    wrap.innerHTML =
-      '<div class="biz-card">' +
-        '<div class="biz-card-logo">' + logoSrc + '</div>' +
-        '<div class="biz-card-info">' +
-          '<h3>' + escapeHtml(p.businessName) + premiumBadge + '</h3>' +
-          (metaParts.length ? '<p class="biz-card-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
-          (contactParts.length ? '<p class="biz-card-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
-        '</div>' +
-        '<a href="profile.html" class="biz-card-edit" aria-label="Edit business">✏️</a>' +
-      '</div>';
-  }
+  function renderBizCard(){ return; }
 
   /* ---------- PREMIUM BANNER ---------- */
   function renderPremiumBanner(){
@@ -240,7 +206,7 @@
   }
 
   function refreshUI(){
-    renderBizCard();
+    /* renderBizCard removed */
     renderPremiumBanner();
     renderPreview();
     pdfCache = { signature:null, blob:null, file:null, filename:null };
@@ -290,9 +256,9 @@
 
   /* ---------- TABS / FIELDS / ITEMS ---------- */
   function bindTabs(){
-    document.querySelectorAll('.tab').forEach(function(t){
+    document.querySelectorAll('.kw-inv-tab').forEach(function(t){
       t.addEventListener('click', function(){
-        document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('is-active'); });
+        document.querySelectorAll('.kw-inv-tab').forEach(function(x){ x.classList.remove('is-active'); });
         t.classList.add('is-active');
         var tab = t.getAttribute('data-tab');
         $('view-edit').classList.toggle('is-hidden', tab !== 'edit');
@@ -324,7 +290,7 @@
     var itemsWrap = $('items');
     itemsWrap.addEventListener('input', function(e){
       var t = e.target;
-      if (t.matches('.item-desc,.item-qty,.item-rate')){
+      if (t.matches('.kw-inv-item-desc,.kw-inv-item-qty,.kw-inv-item-rate')){
         updateAmounts();
         renderPreview();
         schedulePrebuild();
@@ -332,8 +298,8 @@
     });
     itemsWrap.addEventListener('click', function(e){
       var t = e.target;
-      if (t.classList.contains('remove-btn')){
-        var row = t.closest('.item-row');
+      if (t.classList.contains('kw-inv-item-del')){
+        var row = t.closest('.kw-inv-item');
         if (row && row.parentNode){
           row.parentNode.removeChild(row);
           ensureAtLeastOne();
@@ -357,7 +323,7 @@
 
   function ensureAtLeastOne(){
     var wrap = $('items');
-    if (wrap.querySelectorAll('.item-row').length === 0){
+    if (wrap.querySelectorAll('.kw-inv-item').length === 0){
       wrap.appendChild(makeItemRow({desc:'', qty:1, rate:0}));
     }
   }
@@ -366,47 +332,66 @@
 
   function makeItemRow(item){
     var row = document.createElement('div');
-    row.className = 'item-row';
+    row.className = 'kw-inv-item';
 
     var desc = document.createElement('input');
-    desc.type = 'text'; desc.className = 'item-desc';
-    desc.placeholder = 'Type product or service name';
+    desc.type = 'text';
+    desc.className = 'kw-inv-item-desc';
+    desc.placeholder = 'Description of product or service';
     desc.value = item.desc || '';
     desc.setAttribute('list', 'kwProducts');
     desc.setAttribute('autocomplete', 'off');
 
     var grid = document.createElement('div');
-    grid.className = 'item-grid';
+    grid.className = 'kw-inv-item-grid';
 
-    function numField(cls, labelText, value){
+    function numField(cls, labelText, value, inputMode){
       var label = document.createElement('label');
-      var span = document.createElement('span'); span.textContent = labelText;
+      var span = document.createElement('span');
+      span.textContent = labelText;
       var inp = document.createElement('input');
-      inp.type = 'number'; inp.className = cls; inp.inputMode = 'decimal';
-      inp.min = '0'; inp.step = '0.01'; inp.value = value;
-      label.appendChild(span); label.appendChild(inp);
+      inp.type = 'number';
+      inp.className = cls;
+      inp.inputMode = inputMode || 'decimal';
+      inp.min = '0';
+      inp.step = '0.01';
+      inp.value = value;
+      label.appendChild(span);
+      label.appendChild(inp);
       return label;
     }
 
-    grid.appendChild(numField('item-qty','Qty', item.qty != null ? item.qty : 1));
-    grid.appendChild(numField('item-rate','Rate', item.rate != null ? item.rate : 0));
+    // Qty
+    grid.appendChild(numField('kw-inv-item-qty', 'Qty', item.qty != null ? item.qty : 1, 'numeric'));
 
+    // Rate
+    grid.appendChild(numField('kw-inv-item-rate', 'Rate', item.rate != null ? item.rate : 0));
+
+    // Amount (readonly)
     var amtLabel = document.createElement('label');
-    var amtSpan = document.createElement('span'); amtSpan.textContent = 'Amount';
+    var amtSpan = document.createElement('span');
+    amtSpan.textContent = 'Amount';
     var amt = document.createElement('input');
-    amt.type = 'text'; amt.className = 'item-amount'; amt.readOnly = true; amt.value = '0.00';
-    amtLabel.appendChild(amtSpan); amtLabel.appendChild(amt);
+    amt.type = 'text';
+    amt.className = 'kw-inv-item-amount';
+    amt.readOnly = true;
+    amt.value = (item.amount != null ? item.amount.toFixed(2) : '0.00');
+    amtLabel.appendChild(amtSpan);
+    amtLabel.appendChild(amt);
     grid.appendChild(amtLabel);
 
+    // Delete
     var rm = document.createElement('button');
-    rm.type = 'button'; rm.className = 'remove-btn'; rm.textContent = '×';
+    rm.type = 'button';
+    rm.className = 'kw-inv-item-del';
+    rm.textContent = '×';
     rm.setAttribute('aria-label','Remove item');
     grid.appendChild(rm);
 
     desc.addEventListener('change', function(){
       var prod = findProduct(desc.value);
       if (!prod) return;
-      var rateInput = row.querySelector('.item-rate');
+      var rateInput = row.querySelector('.kw-inv-item-rate');
       if (!rateInput) return;
       var cur = parseFloat(rateInput.value);
       if (!cur || cur === 0){
@@ -415,8 +400,44 @@
       }
     });
 
-    row.appendChild(desc); row.appendChild(grid);
+    row.appendChild(desc);
+    row.appendChild(grid);
     return row;
+  }
+
+  function getPaymentStatus(){
+    var el = document.querySelector('input[name="payStatus"]:checked');
+    return el ? el.value : 'unpaid';
+  }
+
+  function setPaymentStatus(status){
+    var els = document.querySelectorAll('input[name="payStatus"]');
+    els.forEach(function(el){
+      el.checked = (el.value === (status || 'unpaid'));
+    });
+    updateStatusHint();
+  }
+
+  function updateStatusHint(){
+    var hint = document.getElementById('statusHint');
+    if (!hint) return;
+    var el = document.querySelector('input[name="payStatus"]:checked');
+    var val = el ? el.value : 'unpaid';
+    if (val === 'paid'){
+      hint.textContent = 'Payment received — marked as paid ✓';
+      hint.style.color = '#059669';
+    } else {
+      hint.textContent = "Customer hasn't paid yet — amount due.";
+      hint.style.color = '#94A3B8';
+    }
+  }
+
+  function bindPaymentStatus(){
+    var els = document.querySelectorAll('input[name="payStatus"]');
+    els.forEach(function(el){
+      el.addEventListener('change', updateStatusHint);
+    });
+    updateStatusHint();
   }
 
   function readData(){
@@ -436,6 +457,7 @@
       invoice: { number: $('invNumber').value.trim(), date: $('invDate').value,
                  due: $('invDue').value, currency: $('invCurrency').value,
                  notes: $('invNotes').value.trim() },
+      status: getPaymentStatus(),
       payment: {
         jazzcash: p.jazzcash || '',
         easypaisa: p.easypaisa || '',
@@ -444,10 +466,10 @@
       },
       items: []
     };
-    document.querySelectorAll('.item-row').forEach(function(row){
-      var desc = row.querySelector('.item-desc').value.trim();
-      var qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-      var rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+    document.querySelectorAll('.kw-inv-item').forEach(function(row){
+      var desc = row.querySelector('.kw-inv-item-desc').value.trim();
+      var qty = parseFloat(row.querySelector('.kw-inv-item-qty').value) || 0;
+      var rate = parseFloat(row.querySelector('.kw-inv-item-rate').value) || 0;
       data.items.push({desc:desc, qty:qty, rate:rate, amount: qty * rate});
     });
     return data;
@@ -482,17 +504,17 @@
   }
 
   function updateAmounts(){
-    document.querySelectorAll('.item-row').forEach(function(row){
-      var qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-      var rate = parseFloat(row.querySelector('.item-rate').value) || 0;
-      row.querySelector('.item-amount').value = (qty * rate).toFixed(2);
+    document.querySelectorAll('.kw-inv-item').forEach(function(row){
+      var qty = parseFloat(row.querySelector('.kw-inv-item-qty').value) || 0;
+      var rate = parseFloat(row.querySelector('.kw-inv-item-rate').value) || 0;
+      row.querySelector('.kw-inv-item-amount').value = (qty * rate).toFixed(2);
     });
     return calcTotals(readData().items);
   }
 
   function renderItems(){
     var wrap = $('items');
-    if (wrap.querySelectorAll('.item-row').length === 0){
+    if (wrap.querySelectorAll('.kw-inv-item').length === 0){
       wrap.appendChild(makeItemRow({desc:'', qty:1, rate:0}));
     }
     updateAmounts();
@@ -504,84 +526,129 @@
     var totals = calcTotals(d.items);
     var cur = d.invoice.currency;
     var el = $('preview');
+    if (!el) return;
 
-    var itemsHtml = '';
+    // ---- LETTERHEAD ----
+    var logoHtml = d.from.logo
+      ? '<img src="' + d.from.logo + '" class="inv-logo" alt="logo">'
+      : '<div class="inv-logo-ph">' + escapeHtml(((d.from.name||'B').charAt(0)).toUpperCase()) + '</div>';
+    var headLines = [];
+    if (d.from.ownerName && d.from.ownerName !== d.from.name) headLines.push(d.from.ownerName);
+    if (d.from.license) headLines.push(d.from.license);
+    var contactLine = [d.from.phone, d.from.email].filter(Boolean).join('  ·  ');
+
+    var headHtml =
+      '<div class="inv-head-block">' +
+        logoHtml +
+        '<div class="inv-head-text">' +
+          '<h1 class="inv-biz-name">' + (escapeHtml(d.from.name) || 'Your Business') + '</h1>' +
+          (headLines.length ? '<p class="inv-biz-line">' + escapeHtml(headLines.join('  ·  ')) + '</p>' : '') +
+          (contactLine ? '<p class="inv-biz-line">' + escapeHtml(contactLine) + '</p>' : '') +
+          (d.from.address ? '<p class="inv-biz-line">' + escapeHtml(d.from.address) + '</p>' : '') +
+        '</div>' +
+      '</div>';
+
+    // ---- INVOICE META (right-aligned like Invoice Simple) ----
+    var metaHtml =
+      '<div class="inv-meta-right">' +
+        '<div class="inv-meta-row"><span class="k">Invoice</span><span class="v">' + escapeHtml(d.invoice.number || '—') + '</span></div>' +
+        '<div class="inv-meta-row"><span class="k">Date</span><span class="v">' + formatDate(d.invoice.date) + '</span></div>' +
+        '<div class="inv-meta-row"><span class="k">Due</span><span class="v">' + formatDate(d.invoice.due) + '</span></div>' +
+      '</div>'
+      +
+      '<div style="text-align:right;margin-top:8px">' +
+        '<span class="inv-status-badge ' + (d.status === 'paid' ? 'paid' : 'unpaid') + '">' +
+          '<span class="dot"></span>' +
+          (d.status === 'paid' ? 'PAID' : 'UNPAID') +
+        '</span>' +
+      '</div>';
+
+    // ---- BILL TO ----
+    var toLines = [d.to.phone, d.to.email, d.to.address].filter(Boolean);
+    var billTo =
+      '<div class="inv-billto">' +
+        '<div class="inv-billto-label">Bill To</div>' +
+        '<p class="inv-billto-name">' + (escapeHtml(d.to.name) || 'Customer') + '</p>' +
+        toLines.map(function(l){ return '<p class="inv-billto-line">' + escapeHtml(l) + '</p>'; }).join('') +
+      '</div>';
+
+    // ---- ITEMS (Rate before Qty like Invoice Simple) ----
     var hasItems = d.items.some(function(it){ return it.desc || it.qty || it.rate; });
+    var itemsHtml;
     if (hasItems){
       itemsHtml = d.items.map(function(it){
         return '<tr>' +
           '<td>' + (escapeHtml(it.desc) || '<span style="color:#94A3B8">—</span>') + '</td>' +
-          '<td class="num">' + escapeHtml(String(it.qty)) + '</td>' +
           '<td class="num">' + formatMoney(it.rate, cur) + '</td>' +
+          '<td class="num">' + escapeHtml(String(it.qty)) + '</td>' +
           '<td class="num">' + formatMoney(it.amount, cur) + '</td>' +
         '</tr>';
       }).join('');
     } else {
-      itemsHtml = '<tr><td colspan="4" style="text-align:center;color:#94A3B8;padding:20px">No items yet</td></tr>';
+      itemsHtml = '<tr><td colspan="4" style="text-align:center;color:#94A3B8;padding:22px">No items yet</td></tr>';
     }
 
-    var logoHtml = d.from.logo ? '<img src="' + d.from.logo + '" class="inv-logo" alt="logo">' : '';
-    var metaParts = [];
-    if (d.from.ownerName && d.from.ownerName !== d.from.name) metaParts.push(d.from.ownerName);
-    if (d.from.license) metaParts.push(d.from.license);
-    var contactParts = [d.from.phone, d.from.email].filter(Boolean);
+    var itemsTable =
+      '<table class="inv-items-table">' +
+        '<thead><tr>' +
+          '<th>Description</th>' +
+          '<th class="num">Rate</th>' +
+          '<th class="num">Qty</th>' +
+          '<th class="num">Amount</th>' +
+        '</tr></thead>' +
+        '<tbody>' + itemsHtml + '</tbody>' +
+      '</table>';
 
-    var letterhead =
-      '<div class="inv-letterhead">' + logoHtml +
-        '<h1 class="inv-biz-name">' + (escapeHtml(d.from.name) || 'Your Business') + '</h1>' +
-        (metaParts.length ? '<p class="inv-biz-meta">' + escapeHtml(metaParts.join(' • ')) + '</p>' : '') +
-        (contactParts.length ? '<p class="inv-biz-contact">' + escapeHtml(contactParts.join('  |  ')) + '</p>' : '') +
-        (d.from.address ? '<p class="inv-biz-address">' + escapeHtml(d.from.address) + '</p>' : '') +
-      '</div>';
-
-    var toLines = [d.to.email, d.to.phone, d.to.address]
-      .filter(Boolean).map(function(l){ return '<p class="inv-party-line">'+escapeHtml(l)+'</p>'; }).join('');
-
-    var clientBlock =
-      '<div class="inv-client-block">' +
-        '<div class="inv-label">BILL TO</div>' +
-        '<p class="inv-party-name">' + (escapeHtml(d.to.name) || 'Client') + '</p>' +
-        toLines +
-      '</div>';
-
+    // ---- PAYMENT (left) + TOTALS (right) ----
     var payLines = [];
     if (d.payment.easypaisa) payLines.push('<div><strong>Easypaisa:</strong> ' + escapeHtml(d.payment.easypaisa) + '</div>');
     if (d.payment.jazzcash) payLines.push('<div><strong>Raast ID:</strong> ' + escapeHtml(d.payment.jazzcash) + '</div>');
     if (d.payment.bank) payLines.push('<div><strong>Bank:</strong> ' + escapeHtml(d.payment.bank) + '</div>');
 
-    var payHtml = '';
+    var paymentHtml = '';
     if (payLines.length || d.payment.qrImage){
-      payHtml = '<div class="inv-payment">' +
-        (d.payment.qrImage ? '<div class="inv-payment-qr"><img src="' + d.payment.qrImage + '" alt="QR"></div>' : '') +
-        '<div class="inv-payment-info">' +
-          '<div class="inv-payment-title">💳 Payment Details</div>' +
-          payLines.join('') +
-        '</div>' +
-      '</div>';
+      paymentHtml =
+        '<div class="inv-payment-simple">' +
+          (d.payment.qrImage ? '<div class="inv-payment-simple-qr"><img src="' + d.payment.qrImage + '" alt="QR"></div>' : '') +
+          '<div class="inv-payment-simple-info">' +
+            '<div class="inv-payment-simple-title">Payment Info</div>' +
+            payLines.join('') +
+          '</div>' +
+        '</div>';
+    } else {
+      paymentHtml = '<div></div>';
     }
 
-    var footerHtml = isPremium() ? '' : '<div class="inv-footer">Made with KaamWala</div>';
+    var totalsHtml =
+      '<div class="inv-totals-block">' +
+        '<div class="inv-totals">' +
+          '<div class="k">Subtotal</div><div class="v">' + formatMoney(totals.subtotal, cur) + '</div>' +
+          '<div class="k grand-k">Total</div><div class="v grand-v">' + formatMoney(totals.total, cur) + '</div>' +
+        '</div>' +
+      '</div>';
+
+    var bottomRow =
+      '<div class="inv-bottom-row">' +
+        paymentHtml +
+        totalsHtml +
+      '</div>';
+
+    // ---- NOTES ----
+    var notesHtml = d.invoice.notes
+      ? '<div class="inv-notes-block">' + escapeHtml(d.invoice.notes) + '</div>' : '';
+
+    // ---- FOOTER + SIGNATURE ----
+    var footerHtml =
+      '<div class="inv-signature">' +
+        '<div class="inv-signature-label">Authorized Signature</div>' +
+        '<div class="inv-signature-line"></div>' +
+      '</div>' +
+      '<div class="inv-footer-line">' +
+        (isPremium() ? 'Thank you for your business.' : 'Made with KaamWala · kaamwala.app') +
+      '</div>';
 
     el.innerHTML =
-      letterhead +
-      '<div class="inv-inv-row">' +
-        '<div><div class="inv-label">INVOICE</div>' +
-        '<div class="inv-inv-num">' + escapeHtml(d.invoice.number || '—') + '</div></div>' +
-        '<div class="inv-inv-dates">' +
-          '<div><span class="inv-label">DATE</span> ' + formatDate(d.invoice.date) + '</div>' +
-          '<div><span class="inv-label">DUE</span> ' + formatDate(d.invoice.due) + '</div>' +
-        '</div>' +
-      '</div>' +
-      clientBlock +
-      '<table class="inv-table"><thead><tr><th>Description</th><th class="num">Qty</th>' +
-      '<th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>' +
-      itemsHtml + '</tbody></table>' +
-      '<div class="inv-total"><div class="k">Subtotal</div><div class="v">' +
-      formatMoney(totals.subtotal, cur) + '</div><div class="k grand">Total</div>' +
-      '<div class="v grand">' + formatMoney(totals.total, cur) + '</div></div>' +
-      payHtml +
-      (d.invoice.notes ? '<div class="inv-notes">' + escapeHtml(d.invoice.notes) + '</div>' : '') +
-      footerHtml;
+      headHtml + metaHtml + billTo + itemsTable + bottomRow + notesHtml + footerHtml;
   }
 
   /* ---------- SAVE ---------- */
@@ -654,6 +721,7 @@
       setVal('invDate', d.invoice && d.invoice.date);
       setVal('invDue', d.invoice && d.invoice.due);
       setVal('invNotes', d.invoice && d.invoice.notes);
+      setPaymentStatus(d.status || 'unpaid');
       var curEl = $('invCurrency');
       if (curEl && d.invoice && d.invoice.currency){
         curEl.value = d.invoice.currency;
@@ -707,8 +775,8 @@
     var previewView = $('view-preview');
     var wasHidden = previewView.classList.contains('is-hidden');
     if (wasHidden){
-      document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('is-active'); });
-      var previewTab = document.querySelector('.tab[data-tab="preview"]');
+      document.querySelectorAll('.kw-inv-tab').forEach(function(x){ x.classList.remove('is-active'); });
+      var previewTab = document.querySelector('.kw-inv-tab[data-tab="preview"]');
       if (previewTab) previewTab.classList.add('is-active');
       $('view-edit').classList.add('is-hidden');
       previewView.classList.remove('is-hidden');
@@ -744,117 +812,168 @@
       var totals = calcTotals(d.items);
       var jsPDF = window.jspdf.jsPDF;
       var pdf = new jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
-      var M = 15, W = 210, CW = W - 2*M, y = 15;
+      var M = 18, W = 210, CW = W - 2*M, y = M;
       var TEAL = [15,118,110], DARK = [15,23,42], GRAY = [100,116,139];
-      var LIGHT = [226,232,240], BG = [248,250,252];
+      var LIGHT = [226,232,240], SOFT = [248,250,252];
       var cur = d.invoice.currency;
 
+      /* ---------- LETTERHEAD ---------- */
+      var logoSide = 20;
+      var headX = M;
       if (d.from.logo){
         try {
-          var logoH = 18, logoW = 18;
-          pdf.addImage(d.from.logo, 'JPEG', W/2 - logoW/2, y, logoW, logoH);
-          y += logoH + 2;
+          pdf.addImage(d.from.logo, 'JPEG', M, y, logoSide, logoSide);
+          headX = M + logoSide + 5;
         } catch(e){}
       }
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(17);
       pdf.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
-      pdf.text(d.from.name || 'Business Name', W/2, y + 3, {align:'center'});
-      y += 9;
+      var nameLines = pdf.splitTextToSize(d.from.name || 'Your Business', CW - (headX - M));
+      pdf.text(nameLines[0], headX, y + 6);
 
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-      var metaParts = [];
-      if (d.from.ownerName && d.from.ownerName !== d.from.name) metaParts.push(d.from.ownerName);
-      if (d.from.license) metaParts.push('License: ' + d.from.license);
-      if (metaParts.length){ pdf.text(metaParts.join('  •  '), W/2, y, {align:'center'}); y += 4; }
-      var contactParts = [d.from.phone, d.from.email].filter(Boolean);
-      if (contactParts.length){ pdf.text(contactParts.join('  |  '), W/2, y, {align:'center'}); y += 4; }
+      var metaLines = [];
+      if (d.from.ownerName && d.from.ownerName !== d.from.name) metaLines.push(d.from.ownerName);
+      if (d.from.license) metaLines.push(d.from.license);
+      var contactLine = [d.from.phone, d.from.email].filter(Boolean).join('  ·  ');
+      if (contactLine) metaLines.push(contactLine);
+      var metaY = y + 12;
+      metaLines.forEach(function(l){
+        var ll = pdf.splitTextToSize(l, CW - (headX - M));
+        pdf.text(ll[0], headX, metaY);
+        metaY += 4;
+      });
       if (d.from.address){
-        var addrL = pdf.splitTextToSize(d.from.address, CW - 40);
-        addrL.forEach(function(line, i){ pdf.text(line, W/2, y + i*4, {align:'center'}); });
-        y += addrL.length * 4;
+        var al = pdf.splitTextToSize(d.from.address, CW - (headX - M));
+        al.slice(0, 2).forEach(function(line){
+          pdf.text(line, headX, metaY);
+          metaY += 4;
+        });
       }
-      y += 2;
-      pdf.setDrawColor(TEAL[0],TEAL[1],TEAL[2]); pdf.setLineWidth(0.6);
+
+      y = Math.max(y + logoSide + 4, metaY + 2);
+      pdf.setDrawColor(TEAL[0],TEAL[1],TEAL[2]); pdf.setLineWidth(0.8);
       pdf.line(M, y, W-M, y);
       y += 8;
 
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+      /* ---------- INVOICE TITLE ---------- */
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(16);
       pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
       pdf.text('INVOICE', M, y);
+
+      pdf.setFontSize(11);
+      pdf.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
       pdf.text(d.invoice.number || '', W - M, y, {align:'right'});
-      y += 6;
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
+
+      y += 5;
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-      pdf.text('Date: ' + formatDate(d.invoice.date), M, y);
-      pdf.text('Due: ' + formatDate(d.invoice.due), W - M, y, {align:'right'});
+      pdf.text('Date: ' + formatDate(d.invoice.date), W - M, y, {align:'right'});
       y += 4;
-      pdf.setDrawColor(LIGHT[0],LIGHT[1],LIGHT[2]);
-      pdf.line(M, y, W-M, y); y += 8;
+      pdf.text('Due: ' + formatDate(d.invoice.due), W - M, y, {align:'right'});
+      y += 8;
 
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
+      /* ---------- BILL TO ---------- */
+      var boxY = y;
+      var boxH = 22;
+      pdf.setFillColor(SOFT[0],SOFT[1],SOFT[2]);
+      pdf.rect(M, boxY, CW, boxH, 'F');
+      pdf.setFillColor(TEAL[0],TEAL[1],TEAL[2]);
+      pdf.rect(M, boxY, 1.5, boxH, 'F');
+
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-      pdf.text('BILL TO', M, y); y += 5;
+      pdf.text('BILL TO', M + 5, boxY + 5);
+
       pdf.setFontSize(11); pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
-      pdf.text(d.to.name || 'Client', M, y); y += 5;
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
-      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-      if (d.to.email){ pdf.text(d.to.email, M, y); y += 4; }
-      if (d.to.phone){ pdf.text(d.to.phone, M, y); y += 4; }
-      if (d.to.address){
-        var tal = pdf.splitTextToSize(d.to.address, CW);
-        tal.forEach(function(line, i){ pdf.text(line, M, y + i*4); });
-        y += tal.length * 4;
-      }
-      y += 6;
+      pdf.text(d.to.name || 'Customer', M + 5, boxY + 11);
 
-      var descX = M, qtyX = M + CW - 68, rateX = M + CW - 38, amtX = W - M;
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-      pdf.text('DESCRIPTION', descX, y);
-      pdf.text('QTY', qtyX + 10, y, {align:'right'});
-      pdf.text('RATE', rateX + 15, y, {align:'right'});
-      pdf.text('AMOUNT', amtX, y, {align:'right'});
-      y += 2.5;
-      pdf.setDrawColor(DARK[0],DARK[1],DARK[2]); pdf.setLineWidth(0.4);
-      pdf.line(M, y, W - M, y); pdf.setLineWidth(0.2); y += 6;
+      var toLine1 = [d.to.phone, d.to.email].filter(Boolean).join('  ·  ');
+      if (toLine1) pdf.text(toLine1, M + 5, boxY + 16);
+      if (d.to.address){
+        var tal = pdf.splitTextToSize(d.to.address, CW - 10);
+        pdf.text(tal[0], M + 5, boxY + 20);
+      }
+
+      y = boxY + boxH + 8;
+
+      /* ---------- ITEMS TABLE ---------- */
+      var descX = M + 2;
+      var qtyX = M + CW - 66;
+      var rateX = M + CW - 36;
+      var amtX = W - M - 2;
+
+      pdf.setFillColor(TEAL[0],TEAL[1],TEAL[2]);
+      pdf.rect(M, y, CW, 7, 'F');
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(8);
+      pdf.setTextColor(255,255,255);
+      pdf.text('DESCRIPTION', descX, y + 4.8);
+      pdf.text('QTY', qtyX + 10, y + 4.8, {align:'right'});
+      pdf.text('RATE', rateX + 12, y + 4.8, {align:'right'});
+      pdf.text('AMOUNT', amtX, y + 4.8, {align:'right'});
+      y += 7;
 
       pdf.setFont('helvetica','normal'); pdf.setFontSize(9.5);
       pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
       var renderedItems = d.items.filter(function(it){ return it.desc || it.amount; });
       if (renderedItems.length === 0){
-        pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]); pdf.text('No items', M, y); y += 8;
+        pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
+        pdf.text('No items', descX, y + 6);
+        y += 10;
       } else {
-        renderedItems.forEach(function(it){
-          if (y > 240){ pdf.addPage(); y = 20; }
+        renderedItems.forEach(function(it, idx){
+          if (y > 250){ pdf.addPage(); y = 20; }
           var descLines = pdf.splitTextToSize(it.desc || '—', CW - 78);
-          var rowH = Math.max(6, descLines.length * 4.5);
-          descLines.forEach(function(line, idx){ pdf.text(line, descX, y + idx * 4.5); });
-          pdf.text(String(it.qty), qtyX + 10, y, {align:'right'});
-          pdf.text(formatMoneyPlain(it.rate, cur), rateX + 15, y, {align:'right'});
-          pdf.text(formatMoneyPlain(it.amount, cur), amtX, y, {align:'right'});
-          y += rowH + 2;
-          pdf.setDrawColor(LIGHT[0],LIGHT[1],LIGHT[2]);
-          pdf.line(M, y, W - M, y); y += 5;
+          var rowH = Math.max(8, descLines.length * 4.6 + 3);
+
+          if (idx % 2 === 1){
+            pdf.setFillColor(SOFT[0],SOFT[1],SOFT[2]);
+            pdf.rect(M, y, CW, rowH, 'F');
+          }
+
+          descLines.forEach(function(line, i){
+            pdf.text(line, descX, y + 5 + i * 4.6);
+          });
+          pdf.text(String(it.qty), qtyX + 10, y + 5, {align:'right'});
+          pdf.text(formatMoneyPlain(it.rate, cur), rateX + 12, y + 5, {align:'right'});
+          pdf.text(formatMoneyPlain(it.amount, cur), amtX, y + 5, {align:'right'});
+
+          pdf.setDrawColor(LIGHT[0],LIGHT[1],LIGHT[2]); pdf.setLineWidth(0.15);
+          pdf.line(M, y + rowH, W - M, y + rowH);
+          y += rowH;
         });
       }
-      if (y > 230){ pdf.addPage(); y = 20; }
+
       y += 5;
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(10);
+
+      /* ---------- TOTALS ---------- */
+      if (y > 220){ pdf.addPage(); y = 20; }
+      var tw = 70;
+      var tX = W - M - tw;
+
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(9.5);
       pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-      pdf.text('Subtotal', amtX - 55, y);
+      pdf.text('Subtotal', tX, y + 4);
       pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
-      pdf.text(formatMoneyPlain(totals.subtotal, cur), amtX, y, {align:'right'});
-      y += 4;
+      pdf.setFont('helvetica','bold');
+      pdf.text(formatMoneyPlain(totals.subtotal, cur), W - M, y + 4, {align:'right'});
+
+      y += 8;
       pdf.setDrawColor(TEAL[0],TEAL[1],TEAL[2]); pdf.setLineWidth(0.5);
-      pdf.line(amtX - 70, y, amtX, y); pdf.setLineWidth(0.2);
+      pdf.line(tX, y, W - M, y);
       y += 7;
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(12);
+      pdf.setFontSize(12);
       pdf.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
-      pdf.text('Total', amtX - 55, y);
-      pdf.text(formatMoneyPlain(totals.total, cur), amtX, y, {align:'right'});
+      pdf.text('Total', tX, y);
+      pdf.text(formatMoneyPlain(totals.total, cur), W - M, y, {align:'right'});
       y += 12;
 
+      /* ---------- PAYMENT ---------- */
       var payLines = [];
       if (d.payment.easypaisa) payLines.push('Easypaisa: ' + d.payment.easypaisa);
       if (d.payment.jazzcash) payLines.push('Raast ID: ' + d.payment.jazzcash);
@@ -863,24 +982,28 @@
       if (payLines.length || d.payment.qrImage){
         if (y > 220){ pdf.addPage(); y = 20; }
         var hasQr = !!d.payment.qrImage;
-        var qrSize = 30;
+        var qrSize = 28;
         var infoW = hasQr ? CW - qrSize - 8 : CW;
-        var boxH = Math.max(hasQr ? qrSize + 8 : 0, payLines.length * 4.5 + 12);
-        pdf.setFillColor(BG[0],BG[1],BG[2]);
+        var boxH = Math.max(hasQr ? qrSize + 10 : 0, payLines.length * 5 + 14);
+
+        pdf.setFillColor(SOFT[0],SOFT[1],SOFT[2]);
         pdf.rect(M, y, CW, boxH, 'F');
-        pdf.setFont('helvetica','bold'); pdf.setFontSize(9);
+
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(8);
         pdf.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
-        pdf.text('PAYMENT DETAILS', M + 4, y + 6);
-        pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5);
-        pdf.setTextColor(71,85,105);
+        pdf.text('PAYMENT DETAILS', M + 5, y + 6);
+
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
+        pdf.setTextColor(DARK[0],DARK[1],DARK[2]);
         payLines.forEach(function(line, i){
-          var ll = pdf.splitTextToSize(line, infoW - 8);
-          pdf.text(ll[0], M + 4, y + 12 + i * 4.5);
+          var ll = pdf.splitTextToSize(line, infoW - 10);
+          pdf.text(ll[0], M + 5, y + 12 + i * 5);
         });
+
         if (hasQr){
           try {
-            var qx = M + CW - qrSize - 4;
-            var qy = y + 4;
+            var qx = M + CW - qrSize - 5;
+            var qy = y + 5;
             pdf.addImage(d.payment.qrImage, 'JPEG', qx, qy, qrSize, qrSize);
             pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5);
             pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
@@ -890,24 +1013,33 @@
         y += boxH + 6;
       }
 
+      /* ---------- NOTES ---------- */
       if (d.invoice.notes){
         if (y > 240){ pdf.addPage(); y = 20; }
-        var notesLines = pdf.splitTextToSize(d.invoice.notes, CW - 10);
-        var notesH = notesLines.length * 4.5 + 8;
-        pdf.setFillColor(BG[0],BG[1],BG[2]);
-        pdf.rect(M, y, CW, notesH, 'F'); y += 5.5;
+        var notesLines = pdf.splitTextToSize(d.invoice.notes, CW - 12);
+        var notesH = notesLines.length * 4.5 + 10;
+        pdf.setFillColor(SOFT[0],SOFT[1],SOFT[2]);
+        pdf.rect(M, y, CW, notesH, 'F');
         pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
         pdf.setTextColor(71,85,105);
-        notesLines.forEach(function(line, idx){ pdf.text(line, M + 5, y + idx * 4.5); });
-        y += notesH;
+        notesLines.forEach(function(line, i){
+          pdf.text(line, M + 5, y + 6 + i * 4.5);
+        });
+        y += notesH + 6;
       }
 
+      /* ---------- FOOTER ---------- */
+      if (y > 250) y = 250;
+      pdf.setDrawColor(LIGHT[0],LIGHT[1],LIGHT[2]); pdf.setLineWidth(0.3);
+      pdf.line(M, y + 4, W - M, y + 4);
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+      pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
       if (!isPremium()){
-        y += 10;
-        pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
-        pdf.setTextColor(GRAY[0],GRAY[1],GRAY[2]);
-        pdf.text('Made with KaamWala', W/2, y, {align:'center'});
+        pdf.text('Made with KaamWala · kaamwala.app', W/2, y + 10, {align:'center'});
+      } else {
+        pdf.text('Thank you for your business.', W/2, y + 10, {align:'center'});
       }
+
       return pdf;
     });
   }
@@ -1151,21 +1283,21 @@
 
   function addItemAndFill(name, rate){
     // Check if an empty row exists — if yes, use it
-    var rows = document.querySelectorAll('.item-row');
+    var rows = document.querySelectorAll('.kw-inv-item');
     var targetRow = null;
     for (var i = 0; i < rows.length; i++){
-      var d = rows[i].querySelector('.item-desc').value.trim();
+      var d = rows[i].querySelector('.kw-inv-item-desc').value.trim();
       if (!d){ targetRow = rows[i]; break; }
     }
     if (!targetRow){
       addItem({desc:'', qty:1, rate:0});
-      var allRows = document.querySelectorAll('.item-row');
+      var allRows = document.querySelectorAll('.kw-inv-item');
       targetRow = allRows[allRows.length - 1];
     }
     if (!targetRow) return;
-    targetRow.querySelector('.item-desc').value = name;
-    var qtyEl = targetRow.querySelector('.item-qty');
-    var rateEl = targetRow.querySelector('.item-rate');
+    targetRow.querySelector('.kw-inv-item-desc').value = name;
+    var qtyEl = targetRow.querySelector('.kw-inv-item-qty');
+    var rateEl = targetRow.querySelector('.kw-inv-item-rate');
     if (qtyEl && (!qtyEl.value || parseFloat(qtyEl.value) === 0)) qtyEl.value = 1;
     if (rateEl) rateEl.value = rate;
     if (rateEl) rateEl.dispatchEvent(new Event('input', {bubbles:true}));
