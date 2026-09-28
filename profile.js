@@ -247,7 +247,9 @@ window.addEventListener('unhandledrejection', function(e){
   }
 
   function collectProducts(){
-    var rows = $('productsList').querySelectorAll('.product-row');
+    var wrap = $('productsList');
+    if (!wrap) return (window.__kwCurrentProfile && window.__kwCurrentProfile.products) || [];
+    var rows = wrap.querySelectorAll('.product-row');
     var out = [];
     for (var i = 0; i < rows.length; i++){
       var n = rows[i].querySelector('.pr-name').value.trim();

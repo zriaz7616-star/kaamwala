@@ -2,7 +2,7 @@
   "name": "KaamWala — Free Invoice Maker",
   "short_name": "KaamWala",
   "description": "Free invoice maker for Pakistani freelancers and small businesses. Mobile-first, Urdu & English, PDF export.",
-  "start_url": "/kaamwala/app.html",
+  "start_url": "/kaamwala/home.html",
   "scope": "/kaamwala/",
   "display": "standalone",
   "orientation": "portrait",

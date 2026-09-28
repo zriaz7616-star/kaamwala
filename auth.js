@@ -33,7 +33,9 @@
   function signIn(email, password){
     var A = ensureReady();
     return A.auth.signInWithEmailAndPassword(email, password)
-      .then(function(cred){ return cred.user; });
+      .then(function(cred){
+        return ensureUserDoc(cred.user).then(function(){ return cred.user; });
+      });
   }
 
   function signOut(){
@@ -104,6 +106,33 @@
     return map[code] || (err.message || 'Error aaya');
   }
 
+  function ensureUserDoc(user){
+    if (!user) return Promise.resolve();
+    var A = ensureReady();
+    var ref = A.db.collection('users').doc(user.uid);
+    return ref.get().then(function(snap){
+      if (snap.exists){
+        // Ensure email is present even on existing docs
+        var d = snap.data() || {};
+        if (!d.email){
+          return ref.set({ email: user.email || '', uid: user.uid }, {merge:true});
+        }
+        return null;
+      }
+      // Create missing doc
+      return ref.set({
+        email: user.email || '',
+        uid: user.uid,
+        premium: false,
+        plan: 'free',
+        emailVerified: !!user.emailVerified,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).catch(function(err){
+      console.error('[KW] ensureUserDoc failed:', err);
+    });
+  }
+
   window.KWAuthHelpers = {
     signUp: signUp,
     signIn: signIn,
@@ -115,6 +144,7 @@
     reloadUser: reloadUser,
     isVerified: isVerified,
     sendPasswordReset: sendPasswordReset,
-    friendlyError: friendlyError
+    friendlyError: friendlyError,
+    ensureUserDoc: ensureUserDoc
   };
 })();
