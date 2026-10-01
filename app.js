@@ -32,6 +32,59 @@
     });
   });
 
+  function bindCustomerAutocomplete(){
+    var nameInput = document.getElementById('toName');
+    if (!nameInput) return;
+    var dl = document.getElementById('kwCustomers');
+    if (!dl){
+      dl = document.createElement('datalist');
+      dl.id = 'kwCustomers';
+      document.body.appendChild(dl);
+    }
+    nameInput.setAttribute('list', 'kwCustomers');
+
+    // Fetch past invoices and populate unique customers
+    if (window.FB){
+      window.FB.getInvoices().then(function(invoices){
+        var seen = {};
+        var customers = [];
+        (invoices || []).forEach(function(inv){
+          var n = (inv.to && inv.to.name || '').trim();
+          if (!n) return;
+          var key = n.toLowerCase();
+          if (seen[key]) return;
+          seen[key] = true;
+          customers.push({
+            name: n,
+            phone: inv.to.phone || '',
+            email: inv.to.email || '',
+            address: inv.to.address || ''
+          });
+        });
+        customers.sort(function(a,b){ return a.name.localeCompare(b.name); });
+        dl.innerHTML = customers.map(function(c){
+          return '<option value="' + c.name.replace(/"/g, '&quot;') + '"></option>';
+        }).join('');
+
+        // When user picks from dropdown, auto-fill phone/email/address
+        nameInput.addEventListener('change', function(){
+          var v = nameInput.value.trim().toLowerCase();
+          for (var i = 0; i < customers.length; i++){
+            if (customers[i].name.toLowerCase() === v){
+              var phoneEl = document.getElementById('toPhone');
+              var emailEl = document.getElementById('toEmail');
+              var addrEl = document.getElementById('toAddress');
+              if (phoneEl && !phoneEl.value && customers[i].phone) phoneEl.value = customers[i].phone;
+              if (emailEl && !emailEl.value && customers[i].email) emailEl.value = customers[i].email;
+              if (addrEl && !addrEl.value && customers[i].address) addrEl.value = customers[i].address;
+              break;
+            }
+          }
+        });
+      }).catch(function(err){ console.warn('autocomplete:', err); });
+    }
+  }
+
   function bootUI(){
     bindAccount();
     bindTabs();
@@ -48,6 +101,7 @@
     setDebug('Ready. Prebuilding PDF…');
     setTimeout(schedulePrebuild, 300);
     setTimeout(handlePendingLoad, 200);
+    setTimeout(bindCustomerAutocomplete, 300);
     applyCategoryMode();
   }
 
@@ -439,6 +493,10 @@
     });
     updateStatusHint();
   }
+
+  
+
+  
 
   function readData(){
     var p = currentProfile || {};

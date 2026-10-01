@@ -125,6 +125,7 @@
             '<div class="inv-actions-row">' +
               '<button class="inv-action-btn edit" data-action="load" data-id="' + escapeHtml(inv.id || '') + '">✏️ Edit</button>' +
               '<button class="inv-action-btn share" data-action="share" data-id="' + escapeHtml(inv.id || '') + '">📤 Share</button>' +
+              (status !== 'paid' ? '<button class="inv-action-btn ai-remind" data-action="ai-remind" data-id="' + escapeHtml(inv.id || '') + '" style="grid-column:1/-1;background:linear-gradient(135deg,#8B5CF6,#6366F1);color:#fff;border-color:transparent">✨ AI Reminder</button>' : '') +
               '<button class="inv-action-btn del" data-action="delete" data-id="' + escapeHtml(inv.id || '') + '">🗑 Delete</button>' +
             '</div>' +
           '</div>'
@@ -189,6 +190,7 @@
         var id = btn.getAttribute('data-id');
         if (action === 'load') loadIntoEditor(id);
         else if (action === 'share') shareInvoice(id);
+        
         else if (action === 'delete') confirmDelete(id);
       });
     }
@@ -237,6 +239,13 @@
       window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
     }
   }
+
+  
+
+  
+  
+
+  
 
   function confirmDelete(id){
     if (!confirm('Delete this invoice? This cannot be undone.')) return;
