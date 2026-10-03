@@ -353,3 +353,607 @@ body.dark .inv-action-btn.del{
   border-color:#7F1D1D !important;
 }
 
+
+/* ============================================================
+   UDHAAR KHATA — Stylish Upgrade
+   ============================================================ */
+
+/* Card style */
+.ud-card{
+  background:linear-gradient(180deg,#FFFFFF 0%,#FAFBFC 100%) !important;
+  border:1px solid rgba(226,232,240,0.9) !important;
+  border-radius:16px !important;
+  padding:14px !important;
+  margin-bottom:10px !important;
+  box-shadow:0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.03) !important;
+  transition:transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+body.dark .ud-card{
+  background:linear-gradient(180deg,#1E293B 0%,#1A2637 100%) !important;
+  border-color:#334155 !important;
+  box-shadow:0 1px 2px rgba(0,0,0,0.2) !important;
+}
+.ud-card:active{
+  transform:scale(0.98) !important;
+  box-shadow:0 1px 2px rgba(15,118,110,0.1) !important;
+}
+
+.ud-avatar{
+  width:50px !important;
+  height:50px !important;
+  border-radius:14px !important;
+  font-size:1.2rem !important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1) !important;
+}
+
+.ud-name{
+  font-size:1rem !important;
+  font-weight:800 !important;
+  letter-spacing:-.01em !important;
+}
+
+.ud-balance{
+  font-size:1.1rem !important;
+  font-weight:900 !important;
+}
+.ud-balance.owe-you{ color:#059669 !important; }
+.ud-balance.you-owe{ color:#DC2626 !important; }
+.ud-balance.clear{
+  color:#94A3B8 !important;
+  font-size:.9rem !important;
+  font-weight:700 !important;
+}
+
+/* Tabs */
+.ud-tabs{
+  padding:14px 16px 10px !important;
+  max-width:640px !important;
+  margin:0 auto !important;
+  gap:8px !important;
+}
+.ud-tab{
+  padding:10px 18px !important;
+  font-size:.84rem !important;
+  font-weight:800 !important;
+  letter-spacing:.2px !important;
+  transition:all 0.15s ease !important;
+}
+.ud-tab.active{
+  box-shadow:0 4px 12px rgba(15,118,110,0.25) !important;
+}
+
+/* FAB button */
+.ud-add-fab{
+  width:60px !important;
+  height:60px !important;
+  font-size:1.8rem !important;
+  box-shadow:0 10px 30px rgba(15,118,110,0.4) !important;
+  transition:transform 0.15s ease !important;
+}
+.ud-add-fab:active{
+  transform:scale(0.92) !important;
+}
+
+/* ============================================================
+   UDHAAR CUSTOMER PAGE — Redesign
+   ============================================================ */
+
+.ud-entry{
+  background:#fff !important;
+  border:1px solid rgba(226,232,240,0.8) !important;
+  border-radius:14px !important;
+  padding:14px 16px !important;
+  margin-bottom:8px !important;
+  box-shadow:0 1px 2px rgba(15,23,42,0.03) !important;
+  transition:transform 0.1s ease !important;
+}
+body.dark .ud-entry{
+  background:#1E293B !important;
+  border-color:#334155 !important;
+}
+.ud-entry:active{
+  transform:scale(0.99) !important;
+  background:#FAFBFC !important;
+}
+body.dark .ud-entry:active{ background:#0F172A !important; }
+
+.ud-entry-icon{
+  width:42px !important;
+  height:42px !important;
+  border-radius:12px !important;
+  font-size:1.15rem !important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08) !important;
+}
+
+.ud-entry-title{
+  font-size:.95rem !important;
+  font-weight:800 !important;
+  letter-spacing:-.01em !important;
+}
+.ud-entry-amount{
+  font-size:1.05rem !important;
+  font-weight:900 !important;
+  letter-spacing:-.01em !important;
+}
+.ud-entry-amount.credit{ color:#DC2626 !important; }
+.ud-entry-amount.payment{ color:#059669 !important; }
+body.dark .ud-entry-amount.credit{ color:#FCA5A5 !important; }
+body.dark .ud-entry-amount.payment{ color:#6EE7B7 !important; }
+
+/* Contact actions */
+.ud-action-row{
+  grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)) !important;
+  gap:10px !important;
+}
+.ud-action{
+  padding:14px 8px !important;
+  border-radius:14px !important;
+  font-size:.82rem !important;
+  font-weight:800 !important;
+  min-height:60px !important;
+  transition:transform 0.12s ease !important;
+  letter-spacing:.2px !important;
+}
+.ud-action.call{
+  background:linear-gradient(135deg,#EEF2FF,#E0E7FF) !important;
+  color:#4338CA !important;
+  border-color:#C7D2FE !important;
+}
+.ud-action.wa{
+  background:linear-gradient(135deg,#DCFCE7,#BBF7D0) !important;
+  color:#166534 !important;
+  border-color:#86EFAC !important;
+}
+.ud-action.edit{
+  background:linear-gradient(135deg,#F1F5F9,#E2E8F0) !important;
+  color:#475569 !important;
+  border-color:#CBD5E1 !important;
+}
+
+/* Add entry buttons */
+.ud-add-entry button{
+  padding:16px !important;
+  border-radius:14px !important;
+  font-size:.95rem !important;
+  font-weight:900 !important;
+  min-height:64px !important;
+  letter-spacing:.2px !important;
+  transition:transform 0.12s ease, box-shadow 0.12s ease !important;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05) !important;
+}
+.ud-add-entry .credit{
+  background:linear-gradient(135deg,#FEF2F2,#FEE2E2) !important;
+  color:#DC2626 !important;
+  border-color:#FECACA !important;
+}
+.ud-add-entry .payment{
+  background:linear-gradient(135deg,#ECFDF5,#D1FAE5) !important;
+  color:#059669 !important;
+  border-color:#A7F3D0 !important;
+}
+.ud-add-entry button:active{
+  transform:scale(0.97) !important;
+  box-shadow:0 1px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* Summary card */
+.ud-summary{
+  background:linear-gradient(180deg,#FFFFFF,#FAFBFC) !important;
+  border:1px solid rgba(226,232,240,0.9) !important;
+  border-radius:16px !important;
+  padding:18px 20px !important;
+  box-shadow:0 4px 16px rgba(15,23,42,0.04) !important;
+}
+body.dark .ud-summary{
+  background:linear-gradient(180deg,#1E293B,#1A2637) !important;
+  border-color:#334155 !important;
+}
+.ud-summary-row{
+  padding:8px 0 !important;
+  font-size:.94rem !important;
+  font-weight:600 !important;
+}
+.ud-summary-row.balance{
+  border-top:2px solid #0F766E !important;
+  padding-top:14px !important;
+  margin-top:8px !important;
+  font-weight:900 !important;
+  font-size:1.2rem !important;
+}
+
+/* Better stats cards for udhaar */
+.kw-stat-num{
+  font-variant-numeric:tabular-nums !important;
+}
+
+/* Modal improvements */
+.kw-modal label > span{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif !important;
+}
+.kw-modal input{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif !important;
+}
+.kw-modal input:focus{
+  border-color:#0F766E !important;
+  box-shadow:0 0 0 4px rgba(15,118,110,.12) !important;
+  background:#fff !important;
+}
+
+
+/* ============================================================
+   UDHAAR BOOK — Modern Redesign
+   ============================================================ */
+body{background:#F5F5F5}
+body.dark{background:#0F172A}
+
+/* HEADER */
+.udb-header{background:#fff;border-bottom:1px solid #EEF0F3}
+body.dark .udb-header{background:#1E293B;border-color:#334155}
+.udb-header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px}
+.udb-business-btn{display:inline-flex;align-items:center;gap:8px;background:transparent;border:none;
+  font-family:inherit;font-weight:800;font-size:1.05rem;color:#0F172A;cursor:pointer;padding:0;
+  letter-spacing:-.02em}
+body.dark .udb-business-btn{color:#F1F5F9}
+.udb-caret{font-size:.75rem;color:#94A3B8}
+.udb-header-actions{display:flex;gap:6px}
+.udb-icon-btn{width:36px;height:36px;border-radius:50%;background:transparent;border:none;
+  font-size:1.15rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  color:#0F172A}
+body.dark .udb-icon-btn{color:#F1F5F9}
+.udb-icon-btn:active{background:#F1F5F9}
+
+.udb-tabs{display:flex;padding:0 16px;gap:24px;border-top:1px solid #F1F5F9}
+body.dark .udb-tabs{border-color:#334155}
+.udb-tab{background:transparent;border:none;padding:12px 0;font-family:inherit;font-weight:600;
+  font-size:.95rem;color:#94A3B8;cursor:pointer;position:relative}
+.udb-tab.active{color:#0F172A;font-weight:800}
+body.dark .udb-tab.active{color:#F1F5F9}
+.udb-tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:3px;
+  background:#0F172A;border-radius:3px 3px 0 0}
+body.dark .udb-tab.active::after{background:#5EEAD4}
+
+/* BODY */
+.udb-body{padding:0 0 100px}
+
+/* TOTAL CARDS */
+.udb-total-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
+.udb-total-card{background:#fff;border-radius:16px;padding:16px 14px;text-align:center;
+  border:1px solid #EEF0F3;box-shadow:0 1px 2px rgba(15,23,42,0.03)}
+body.dark .udb-total-card{background:#1E293B;border-color:#334155}
+.udb-total-amount{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-bottom:4px}
+.udb-total-card.give .udb-total-amount{color:#059669}
+.udb-total-card.get .udb-total-amount{color:#EA580C}
+.udb-total-label{font-size:.78rem;color:#94A3B8;font-weight:600}
+
+/* SEARCH */
+.udb-search-wrap{display:flex;gap:10px;padding:0 16px 12px;align-items:center}
+.udb-search{flex:1;position:relative;background:#fff;border:1px solid #EEF0F3;border-radius:14px;
+  display:flex;align-items:center;padding:0 14px;height:48px}
+body.dark .udb-search{background:#1E293B;border-color:#334155}
+.udb-search-icon{font-size:.9rem;margin-right:8px;opacity:.5}
+.udb-search input{flex:1;border:none;outline:none;background:transparent;font-family:inherit;
+  font-size:15px;color:#0F172A;height:100%}
+body.dark .udb-search input{color:#F1F5F9}
+.udb-search input::placeholder{color:#94A3B8}
+
+.udb-filter-btn{width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #EEF0F3;
+  font-size:1.2rem;cursor:pointer;color:#0F172A;display:inline-flex;align-items:center;
+  justify-content:center}
+body.dark .udb-filter-btn{background:#1E293B;border-color:#334155;color:#F1F5F9}
+
+/* LIST */
+.udb-list-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 8px}
+.udb-list-head > span:first-child{font-weight:800;font-size:.9rem;color:#0F172A}
+body.dark .udb-list-head > span:first-child{color:#F1F5F9}
+.udb-list-updated{font-size:.72rem;color:#94A3B8}
+.udb-list-updated a{color:#0F766E;font-weight:700;text-decoration:none}
+
+.udb-list{background:#fff;margin:0 16px;border-radius:16px;overflow:hidden;
+  border:1px solid #EEF0F3;box-shadow:0 1px 2px rgba(15,23,42,0.03)}
+body.dark .udb-list{background:#1E293B;border-color:#334155}
+
+.udb-cust-row{display:flex;align-items:center;gap:12px;padding:14px 16px;
+  border-bottom:1px solid #F5F5F5;cursor:pointer}
+body.dark .udb-cust-row{border-bottom-color:#334155}
+.udb-cust-row:last-child{border-bottom:none}
+.udb-cust-row:active{background:#FAFBFC}
+body.dark .udb-cust-row:active{background:#0F172A}
+
+.udb-cust-avatar{width:44px;height:44px;border-radius:50%;color:#fff;font-weight:800;font-size:1rem;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+  border:1.5px solid rgba(0,0,0,0.05)}
+.udb-cust-mid{flex:1;min-width:0}
+.udb-cust-name{font-weight:700;font-size:.95rem;color:#0F172A;margin:0;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.dark .udb-cust-name{color:#F1F5F9}
+.udb-cust-phone{font-size:.78rem;color:#94A3B8;margin:2px 0 0}
+.udb-cust-amount{font-weight:800;font-size:.98rem;flex-shrink:0;letter-spacing:-.01em}
+.udb-pill{padding:8px 14px;border-radius:12px;border:none;font-family:inherit;
+  font-weight:800;font-size:.72rem;cursor:pointer;letter-spacing:.4px;flex-shrink:0;min-width:88px}
+.udb-pill.collect{background:#0F172A;color:#fff}
+body.dark .udb-pill.collect{background:#5EEAD4;color:#0F172A}
+.udb-pill.send{background:#22C55E;color:#fff}
+.udb-pill:active{transform:scale(0.96)}
+
+/* EMPTY */
+.udb-empty{text-align:center;padding:60px 30px 80px}
+.udb-empty-icon{font-size:3rem;opacity:.7;margin-bottom:12px}
+.udb-empty h3{margin:0 0 6px;font-size:1.05rem;color:#0F172A}
+body.dark .udb-empty h3{color:#F1F5F9}
+.udb-empty p{margin:0;color:#94A3B8;font-size:.88rem;line-height:1.5}
+
+/* ADD BUTTON */
+.udb-add-btn{display:block;width:calc(100% - 32px);margin:16px auto 0;
+  padding:16px;border-radius:14px;background:#fff;color:#0F766E;
+  border:1.5px solid #A7F3D0;font-family:inherit;font-weight:800;font-size:.9rem;
+  cursor:pointer;letter-spacing:.5px;box-shadow:0 1px 2px rgba(15,118,110,0.08)}
+body.dark .udb-add-btn{background:#064E3B;color:#5EEAD4;border-color:#065F46}
+.udb-add-btn:active{transform:scale(0.98)}
+
+/* MODAL FIELDS */
+.udb-modal-field{margin-bottom:14px}
+.udb-modal-field label{display:block;font-size:.78rem;font-weight:700;color:#64748B;
+  margin-bottom:6px;letter-spacing:.3px}
+.udb-modal-field input{width:100%;padding:14px;border:1.5px solid #E2E8F0;border-radius:12px;
+  font-family:inherit;font-size:15px;background:#FAFBFC;color:#0F172A;
+  box-sizing:border-box;outline:none;transition:all .15s}
+body.dark .udb-modal-field input{background:#0F172A;border-color:#334155;color:#F1F5F9}
+.udb-modal-field input:focus{border-color:#0F766E;background:#fff;
+  box-shadow:0 0 0 4px rgba(15,118,110,.12)}
+.udb-type-pills{display:flex;gap:8px}
+.udb-type-pill{padding:10px 18px;border-radius:24px;border:1.5px solid #E2E8F0;
+  background:#fff;font-family:inherit;font-weight:700;font-size:.85rem;color:#64748B;cursor:pointer}
+body.dark .udb-type-pill{background:#0F172A;border-color:#334155;color:#94A3B8}
+.udb-type-pill.active{background:#F0FDFA;color:#0F766E;border-color:#5EEAD4}
+body.dark .udb-type-pill.active{background:#064E3B;color:#5EEAD4;border-color:#065F46}
+.udb-save-btn{width:100%;padding:16px;border-radius:14px;background:#0F172A;color:#fff;
+  border:none;font-family:inherit;font-weight:800;font-size:.95rem;cursor:pointer;
+  letter-spacing:.5px;margin-top:8px}
+body.dark .udb-save-btn{background:#5EEAD4;color:#0F172A}
+.udb-save-btn:disabled{opacity:.5}
+
+/* ============================================================
+   DETAIL PAGE — Udhaar Book Style
+   ============================================================ */
+body{background:#F0F7F4}
+body.dark{background:#0F172A}
+
+.udb-detail-header{background:#fff;display:flex;align-items:center;gap:10px;
+  padding:12px 14px;border-bottom:1px solid #EEF0F3;position:sticky;top:0;z-index:20}
+body.dark .udb-detail-header{background:#1E293B;border-color:#334155}
+.udb-back{width:36px;height:36px;border-radius:50%;background:transparent;border:none;
+  font-size:1.3rem;cursor:pointer;color:#0F172A;font-family:inherit;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center}
+body.dark .udb-back{color:#F1F5F9}
+.udb-detail-avatar{width:36px;height:36px;border-radius:50%;color:#fff;font-weight:800;
+  font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.udb-detail-name-wrap{flex:1;min-width:0}
+.udb-detail-name{font-weight:800;font-size:.98rem;color:#0F172A;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.dark .udb-detail-name{color:#F1F5F9}
+.udb-detail-phone{font-size:.72rem;color:#94A3B8;margin-top:1px}
+.udb-edit-btn,.udb-more-btn{width:34px;height:34px;border-radius:50%;background:transparent;
+  border:none;font-size:1rem;cursor:pointer;color:#0F172A;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center}
+body.dark .udb-edit-btn,body.dark .udb-more-btn{color:#F1F5F9}
+
+.udb-balance-strip{background:#fff;padding:16px;text-align:center;border-bottom:1px solid #EEF0F3}
+body.dark .udb-balance-strip{background:#1E293B;border-color:#334155}
+.udb-balance-lbl{font-size:.78rem;color:#94A3B8;font-weight:700;letter-spacing:.4px;
+  text-transform:uppercase;margin-bottom:4px}
+.udb-balance-amt{font-size:1.8rem;font-weight:900;letter-spacing:-.03em;line-height:1.1}
+
+.udb-safe-badge{background:linear-gradient(180deg,#fff,#FAFBFC);padding:14px 16px;text-align:center;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  border-bottom:1px solid #EEF0F3;font-size:.85rem;color:#475569;font-weight:600}
+body.dark .udb-safe-badge{background:linear-gradient(180deg,#1E293B,#1A2637);
+  border-color:#334155;color:#CBD5E1}
+.udb-safe-icon{font-size:1rem}
+
+.udb-ledger{padding:16px 16px 200px;background:#F0F7F4}
+body.dark .udb-ledger{background:#0F172A}
+
+.udb-first-hint{text-align:center;color:#475569;font-size:.92rem;font-weight:700;
+  margin-top:40px;letter-spacing:-.01em}
+body.dark .udb-first-hint{color:#CBD5E1}
+.udb-arrow{text-align:center;font-size:1.8rem;color:#0F172A;margin-top:16px;
+  animation:udbBounce 1.6s ease-in-out infinite}
+body.dark .udb-arrow{color:#5EEAD4}
+@keyframes udbBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+.udb-empty-ledger{padding:20px 0}
+.udb-empty-skeleton{display:flex;flex-direction:column;gap:10px;opacity:.5}
+.udb-sk-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;
+  border-radius:14px;border:1px solid #EEF0F3}
+body.dark .udb-sk-row{background:#1E293B;border-color:#334155}
+.udb-sk-avatar{width:36px;height:36px;border-radius:50%;background:#E5E7EB;flex-shrink:0}
+body.dark .udb-sk-avatar{background:#334155}
+.udb-sk-lines{flex:1;display:flex;flex-direction:column;gap:6px}
+.udb-sk-line{height:10px;border-radius:6px;background:#E5E7EB;width:100%}
+.udb-sk-line.short{width:50%}
+body.dark .udb-sk-line{background:#334155}
+
+/* ENTRIES */
+.udb-entry{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;
+  display:flex;align-items:center;gap:12px;border:1px solid #EEF0F3;
+  box-shadow:0 1px 2px rgba(15,23,42,0.03)}
+body.dark .udb-entry{background:#1E293B;border-color:#334155}
+.udb-entry-icon{width:40px;height:40px;border-radius:12px;font-size:1.2rem;font-weight:900;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.udb-entry-icon.gave{background:#FEF2F2;color:#DC2626}
+.udb-entry-icon.took{background:#ECFDF5;color:#059669}
+body.dark .udb-entry-icon.gave{background:#450A0A;color:#FCA5A5}
+body.dark .udb-entry-icon.took{background:#064E3B;color:#6EE7B7}
+.udb-entry-body{flex:1;min-width:0}
+.udb-entry-title{font-weight:800;font-size:.85rem;letter-spacing:.5px;color:#0F172A;margin:0}
+body.dark .udb-entry-title{color:#F1F5F9}
+.udb-entry-note{font-size:.82rem;color:#64748B;margin:2px 0 0}
+.udb-entry-date{font-size:.72rem;color:#94A3B8;margin:3px 0 0}
+.udb-entry-amt{font-weight:900;font-size:1.02rem;letter-spacing:-.01em;flex-shrink:0}
+.udb-entry-amt.gave{color:#DC2626}
+.udb-entry-amt.took{color:#059669}
+body.dark .udb-entry-amt.gave{color:#FCA5A5}
+body.dark .udb-entry-amt.took{color:#6EE7B7}
+
+/* BOTTOM ACTION BUTTONS */
+.udb-detail-actions{position:fixed;left:0;right:0;bottom:0;z-index:40;
+  padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+  background:rgba(240,247,244,0.98);backdrop-filter:blur(14px);
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:640px;margin:0 auto}
+body.dark .udb-detail-actions{background:rgba(15,23,42,0.98)}
+.udb-action{padding:14px;border-radius:14px;border:1.5px solid;font-family:inherit;
+  font-weight:900;font-size:.95rem;cursor:pointer;letter-spacing:.5px;
+  display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;
+  transition:transform 0.12s}
+.udb-action.took{background:linear-gradient(180deg,#ECFDF5,#D1FAE5);color:#059669;
+  border-color:#A7F3D0}
+body.dark .udb-action.took{background:linear-gradient(180deg,#064E3B,#065F46);
+  color:#6EE7B7;border-color:#065F46}
+.udb-action.gave{background:linear-gradient(180deg,#FEF2F2,#FEE2E2);color:#DC2626;
+  border-color:#FECACA}
+body.dark .udb-action.gave{background:linear-gradient(180deg,#450A0A,#7F1D1D);
+  color:#FCA5A5;border-color:#7F1D1D}
+.udb-action:active{transform:scale(0.97)}
+.udb-action-icon{font-size:1.2rem;font-weight:900}
+
+/* ENTRY FULL SCREEN */
+.udb-entry-full{background:#fff;width:100%;height:100%;display:flex;flex-direction:column;
+  padding:20px;box-sizing:border-box}
+body.dark .udb-entry-full{background:#0F172A}
+.udb-entry-top{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.udb-entry-back{width:36px;height:36px;border-radius:50%;background:transparent;border:none;
+  font-size:1.3rem;cursor:pointer;color:#0F172A;font-family:inherit}
+body.dark .udb-entry-back{color:#F1F5F9}
+.udb-entry-title-bar{font-weight:700;font-size:.95rem;color:#0F172A}
+body.dark .udb-entry-title-bar{color:#F1F5F9}
+
+.udb-entry-amount-row{display:flex;align-items:baseline;gap:12px;padding:24px 0 8px;
+  border-bottom:2px solid #F1F5F9;margin-bottom:20px}
+body.dark .udb-entry-amount-row{border-color:#334155}
+.udb-rs{font-size:1.4rem;font-weight:900;color:#0F172A}
+body.dark .udb-rs{color:#F1F5F9}
+.udb-entry-amount-row input{flex:1;border:none;outline:none;font-family:inherit;
+  font-size:1.8rem;font-weight:800;color:#0F172A;background:transparent;
+  letter-spacing:-.02em;padding:0;min-width:0}
+body.dark .udb-entry-amount-row input{color:#F1F5F9}
+.udb-entry-amount-row input::placeholder{color:#CBD5E1;font-weight:600}
+.udb-amt-date{font-size:.78rem;color:#94A3B8;flex-shrink:0;font-weight:600}
+.udb-entry-note-row{margin-bottom:auto}
+.udb-entry-note-row input{width:100%;padding:14px;border:1.5px solid #F1F5F9;border-radius:12px;
+  font-family:inherit;font-size:15px;background:#FAFBFC;color:#0F172A;box-sizing:border-box;
+  outline:none}
+body.dark .udb-entry-note-row input{background:#1E293B;border-color:#334155;color:#F1F5F9}
+.udb-entry-note-row input:focus{border-color:#0F766E;background:#fff}
+
+.udb-done-btn{width:100%;padding:18px;border-radius:14px;background:#0F172A;color:#fff;
+  border:none;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;
+  letter-spacing:.8px;margin-top:20px}
+.udb-done-btn:disabled{background:#E2E8F0;color:#94A3B8;cursor:not-allowed}
+body.dark .udb-done-btn{background:#5EEAD4;color:#0F172A}
+body.dark .udb-done-btn:disabled{background:#334155;color:#64748B}
+
+/* MENU ITEMS */
+.udb-menu-item{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;
+  background:#fff;border:1px solid #EEF0F3;border-radius:12px;margin-bottom:8px;
+  font-family:inherit;font-weight:700;font-size:.95rem;color:#0F172A;cursor:pointer;text-align:left}
+body.dark .udb-menu-item{background:#1E293B;border-color:#334155;color:#F1F5F9}
+.udb-menu-item.danger{color:#DC2626}
+.udb-menu-item:active{background:#FAFBFC}
+
+
+/* ============================================================
+   MODAL — For Udhaar & other pages (shared)
+   ============================================================ */
+.kw-overlay{
+  position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:16px;box-sizing:border-box;
+  animation:kwFadeIn 0.2s ease;
+}
+@keyframes kwFadeIn{from{opacity:0}to{opacity:1}}
+
+.kw-modal{
+  background:#fff;border-radius:20px;padding:22px 20px;
+  width:100%;max-width:440px;box-sizing:border-box;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  animation:kwSlideUp 0.28s cubic-bezier(0.4,0,0.2,1);
+  max-height:90vh;overflow-y:auto;
+}
+@keyframes kwSlideUp{
+  from{transform:translateY(40px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+body.dark .kw-modal{background:#1E293B;color:#F1F5F9}
+
+.kw-modal h3{
+  margin:0 0 6px;font-size:1.2rem;font-weight:800;color:#0F172A;
+  letter-spacing:-.01em;line-height:1.25;
+}
+body.dark .kw-modal h3{color:#F1F5F9}
+.kw-modal > p{
+  margin:0 0 16px;color:#64748B;font-size:.88rem;line-height:1.5;
+}
+body.dark .kw-modal > p{color:#94A3B8}
+
+.kw-modal .kw-primary{
+  background:#0F766E;color:#fff;border:none;padding:15px;
+  border-radius:13px;font-weight:800;font-size:.98rem;
+  min-height:52px;cursor:pointer;width:100%;font-family:inherit;
+  margin-top:12px;letter-spacing:.3px;
+}
+.kw-modal .kw-primary:active{background:#115E59;transform:scale(0.99)}
+.kw-modal .kw-primary:disabled{opacity:.6;cursor:not-allowed}
+
+.kw-modal .kw-secondary{
+  background:#F1F5F9;color:#475569;border:none;padding:13px;
+  border-radius:13px;font-weight:700;font-size:.92rem;
+  min-height:48px;cursor:pointer;width:100%;font-family:inherit;
+  margin-top:8px;
+}
+body.dark .kw-modal .kw-secondary{background:#334155;color:#CBD5E1}
+.kw-modal .kw-secondary:active{background:#E2E8F0}
+
+.kw-modal .kw-msg{
+  margin-top:10px;padding:10px 12px;border-radius:10px;
+  font-size:.85rem;text-align:center;font-weight:700;display:none;
+}
+.kw-modal .kw-msg.show{display:block}
+
+/* Field wrapper inside modal */
+.kw-modal label{
+  display:block;margin-bottom:14px;
+}
+.kw-modal label > span,
+.kw-modal label > .lbl{
+  display:block;font-size:.8rem;font-weight:700;color:#334155;
+  margin-bottom:7px;letter-spacing:.2px;
+}
+body.dark .kw-modal label > span,
+body.dark .kw-modal label > .lbl{color:#CBD5E1}
+.kw-modal input[type="text"],
+.kw-modal input[type="tel"],
+.kw-modal input[type="number"],
+.kw-modal input[type="email"],
+.kw-modal input[type="date"]{
+  width:100%;padding:13px 14px;border:1.5px solid #E2E8F0;
+  border-radius:12px;font-size:15px;background:#FAFBFC;color:#0F172A;
+  font-family:inherit;box-sizing:border-box;outline:none;
+  min-height:50px;transition:all .15s;
+}
+body.dark .kw-modal input{background:#0F172A;border-color:#334155;color:#F1F5F9}
+.kw-modal input:focus{
+  border-color:#0F766E;background:#fff;
+  box-shadow:0 0 0 4px rgba(15,118,110,.12);
+}
+
+/* CONTACT PICKER BUTTON */
+.kw-contacts-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;margin-top:8px;padding:11px;border-radius:11px;
+  background:#F0FDFA;color:#0F766E;border:1.5px dashed #5EEAD4;
+  font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer;
+  min-height:44px;transition:background .15s;
+}
+.kw-contacts-btn:active{background:#CCFBF1}
+.kw-contacts-btn:disabled{opacity:.55;cursor:not-allowed}
+

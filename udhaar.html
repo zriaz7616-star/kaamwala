@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<meta name="robots" content="noindex, nofollow">
+<title>Udhaar Khata — KaamWala</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="home.css">
+<style>
+.ud-tabs{display:flex;gap:8px;padding:14px 16px 4px;max-width:640px;margin:0 auto;overflow-x:auto}
+.ud-tab{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #E2E8F0;
+  background:#fff;color:#64748B;font-weight:700;font-size:.82rem;cursor:pointer;
+  font-family:inherit;min-height:38px;white-space:nowrap}
+body.dark .ud-tab{background:#1E293B;border-color:#334155;color:#94A3B8}
+.ud-tab.active{background:#0F766E;color:#fff;border-color:#0F766E}
+
+.ud-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:14px;
+  margin-bottom:10px;display:flex;align-items:center;gap:12px;text-decoration:none;
+  color:inherit;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.03)}
+body.dark .ud-card{background:#1E293B;border-color:#334155}
+.ud-card:active{transform:scale(0.99);background:#FAFAFA}
+body.dark .ud-card:active{background:#0F172A}
+.ud-avatar{width:48px;height:48px;border-radius:12px;display:inline-flex;
+  align-items:center;justify-content:center;font-size:1.15rem;font-weight:800;
+  color:#fff;flex-shrink:0}
+.ud-body{flex:1;min-width:0}
+.ud-name{font-weight:700;color:#0F172A;font-size:.98rem;margin:0 0 3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.dark .ud-name{color:#F1F5F9}
+.ud-meta{color:#64748B;font-size:.78rem;margin:0}
+.ud-amount{text-align:right;flex-shrink:0}
+.ud-balance{font-weight:800;font-size:1.05rem;margin:0;letter-spacing:-.01em}
+.ud-balance.owe-you{color:#059669}
+.ud-balance.you-owe{color:#DC2626}
+.ud-balance.clear{color:#94A3B8;font-size:.85rem}
+.ud-balance-lbl{font-size:.65rem;color:#94A3B8;font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.ud-add-fab{position:fixed;right:16px;bottom:96px;width:56px;height:56px;
+  border-radius:50%;background:linear-gradient(135deg,#0F766E,#14B8A6);
+  color:#fff;border:none;font-size:1.6rem;font-weight:700;cursor:pointer;
+  box-shadow:0 8px 24px rgba(15,118,110,0.35);z-index:40;
+  display:flex;align-items:center;justify-content:center}
+.ud-add-fab:active{transform:scale(0.95)}
+</style>
+</head>
+<body>
+
+<div id="udRoot">
+  <div class="kw-loading"><div class="kw-spinner"></div><div>Loading Udhaar Khata…</div></div>
+</div>
+
+<button class="ud-add-fab" id="udAddBtn" style="display:none" aria-label="Add customer">+</button>
+
+<nav class="kw-nav" id="bottomNav" style="display:none">
+  <a href="home.html" class="kw-nav-item "><span class="kw-nav-icon">🏠</span><span class="kw-nav-label">Home</span></a>
+  <a href="udhaar.html" class="kw-nav-item active"><span class="kw-nav-icon">📒</span><span class="kw-nav-label">Udhaar</span></a>
+  <a href="app.html" class="kw-nav-item new-inv"><span class="kw-nav-icon">+</span><span class="kw-nav-label">New</span></a>
+  <a href="customers.html" class="kw-nav-item "><span class="kw-nav-icon">👥</span><span class="kw-nav-label">Customers</span></a>
+  <a href="settings.html" class="kw-nav-item "><span class="kw-nav-icon">⚙️</span><span class="kw-nav-label">Settings</span></a>
+</nav>
+
+<script src="firebase-app.js"></script>
+<script src="firebase-auth.js"></script>
+<script src="firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
+<script src="theme.js"></script>
+<script src="i18n.js"></script>
+<script src="fb-data.js"></script>
+<script src="udhaar.js"></script>
+<script src="udhaar-list.js"></script>
+</body>
+</html>

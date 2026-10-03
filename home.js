@@ -188,10 +188,7 @@
             '<span class="kw-action-icon">+</span>' +
             '<span class="kw-action-label">New<br>Invoice</span>' +
           '</a>' +
-          '<a href="products.html" class="kw-action products">' +
-            '<span class="kw-action-icon">📦</span>' +
-            '<span class="kw-action-label">Products</span>' +
-          '</a>' +
+          '<a href="udhaar.html" class="kw-action products"><span class="kw-action-icon">📒</span><span class="kw-action-label">Udhaar</span></a>' +
           '<a href="customers.html" class="kw-action customers">' +
             '<span class="kw-action-icon">👥</span>' +
             '<span class="kw-action-label">Customers</span>' +

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<meta name="robots" content="noindex, nofollow">
+<title>Customer Ledger — KaamWala</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="home.css">
+<style>
+.ud-entry{background:#fff;border:1px solid #E2E8F0;border-radius:12px;
+  padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+body.dark .ud-entry{background:#1E293B;border-color:#334155}
+.ud-entry-icon{width:40px;height:40px;border-radius:10px;display:inline-flex;
+  align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.ud-entry-icon.credit{background:#FEE2E2;color:#DC2626}
+.ud-entry-icon.payment{background:#D1FAE5;color:#059669}
+body.dark .ud-entry-icon.credit{background:#450A0A;color:#FCA5A5}
+body.dark .ud-entry-icon.payment{background:#064E3B;color:#6EE7B7}
+.ud-entry-body{flex:1;min-width:0}
+.ud-entry-title{font-weight:700;color:#0F172A;font-size:.92rem;margin:0}
+body.dark .ud-entry-title{color:#F1F5F9}
+.ud-entry-note{color:#64748B;font-size:.78rem;margin:2px 0 0}
+.ud-entry-date{color:#94A3B8;font-size:.72rem;margin:2px 0 0}
+.ud-entry-amount{font-weight:800;font-size:.98rem;flex-shrink:0}
+.ud-entry-amount.credit{color:#DC2626}
+.ud-entry-amount.payment{color:#059669}
+body.dark .ud-entry-amount.credit{color:#FCA5A5}
+body.dark .ud-entry-amount.payment{color:#6EE7B7}
+
+.ud-action-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+  padding:0 16px 16px;max-width:640px;margin:0 auto}
+.ud-action{padding:12px 8px;border-radius:12px;border:1.5px solid;font-weight:700;
+  font-size:.82rem;cursor:pointer;font-family:inherit;min-height:52px;
+  display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;
+  flex-direction:column;line-height:1.2}
+.ud-action.call{background:#EEF2FF;color:#4338CA;border-color:#C7D2FE}
+.ud-action.wa{background:#DCFCE7;color:#166534;border-color:#BBF7D0}
+.ud-action.edit{background:#F1F5F9;color:#475569;border-color:#E2E8F0}
+.ud-action:active{transform:scale(0.97)}
+
+.ud-add-entry{padding:0 16px 16px;max-width:640px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ud-add-entry button{padding:14px;border-radius:12px;font-weight:800;
+  font-size:.92rem;cursor:pointer;font-family:inherit;min-height:56px;
+  border:1.5px solid;display:flex;align-items:center;justify-content:center;gap:6px}
+.ud-add-entry .credit{background:linear-gradient(135deg,#FEF2F2,#FEE2E2);color:#DC2626;border-color:#FECACA}
+.ud-add-entry .payment{background:linear-gradient(135deg,#ECFDF5,#D1FAE5);color:#059669;border-color:#A7F3D0}
+.ud-add-entry button:active{transform:scale(0.97)}
+
+.ud-summary{background:#fff;border:1px solid #E2E8F0;border-radius:14px;
+  margin:0 16px 14px;padding:16px;max-width:640px;margin-left:auto;margin-right:auto;
+  box-sizing:border-box}
+body.dark .ud-summary{background:#1E293B;border-color:#334155}
+.ud-summary-row{display:flex;justify-content:space-between;padding:6px 0;
+  font-size:.92rem;color:#64748B}
+.ud-summary-row.balance{border-top:2px solid #0F766E;padding-top:12px;margin-top:6px;
+  font-weight:800;font-size:1.1rem;color:#0F766E}
+body.dark .ud-summary-row.balance{color:#5EEAD4;border-top-color:#5EEAD4}
+</style>
+</head>
+<body>
+
+<div id="detailRoot">
+  <div class="kw-loading"><div class="kw-spinner"></div><div>Loading…</div></div>
+</div>
+
+<div id="toast" class="kw-inv-toast"></div>
+
+<script src="firebase-app.js"></script>
+<script src="firebase-auth.js"></script>
+<script src="firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
+<script src="theme.js"></script>
+<script src="i18n.js"></script>
+<script src="fb-data.js"></script>
+<script src="udhaar.js"></script>
+<script src="udhaar-detail.js"></script>
+</body>
+</html>
