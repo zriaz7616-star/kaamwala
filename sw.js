@@ -1,5 +1,5 @@
 /* KaamWala Service Worker — offline cache */
-const CACHE_NAME = 'kaamwala-v3';
+const CACHE_NAME = 'kaamwala-v5';
 const urlsToCache = [
   '/kaamwala/',
   '/kaamwala/index.html',

@@ -59,6 +59,34 @@ body.dark .ud-summary{background:#1E293B;border-color:#334155}
   font-weight:800;font-size:1.1rem;color:#0F766E}
 body.dark .ud-summary-row.balance{color:#5EEAD4;border-top-color:#5EEAD4}
 </style>
+
+<script>
+window.addEventListener('error', function(e){
+  try {
+    var el = document.getElementById('__kwerr');
+    if (!el){
+      el = document.createElement('div');
+      el.id = '__kwerr';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#FEF2F2;color:#991B1B;padding:12px;z-index:99999;font-size:12px;font-family:monospace;border-bottom:2px solid #DC2626;max-height:60vh;overflow:auto;white-space:pre-wrap';
+      document.body.appendChild(el);
+    }
+    el.textContent = 'ERR: ' + (e.message || '') + '\n' + (e.filename || '') + ':' + (e.lineno || '');
+  } catch(_){}
+});
+window.addEventListener('unhandledrejection', function(e){
+  try {
+    var el = document.getElementById('__kwerr');
+    if (!el){
+      el = document.createElement('div');
+      el.id = '__kwerr';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#FEF2F2;color:#991B1B;padding:12px;z-index:99999;font-size:12px;font-family:monospace;border-bottom:2px solid #DC2626;max-height:60vh;overflow:auto;white-space:pre-wrap';
+      document.body.appendChild(el);
+    }
+    el.textContent = 'ASYNC: ' + ((e.reason && e.reason.message) || e.reason || '');
+  } catch(_){}
+});
+</script>
+
 </head>
 <body>
 
@@ -77,6 +105,8 @@ body.dark .ud-summary-row.balance{color:#5EEAD4;border-top-color:#5EEAD4}
 <script src="i18n.js"></script>
 <script src="fb-data.js"></script>
 <script src="udhaar.js"></script>
+<script src="jspdf.umd.min.js"></script>
+<script src="pdf-statement.js"></script>
 <script src="udhaar-detail.js"></script>
 </body>
 </html>

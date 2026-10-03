@@ -170,34 +170,104 @@
     overlay.className = 'kw-overlay';
     overlay.style.alignItems = 'flex-start';
     overlay.style.paddingTop = '80px';
+
     overlay.innerHTML =
       '<div class="kw-modal" style="max-width:320px">' +
+        '<button class="udb-menu-item" id="mmPdf">📄 Download Statement (PDF)</button>' +
+        '<button class="udb-menu-item" id="mmRemind">💬 Share reminder on WhatsApp</button>' +
         '<button class="udb-menu-item" id="mmEdit">✏️ Edit name / phone</button>' +
         '<button class="udb-menu-item" id="mmCall">📞 Call customer</button>' +
-        '<button class="udb-menu-item" id="mmWa">💬 WhatsApp</button>' +
         '<button class="udb-menu-item danger" id="mmDelete">🗑 Delete customer</button>' +
         '<button class="kw-secondary" id="mmClose" style="margin-top:10px">Close</button>' +
       '</div>';
+
     document.body.appendChild(overlay);
+
     function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
     overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-    overlay.querySelector('#mmClose').onclick = close;
-    overlay.querySelector('#mmEdit').onclick = function(){ close(); openEditModal(); };
-    overlay.querySelector('#mmCall').onclick = function(){
+
+    var btnClose = overlay.querySelector('#mmClose');
+    if (btnClose) btnClose.onclick = close;
+
+    var btnEdit = overlay.querySelector('#mmEdit');
+    if (btnEdit) btnEdit.onclick = function(){ close(); openEditModal(); };
+
+    var btnCall = overlay.querySelector('#mmCall');
+    if (btnCall) btnCall.onclick = function(){
       close();
       if (customer.phone) location.href = 'tel:' + customer.phone;
-      else alert('Koi phone number nahi hai');
+      else alert('Customer ka phone number nahi hai');
     };
-    overlay.querySelector('#mmWa').onclick = function(){
+
+    var btnPdf = overlay.querySelector('#mmPdf');
+    if (btnPdf) btnPdf.onclick = function(){
       close();
-      if (customer.phone){
-        var clean = customer.phone.replace(/[^0-9]/g, '');
-        window.open('https://wa.me/' + clean, '_blank');
-      } else {
-        alert('Koi phone number nahi hai');
+      if (!window.KWStatement){
+        alert('PDF library load nahi hui. Page refresh karein.');
+        return;
       }
+      if (typeof showToast === 'function') showToast('📄 PDF ban raha hai…');
+      window.KWStatement.generate(customer, currentProfile).then(function(res){
+        var file = new File([res.blob], res.filename, {type:'application/pdf'});
+        if (navigator.canShare && navigator.canShare({files:[file]})){
+          return navigator.share({
+            files: [file],
+            title: 'Udhaar Statement — ' + customer.name,
+            text: 'Aap ka udhaar statement attached hai.'
+          }).then(function(){
+            if (typeof showToast === 'function') showToast('✓ Share ho gaya');
+          });
+        } else {
+          var url = URL.createObjectURL(res.blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = res.filename;
+          document.body.appendChild(a); a.click();
+          setTimeout(function(){
+            document.body.removeChild(a); URL.revokeObjectURL(url);
+          }, 500);
+          if (typeof showToast === 'function') showToast('✓ PDF Downloads mein save');
+        }
+      }).catch(function(err){
+        alert('PDF error: ' + (err.message || ''));
+      });
     };
-    overlay.querySelector('#mmDelete').onclick = function(){
+
+    var btnRemind = overlay.querySelector('#mmRemind');
+    if (btnRemind) btnRemind.onclick = function(){
+      close();
+      if (!customer.phone){
+        alert('Customer ka phone number nahi hai');
+        return;
+      }
+      var totals = window.KWUdhaar.computeTotals(customer);
+      if (Math.abs(totals.balance) < 0.01){
+        alert('Koi balance nahi hai. Reminder ki zaroorat nahi.');
+        return;
+      }
+      var cur = (currentProfile && currentProfile.currency) || 'PKR';
+      var sym = 'Rs.';
+      if (cur === 'USD') sym = '$';
+      else if (cur === 'AED') sym = 'AED ';
+      else if (cur === 'GBP') sym = '£';
+      var balAmt = Math.round(Math.abs(totals.balance));
+      var isOweMe = totals.balance > 0;
+      var bizName = (currentProfile && currentProfile.businessName) || 'Our Shop';
+      var dirText = isOweMe
+        ? 'Aap ka udhaar ' + sym + ' ' + balAmt.toLocaleString() + ' baqaya hai.'
+        : 'Aap ko ' + sym + ' ' + balAmt.toLocaleString() + ' dene hain.';
+      var msg = 'Assalam o Alaikum ' + customer.name + ' bhai,\n\n' +
+        bizName + ' ki taraf se yaad dehani:\n\n' +
+        dirText + '\n\n' +
+        'Barah-e-karam jald payment karein ya rabta karein.\n\n' +
+        'Shukriya\n' + bizName +
+        (currentProfile && currentProfile.phone ? '\n' + currentProfile.phone : '');
+      var clean = customer.phone.replace(/[^0-9]/g, '');
+      var waUrl = 'https://wa.me/' + clean + '?text=' + encodeURIComponent(msg);
+      window.open(waUrl, '_blank');
+    };
+
+    var btnDel = overlay.querySelector('#mmDelete');
+    if (btnDel) btnDel.onclick = function(){
       close();
       if (!confirm('Ye customer aur unka saara udhaar delete ho jayega. Confirm?')) return;
       window.KWUdhaar.remove(customerId).then(function(){ location.href = 'udhaar.html'; });
