@@ -85,10 +85,13 @@
               '<p class="kw-setting-title">' + escapeHtml(t('language')) + '</p>' +
               '<p class="kw-setting-sub">' + escapeHtml(t('language_sub')) + '</p>' +
             '</div>' +
-            '<div class="kw-segment" id="kwLangSegment">' +
-              '<button type="button" class="kw-segment-btn' + (lang === 'en' ? ' active' : '') + '" data-lang="en">EN</button>' +
-              '<button type="button" class="kw-segment-btn' + (lang === 'ur' ? ' active' : '') + '" data-lang="ur">اردو</button>' +
-            '</div>' +
+            '<select id="kwLangSegment" style="padding:8px 12px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:inherit;font-weight:700;font-size:.85rem;color:#0F172A;outline:none">' +
+              '<option value="en"' + (lang === 'en' ? ' selected' : '') + '>🇬🇧 English</option>' +
+              '<option value="ur"' + (lang === 'ur' ? ' selected' : '') + '>🇵🇰 اردو</option>' +
+              '<option value="ar"' + (lang === 'ar' ? ' selected' : '') + '>🇸🇦 العربية</option>' +
+              '<option value="es"' + (lang === 'es' ? ' selected' : '') + '>🇪🇸 Español</option>' +
+              '<option value="fr"' + (lang === 'fr' ? ' selected' : '') + '>🇫🇷 Français</option>' +
+            '</select>' +
           '</div>' +
           '<div class="kw-setting-row">' +
             '<span class="kw-setting-icon">🌙</span>' +
@@ -144,15 +147,15 @@
 
   function bindEvents(){
     // Language
-    document.querySelectorAll('#kwLangSegment .kw-segment-btn').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        var lang = btn.getAttribute('data-lang');
+    var langSeg = $('kwLangSegment');
+    if (langSeg){
+      langSeg.addEventListener('change', function(){
         if (window.KWi18n){
-          window.KWi18n.setLang(lang);
+          window.KWi18n.setLang(this.value);
           render();
         }
       });
-    });
+    }
 
     // Theme
     var themeToggle = $('kwThemeToggle');

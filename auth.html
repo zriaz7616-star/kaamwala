@@ -3,119 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0F766E">
-<title>Sign In — KaamWala</title>
+<meta name="theme-color" content="#0F172A">
+<title>KaamWala — Login</title>
 <link rel="stylesheet" href="app.css">
 <style>
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;
-  padding:20px;background:linear-gradient(180deg,#F0FDFA 0%,#F8FAFC 100%)}
-.auth-card{background:#fff;border:1px solid #E2E8F0;border-radius:18px;padding:24px;
-  width:100%;max-width:420px;box-shadow:0 10px 40px rgba(15,118,110,.08)}
-.auth-brand{text-align:center;margin-bottom:22px}
-.auth-logo{display:inline-flex;width:56px;height:56px;align-items:center;justify-content:center;
-  background:#0F766E;color:#fff;border-radius:15px;font-size:1.4rem;font-weight:800;
-  margin-bottom:12px;letter-spacing:.5px}
-.auth-brand h1{margin:0 0 4px;font-size:1.5rem;font-weight:800;color:#0F172A;
-  letter-spacing:-.01em}
-.auth-brand p{margin:0;color:#64748B;font-size:.9rem}
-.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;
-  background:#F1F5F9;border-radius:11px;padding:4px;margin-bottom:18px}
-.auth-tab{padding:10px 8px;border:none;background:transparent;border-radius:8px;
-  font-weight:700;font-size:.92rem;cursor:pointer;color:#64748B;font-family:inherit;
-  min-height:44px}
-.auth-tab.is-active{background:#fff;color:#0F766E;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.auth-form{display:flex;flex-direction:column;gap:12px}
-.auth-input{width:100%;padding:13px 14px;border:1.5px solid #CBD5E1;border-radius:11px;
-  font-size:16px;background:#fff;color:#0F172A;font-family:inherit;min-height:48px;
-  box-sizing:border-box}
-.auth-input:focus{outline:none;border-color:#0F766E;box-shadow:0 0 0 3px rgba(15,118,110,.12)}
-.auth-submit{background:#0F766E;color:#fff;border:none;padding:14px;border-radius:12px;
-  font-weight:800;font-size:1rem;min-height:52px;cursor:pointer;font-family:inherit;
-  margin-top:4px}
-.auth-submit:active{background:#115E59}
-.auth-submit:disabled{opacity:.6;cursor:not-allowed}
-.auth-link{display:block;text-align:right;margin-top:-4px;color:#0F766E;
-  text-decoration:none;font-weight:600;font-size:.85rem;cursor:pointer;
-  background:transparent;border:none;font-family:inherit;padding:6px 0}
-.auth-link:hover{text-decoration:underline}
-.auth-msg{margin-top:12px;padding:11px 14px;border-radius:10px;font-size:.88rem;
-  line-height:1.45;font-weight:600;display:none}
-.auth-msg.show{display:block}
-.auth-msg.err{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
-.auth-msg.ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
-.auth-msg.info{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE}
-.auth-note{background:#FFFBEB;border:1px solid #FDE68A;color:#78350F;
-  padding:12px 14px;border-radius:10px;font-size:.82rem;line-height:1.45;margin-top:16px}
-.auth-note strong{color:#92400E}
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+  
+  * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  
+  body {
+    margin: 0; padding: 0; height: 100vh;
+    background: #0a0f1c;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+  }
 
-/* Reset modal */
-.kw-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.65);z-index:9999;
-  display:flex;align-items:center;justify-content:center;padding:16px}
-.kw-modal{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:400px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto}
-.kw-modal h3{margin:0 0 8px;font-size:1.15rem;font-weight:800;color:#0F172A}
-.kw-modal p{margin:0 0 14px;color:#64748B;font-size:.88rem;line-height:1.5}
-.kw-modal input{width:100%;padding:12px 14px;border:1.5px solid #CBD5E1;
-  border-radius:11px;font-size:1rem;background:#fff;color:#0F172A;font-family:inherit;
-  min-height:48px;box-sizing:border-box}
-.kw-modal input:focus{outline:none;border-color:#0F766E;box-shadow:0 0 0 3px rgba(15,118,110,.12)}
-.kw-modal .kw-primary{background:#0F766E;color:#fff;border:none;padding:13px;
-  border-radius:11px;font-weight:800;font-size:.98rem;min-height:50px;cursor:pointer;
-  width:100%;font-family:inherit;margin-top:12px}
-.kw-modal .kw-primary:disabled{opacity:.6;cursor:not-allowed}
-.kw-modal .kw-secondary{background:#F1F5F9;color:#475569;border:none;padding:12px;
-  border-radius:11px;font-weight:700;font-size:.92rem;min-height:48px;cursor:pointer;
-  width:100%;font-family:inherit;margin-top:8px}
-.kw-msg{margin-top:12px;padding:10px 12px;border-radius:9px;font-size:.84rem;
-  text-align:center;font-weight:600;display:none}
-.kw-msg.show{display:block}
-.kw-msg-err{background:#FEF2F2;color:#991B1B}
-.kw-msg-ok{background:#ECFDF5;color:#065F46}
+  /* Animated Background Orbs */
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(80px); z-index: 0;
+    animation: float 8s infinite ease-in-out;
+  }
+  .orb-1 { width: 300px; height: 300px; background: rgba(15,118,110,0.6); top: -50px; left: -50px; }
+  .orb-2 { width: 250px; height: 250px; background: rgba(14,165,233,0.4); bottom: -50px; right: -50px; animation-delay: -4s; }
+  
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(30px, 30px); }
+  }
+
+  /* Glass Card */
+  .auth-card {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 380px; padding: 32px 24px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+    color: #fff;
+    margin: 16px;
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo-mark {
+    width: 50px; height: 50px; background: linear-gradient(135deg, #0F766E, #0EA5E9);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.2rem; margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(15,118,110,0.5);
+    animation: glow 2s infinite alternate;
+  }
+
+  @keyframes glow {
+    from { box-shadow: 0 0 10px rgba(15,118,110,0.4); }
+    to { box-shadow: 0 0 25px rgba(15,118,110,0.8); }
+  }
+
+  h1 { margin: 0 0 8px; font-size: 1.6rem; font-weight: 800; }
+  p.sub { margin: 0 0 24px; color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+
+  .input-group { margin-bottom: 16px; }
+  .input-group label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.5px;}
+  .input-group input {
+    width: 100%; padding: 14px 16px; border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; font-size: 15px; transition: all 0.3s ease;
+  }
+  .input-group input:focus {
+    outline: none; border-color: #0EA5E9;
+    box-shadow: 0 0 0 4px rgba(14,165,233,0.2); background: rgba(0, 0, 0, 0.4);
+  }
+
+  .auth-btn {
+    width: 100%; padding: 15px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, #0F766E, #0EA5E9); color: #fff;
+    font-weight: 800; font-size: 1rem; cursor: pointer;
+    transition: all 0.3s ease; margin-top: 8px;
+  }
+  .auth-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(15,118,110,0.4); }
+  .auth-btn:active { transform: translateY(0); }
+
+  .auth-links {
+    display: flex; justify-content: space-between; margin-top: 16px;
+    font-size: 0.85rem;
+  }
+  .auth-links a { color: #0EA5E9; text-decoration: none; font-weight: 600; cursor: pointer;}
+  
+  .auth-msg {
+    margin-top: 16px; padding: 12px; border-radius: 10px; font-size: 0.85rem;
+    display: none; font-weight: 600; text-align: center;
+  }
+  .auth-msg.error { background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.5); color: #FCA5A5; display: block; }
+  .auth-msg.success { background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); color: #6EE7B7; display: block; }
 </style>
-
-<meta name="description" content="Sign in or create your free KaamWala account to sync invoices across devices.">
-<meta name="robots" content="noindex, follow">
-<link rel="canonical" href="https://zriaz7616-star.github.io/kaamwala/auth.html">
-<meta property="og:title" content="Sign In — KaamWala">
-<meta property="og:description" content="Free invoice maker for Pakistani freelancers.">
-<meta property="og:url" content="https://zriaz7616-star.github.io/kaamwala/auth.html">
-<meta name="theme-color" content="#0F766E">
-
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="apple-touch-icon" href="favicon.svg">
-<link rel="manifest" href="manifest.json">
 </head>
 <body>
 
-<div class="auth-wrap">
-  <div class="auth-card">
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-    <div class="auth-brand">
-      <div class="auth-logo">KW</div>
-      <h1>Welcome to KaamWala</h1>
-      <p>Sign in to access your invoices anywhere</p>
+<div class="auth-card">
+  <div class="logo-mark">KW</div>
+  <h1 id="authTitle">Welcome Back</h1>
+  <p class="sub" id="authSub">Enter your details to access your invoices.</p>
+
+  <form id="authForm">
+    <div class="input-group">
+      <label>Email</label>
+      <input type="email" id="emailInput" placeholder="you@example.com" required>
+    </div>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="passInput" placeholder="••••••••" required>
     </div>
 
-    <div class="auth-tabs">
-      <button class="auth-tab is-active" data-tab="signin">Sign In</button>
-      <button class="auth-tab" data-tab="signup">Sign Up</button>
+    <button type="submit" class="auth-btn" id="submitBtn">Sign In</button>
+    
+    <div class="auth-links">
+      <a id="toggleAuthMode">Create an account</a>
+      <a id="forgotPassBtn">Forgot password?</a>
     </div>
 
-    <form class="auth-form" id="authForm" autocomplete="on">
-      <input type="email" class="auth-input" id="emailInput" placeholder="Email address" autocomplete="email" required>
-      <input type="password" class="auth-input" id="passInput" placeholder="Password (min 6 characters)" autocomplete="current-password" required>
-
-      <button type="button" class="auth-link" id="forgotBtn">Forgot password?</button>
-
-      <button type="submit" class="auth-submit" id="submitBtn">Sign In</button>
-      <div class="auth-msg" id="authMsg"></div>
-    </form>
-
-    <div class="auth-note">
-      <strong>Why sign in?</strong> Your business profile and invoices sync across all your devices. Free forever — no spam, no data selling.
-    </div>
-
-  </div>
+    <div class="auth-msg" id="authMsg"></div>
+  </form>
 </div>
 
 <script src="firebase-app.js"></script>
@@ -126,132 +140,76 @@
 <script>
 (function(){
   'use strict';
-
-  var mode = 'signin';
+  var isSignup = false;
   var $ = function(id){ return document.getElementById(id); };
 
-  function setMode(m){
-    mode = m;
-    document.querySelectorAll('.auth-tab').forEach(function(t){
-      t.classList.toggle('is-active', t.getAttribute('data-tab') === m);
-    });
-    $('submitBtn').textContent = (m === 'signup') ? 'Create Account' : 'Sign In';
-    $('passInput').setAttribute('autocomplete', m === 'signup' ? 'new-password' : 'current-password');
-    $('forgotBtn').style.display = (m === 'signin') ? 'block' : 'none';
+  function updateUI(){
+    $('authTitle').textContent = isSignup ? 'Create Account' : 'Welcome Back';
+    $('authSub').textContent = isSignup ? 'Start managing your invoices in seconds.' : 'Enter your details to access your invoices.';
+    $('submitBtn').textContent = isSignup ? 'Sign Up' : 'Sign In';
+    $('toggleAuthMode').textContent = isSignup ? 'Already have an account? Sign In' : 'Create an account';
     hideMsg();
   }
 
-  document.querySelectorAll('.auth-tab').forEach(function(t){
-    t.addEventListener('click', function(){ setMode(t.getAttribute('data-tab')); });
-  });
+  $('toggleAuthMode').onclick = function(){ isSignup = !isSignup; updateUI(); };
 
-  function showMsg(kind, text){
-    var m = $('authMsg');
-    m.className = 'auth-msg show ' + kind;
-    m.textContent = text;
+  function showMsg(type, text){
+    var el = $('authMsg');
+    el.className = 'auth-msg ' + type;
+    el.textContent = text;
   }
-  function hideMsg(){
-    var m = $('authMsg');
-    m.className = 'auth-msg';
-    m.textContent = '';
-  }
-  function setLoading(on){
-    var b = $('submitBtn');
-    b.disabled = !!on;
-    b.textContent = on
-      ? (mode === 'signup' ? 'Creating account…' : 'Signing in…')
-      : (mode === 'signup' ? 'Create Account' : 'Sign In');
-  }
+  function hideMsg(){ $('authMsg').className = 'auth-msg'; }
 
-  /* ---------- SIGN IN / SIGN UP ---------- */
   $('authForm').addEventListener('submit', function(e){
     e.preventDefault();
     var email = $('emailInput').value.trim();
     var pass = $('passInput').value;
-    if (!email || !pass){ showMsg('err', 'Email aur password dono bharein.'); return; }
-    if (mode === 'signup' && pass.length < 6){
-      showMsg('err', 'Password kam se kam 6 characters ka hona chahiye.'); return;
-    }
-    setLoading(true);
+    if(!email || !pass) return;
+
+    $('submitBtn').disabled = true;
+    $('submitBtn').textContent = 'Processing…';
     hideMsg();
 
     var H = window.KWAuthHelpers;
-    var p = (mode === 'signup') ? H.signUp(email, pass) : H.signIn(email, pass);
+    var p = isSignup ? H.signUp(email, pass) : H.signIn(email, pass);
 
     p.then(function(user){
-      if (!user.emailVerified){
-        showMsg('ok', '✓ Verification email bheji gayi. Inbox check karein…');
-        setTimeout(function(){ location.href = 'verify.html'; }, 900);
+      if (!user.emailVerified && isSignup) {
+        showMsg('success', 'Check your email to verify account. Redirecting…');
+        setTimeout(function(){ location.href = 'verify.html'; }, 1200);
       } else {
-        showMsg('ok', '✓ Sign in successful! Loading…');
-        setTimeout(function(){ location.href = 'home.html'; }, 700);
+        showMsg('success', 'Login successful! Loading…');
+        setTimeout(function(){ location.href = 'home.html'; }, 800);
       }
     }).catch(function(err){
-      showMsg('err', '✗ ' + window.KWAuthHelpers.friendlyError(err));
-      setLoading(false);
+      showMsg('error', window.KWAuthHelpers.friendlyError(err));
+      $('submitBtn').disabled = false;
+      $('submitBtn').textContent = isSignup ? 'Sign Up' : 'Sign In';
     });
   });
 
-  /* ---------- FORGOT PASSWORD ---------- */
-  $('forgotBtn').addEventListener('click', function(){
-    var existing = document.querySelector('.kw-overlay');
-    if (existing) existing.parentNode.removeChild(existing);
+  $('forgotPassBtn').onclick = function(){
+    var email = $('emailInput').value.trim();
+    if(!email) { showMsg('error', 'Pehle apna email likhein, phir "Forgot Password" dabayein.'); return; }
+    $('forgotPassBtn').textContent = 'Sending…';
+    window.KWAuthHelpers.sendPasswordReset(email)
+      .then(function(){
+        showMsg('success', 'Reset link sent! Check your inbox.');
+        $('forgotPassBtn').textContent = 'Forgot password?';
+      })
+      .catch(function(err){
+        showMsg('error', window.KWAuthHelpers.friendlyError(err));
+        $('forgotPassBtn').textContent = 'Forgot password?';
+      });
+  };
 
-    var overlay = document.createElement('div');
-    overlay.className = 'kw-overlay';
-    overlay.innerHTML =
-      '<div class="kw-modal">' +
-        '<h3>🔑 Reset Password</h3>' +
-        '<p>Apna email daalein — hum password reset link bhejenge.</p>' +
-        '<input type="email" id="resetEmail" placeholder="your@email.com" autocomplete="email" value="' + (document.getElementById('emailInput').value.trim() || '') + '">' +
-        '<div class="kw-msg" id="resetMsg"></div>' +
-        '<button class="kw-primary" id="resetSend">Send Reset Link</button>' +
-        '<button class="kw-secondary" id="resetClose">Cancel</button>' +
-      '</div>';
-    document.body.appendChild(overlay);
-
-    function close(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
-    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-    $('resetClose').addEventListener('click', close);
-
-    $('resetSend').addEventListener('click', function(){
-      var email = $('resetEmail').value.trim();
-      var msg = $('resetMsg');
-      if (!email){
-        msg.className = 'kw-msg kw-msg-err show';
-        msg.textContent = 'Please enter your email';
-        return;
-      }
-      $('resetSend').disabled = true;
-      $('resetSend').textContent = 'Sending…';
-      msg.className = 'kw-msg';
-      window.KWAuthHelpers.sendPasswordReset(email)
-        .then(function(){
-          $('resetSend').disabled = false;
-          $('resetSend').textContent = 'Send Reset Link';
-          msg.className = 'kw-msg kw-msg-ok show';
-          msg.textContent = '✓ Reset link sent! Email (aur spam) check karein.';
-        })
-        .catch(function(err){
-          $('resetSend').disabled = false;
-          $('resetSend').textContent = 'Send Reset Link';
-          msg.className = 'kw-msg kw-msg-err show';
-          msg.textContent = '✗ ' + window.KWAuthHelpers.friendlyError(err);
-        });
-    });
-  });
-
-  /* ---------- ALREADY SIGNED IN ---------- */
-  if (window.KWAuthHelpers){
+  // Check if already logged in
+  if (window.KWAuthHelpers) {
     window.KWAuthHelpers.onUser(function(user){
-      if (user){
-        if (user.emailVerified) location.href = 'home.html';
-        else location.href = 'verify.html';
-      }
+      if (user && user.emailVerified) location.href = 'home.html';
     });
   }
 })();
 </script>
-
 </body>
 </html>

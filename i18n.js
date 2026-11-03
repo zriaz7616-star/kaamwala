@@ -1,142 +1,81 @@
 (function(){
   'use strict';
-
   var LANG_KEY = 'kw_lang';
 
   var STRINGS = {
     en: {
-      home: 'Home',
-      customers: 'Customers',
-      invoices: 'Invoices',
-      new_invoice: 'New Invoice',
-      products: 'Products',
-      profile: 'Profile',
-      settings: 'Settings',
-      greeting: 'Assalam o Alaikum 👋',
-      quick_actions: 'Quick Actions',
-      recent_invoices: 'Recent Invoices',
-      total_customers: 'total customers',
-      total_outstanding: 'Total outstanding',
-      pending: 'Pending',
-      received: 'Received',
-      billed: 'Billed',
-      paid: 'Paid',
-      due: 'Due',
-      customer_details: 'Customer Details',
-      invoice_history: 'Invoice History',
-      contact: 'Contact',
-      customers_nav: 'Customers',
-      search: 'Search',
-      no_customers: 'No customers yet',
-      no_invoices: 'No invoices yet',
-      add_product: 'Add Product',
-      save: 'Save',
-      import: 'Import from Excel / CSV / PDF',
-      load_template: 'Load Product Template',
-      business_edit: 'Business Profile',
-      business_edit_sub: 'Logo, contact, payment details',
-      language: 'Language',
-      language_sub: 'App interface language',
-      theme: 'Dark Mode',
-      theme_sub: 'Dark background, easier on eyes',
-      history: 'Invoice History',
-      history_sub: 'View all saved invoices',
-      signout: 'Sign Out',
-      signout_sub: 'Logout from this device',
-      about: 'About',
-      privacy: 'Privacy Policy',
-      terms: 'Terms of Service',
-      version: 'Version'
+      home: 'Home', customers: 'Customers', invoices: 'Invoices', new_invoice: 'New Invoice',
+      products: 'Products', settings: 'Settings', greeting: 'Assalam o Alaikum 👋',
+      quick_actions: 'Quick Actions', recent_invoices: 'Recent Invoices',
+      total_customers: 'total customers', total_outstanding: 'Total outstanding',
+      pending: 'Pending', received: 'Received', billed: 'Billed', paid: 'Paid', due: 'Due',
+      business_edit: 'Business Profile', language: 'Language', theme: 'Dark Mode',
+      history: 'Invoice History', signout: 'Sign Out', save: 'Save', add_product: 'Add Product',
+      import: 'Import from Excel / CSV / PDF', load_template: 'Load Product Template',
+      forget_pass: 'Forgot password?', reset_pass: 'Reset Password'
     },
     ur: {
-      home: 'ہوم',
-      customers: 'گاہک',
-      invoices: 'بل',
-      new_invoice: 'نیا بل',
-      products: 'مصنوعات',
-      profile: 'کاروبار',
-      settings: 'سیٹنگز',
-      greeting: 'السلام علیکم 👋',
-      quick_actions: 'فوری کام',
-      recent_invoices: 'حالیہ بل',
-      total_customers: 'کل گاہک',
-      total_outstanding: 'کل بقایا',
-      pending: 'بقایا',
-      received: 'موصول',
-      billed: 'بل شدہ',
-      paid: 'ادا شدہ',
-      due: 'واجب الادا',
-      customer_details: 'گاہک کی تفصیلات',
-      invoice_history: 'بل کی تاریخ',
-      contact: 'رابطہ',
-      customers_nav: 'گاہک',
-      search: 'تلاش',
-      no_customers: 'ابھی کوئی گاہک نہیں',
-      no_invoices: 'ابھی کوئی بل نہیں',
-      add_product: 'مصنوعات شامل کریں',
-      save: 'محفوظ کریں',
-      import: 'ایکسل / سی ایس وی / پی ڈی ایف سے درآمد',
-      load_template: 'ٹیمپلیٹ لوڈ کریں',
-      business_edit: 'کاروبار کی پروفائل',
-      business_edit_sub: 'لوگو، رابطہ، ادائیگی کی تفصیلات',
-      language: 'زبان',
-      language_sub: 'ایپ کی زبان',
-      theme: 'ڈارک موڈ',
-      theme_sub: 'رات کے لیے آسان',
-      history: 'بل کی تاریخ',
-      history_sub: 'تمام محفوظ بل دیکھیں',
-      signout: 'لاگ آؤٹ',
-      signout_sub: 'اس ڈیوائس سے نکلیں',
-      about: 'ایپ کے بارے میں',
-      privacy: 'پرائیویسی پالیسی',
-      terms: 'شرائط و ضوابط',
-      version: 'ورژن'
+      home: 'ہوم', customers: 'گاہک', invoices: 'بل', new_invoice: 'نیا بل',
+      products: 'مصنوعات', settings: 'سیٹنگز', greeting: 'السلام علیکم 👋',
+      quick_actions: 'فوری کام', recent_invoices: 'حالیہ بل',
+      total_customers: 'کل گاہک', total_outstanding: 'کل بقایا',
+      pending: 'بقایا', received: 'موصول', billed: 'بل شدہ', paid: 'ادا شدہ', due: 'واجب الادا',
+      business_edit: 'کاروبار کی پروفائل', language: 'زبان', theme: 'ڈارک موڈ',
+      history: 'بل کی تاریخ', signout: 'لاگ آؤٹ', save: 'محفوظ کریں', add_product: 'مصنوعات شامل کریں',
+      import: 'ایکسل / سی ایس وی سے درآمد', load_template: 'ٹیمپلیٹ لوڈ کریں',
+      forget_pass: 'پاس ورڈ بھول گئے؟', reset_pass: 'پاس ورڈ ری سیٹ کریں'
+    },
+    ar: {
+      home: 'الرئيسية', customers: 'العملاء', invoices: 'الفواتير', new_invoice: 'فاتورة جديدة',
+      products: 'المنتجات', settings: 'الإعدادات', greeting: 'السلام عليكم 👋',
+      quick_actions: 'إجراءات سريعة', recent_invoices: 'الفواتير الأخيرة',
+      total_customers: 'إجمالي العملاء', total_outstanding: 'إجمالي المستحقات',
+      pending: 'معلق', received: 'مستلم', billed: 'مفوتر', paid: 'مدفوع', due: 'مستحق',
+      business_edit: 'ملف الشركة', language: 'اللغة', theme: 'الوضع الداكن',
+      history: 'سجل الفواتير', signout: 'تسجيل الخروج', save: 'حفظ', add_product: 'إضافة منتج',
+      import: 'استيراد من Excel / CSV', load_template: 'تحميل القالب',
+      forget_pass: 'نسيت كلمة المرور؟', reset_pass: 'إعادة تعيين كلمة المرور'
+    },
+    es: {
+      home: 'Inicio', customers: 'Clientes', invoices: 'Facturas', new_invoice: 'Nueva Factura',
+      products: 'Productos', settings: 'Ajustes', greeting: 'Hola 👋',
+      quick_actions: 'Acciones Rápidas', recent_invoices: 'Facturas Recientes',
+      total_customers: 'clientes totales', total_outstanding: 'Total pendiente',
+      pending: 'Pendiente', received: 'Recibido', billed: 'Facturado', paid: 'Pagado', due: 'Vencido',
+      business_edit: 'Perfil de Empresa', language: 'Idioma', theme: 'Modo Oscuro',
+      history: 'Historial', signout: 'Salir', save: 'Guardar', add_product: 'Agregar Producto',
+      import: 'Importar de Excel / CSV', load_template: 'Cargar Plantilla',
+      forget_pass: '¿Olvidaste tu contraseña?', reset_pass: 'Restablecer Contraseña'
+    },
+    fr: {
+      home: 'Accueil', customers: 'Clients', invoices: 'Factures', new_invoice: 'Nouvelle Facture',
+      products: 'Produits', settings: 'Paramètres', greeting: 'Bonjour 👋',
+      quick_actions: 'Actions Rapides', recent_invoices: 'Factures Récentes',
+      total_customers: 'clients totaux', total_outstanding: 'Total en attente',
+      pending: 'En attente', received: 'Reçu', billed: 'Facturé', paid: 'Payé', due: 'Dû',
+      business_edit: 'Profil Entreprise', language: 'Langue', theme: 'Mode Sombre',
+      history: 'Historique', signout: 'Déconnexion', save: 'Enregistrer', add_product: 'Ajouter Produit',
+      import: 'Importer Excel / CSV', load_template: 'Charger Modèle',
+      forget_pass: 'Mot de passe oublié?', reset_pass: 'Réinitialiser'
     }
   };
 
-  function getLang(){
-    try { return localStorage.getItem(LANG_KEY) || 'en'; }
-    catch(e){ return 'en'; }
-  }
-
-  function setLang(l){
-    if (l !== 'en' && l !== 'ur') l = 'en';
-    try { localStorage.setItem(LANG_KEY, l); } catch(e){}
-    document.documentElement.setAttribute('lang', l);
-    document.body.setAttribute('data-lang', l);
-  }
-
-  function t(key){
-    var lang = getLang();
-    return (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key;
-  }
+  function getLang(){ try { return localStorage.getItem(LANG_KEY) || 'en'; } catch(e){ return 'en'; } }
+  function setLang(l){ if(!STRINGS[l]) l = 'en'; try { localStorage.setItem(LANG_KEY, l); } catch(e){} document.documentElement.setAttribute('lang', l); document.body.setAttribute('data-lang', l); }
+  function t(key){ var lang = getLang(); return (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key; }
 
   function apply(){
     document.querySelectorAll('[data-i18n]').forEach(function(el){
       var key = el.getAttribute('data-i18n');
       var translation = t(key);
-      if (el.tagName === 'INPUT' && el.hasAttribute('placeholder')){
-        el.setAttribute('placeholder', translation);
-      } else {
-        el.textContent = translation;
-      }
+      if (el.tagName === 'INPUT' && el.hasAttribute('placeholder')) el.setAttribute('placeholder', translation);
+      else el.textContent = translation;
     });
     document.documentElement.setAttribute('lang', getLang());
     document.body.setAttribute('data-lang', getLang());
   }
 
-  window.KWi18n = {
-    getLang: getLang,
-    setLang: setLang,
-    t: t,
-    apply: apply,
-    STRINGS: STRINGS
-  };
-
-  // Auto-apply on load
-  if (document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', apply);
-  } else {
-    apply();
-  }
+  window.KWi18n = { getLang, setLang, t, apply, STRINGS };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+  else apply();
 })();

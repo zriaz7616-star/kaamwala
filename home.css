@@ -965,3 +965,57 @@ body.dark .kw-modal input{background:#0F172A;border-color:#334155;color:#F1F5F9}
 body.dark .udb-import-btn{background:#1E1B4B;color:#A5B4FC;border-color:#3730A3}
 .udb-import-btn:active{transform:scale(0.98)}
 
+
+/* ============================================================
+   GLASSMORPHISM UI UPGRADE
+   ============================================================ */
+
+/* Floating Glass Bottom Nav */
+.kw-nav{
+  background:rgba(255,255,255,0.75) !important;
+  backdrop-filter:blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(180%) !important;
+  border-top:1px solid rgba(255,255,255,0.4) !important;
+  border-radius:24px 24px 0 0;
+  box-shadow:0 -10px 40px rgba(0,0,0,0.08) !important;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom)) !important;
+  bottom:0;
+  left:10px;
+  right:10px;
+  width:auto;
+  max-width:600px;
+  margin:0 auto;
+}
+body.dark .kw-nav{
+  background:rgba(15,23,42,0.75) !important;
+  border-top:1px solid rgba(255,255,255,0.05) !important;
+  box-shadow:0 -10px 40px rgba(0,0,0,0.4) !important;
+}
+.kw-nav-item .kw-nav-icon{
+  transition:transform 0.2s ease;
+}
+.kw-nav-item:active .kw-nav-icon{
+  transform:scale(1.2);
+}
+.kw-nav-item.new-inv .kw-nav-icon{
+  box-shadow:0 8px 24px rgba(15,118,110,0.4) !important;
+  border:2px solid rgba(255,255,255,0.2);
+}
+
+/* Glass Cards for Stats / Quick actions */
+.kw-stat, .kw-action, .udb-total-card{
+  background:rgba(255,255,255,0.6) !important;
+  backdrop-filter:blur(16px) !important;
+  border:1px solid rgba(255,255,255,0.8) !important;
+  box-shadow:0 8px 32px rgba(15,23,42,0.05) !important;
+}
+body.dark .kw-stat, body.dark .kw-action, body.dark .udb-total-card{
+  background:rgba(30,41,59,0.6) !important;
+  border:1px solid rgba(255,255,255,0.05) !important;
+}
+
+/* Header Gradient - Deep Ocean */
+.kw-header{
+  background:linear-gradient(135deg, #0F766E 0%, #0EA5E9 100%) !important;
+}
+
