@@ -25,6 +25,28 @@
       import: 'ایکسل / سی ایس وی سے درآمد', load_template: 'ٹیمپلیٹ لوڈ کریں',
       forget_pass: 'پاس ورڈ بھول گئے؟', reset_pass: 'پاس ورڈ ری سیٹ کریں'
     },
+    hi: {
+      home: 'होम', customers: 'ग्राहक', invoices: 'चालान', new_invoice: 'नया चालान',
+      products: 'उत्पाद', settings: 'सेटिंग्स', greeting: 'नमस्ते 👋',
+      quick_actions: 'त्वरित कार्रवाई', recent_invoices: 'हाल के चालान',
+      total_customers: 'कुल ग्राहक', total_outstanding: 'कुल बकाया',
+      pending: 'लंबित', received: 'प्राप्त', billed: 'बिल किया गया', paid: 'भुगतान किया गया', due: 'देय',
+      business_edit: 'व्यवसाय प्रोफ़ाइल', language: 'भाषा', theme: 'डार्क मोड',
+      history: 'चालान इतिहास', signout: 'साइन आउट', save: 'सहेजें', add_product: 'उत्पाद जोड़ें',
+      import: 'Excel / CSV से आयात करें', load_template: 'टेम्पलेट लोड करें',
+      forget_pass: 'पासवर्ड भूल गए?', reset_pass: 'पासवर्ड रीसेट करें'
+    },
+    zh: {
+      home: '首页', customers: '客户', invoices: '发票', new_invoice: '新发票',
+      products: '产品', settings: '设置', greeting: '你好 👋',
+      quick_actions: '快捷操作', recent_invoices: '最近发票',
+      total_customers: '总客户数', total_outstanding: '总未付款',
+      pending: '待定', received: '已收款', billed: '已开票', paid: '已付款', due: '到期',
+      business_edit: '企业简介', language: '语言', theme: '深色模式',
+      history: '发票历史', signout: '登出', save: '保存', add_product: '添加产品',
+      import: '从 Excel / CSV 导入', load_template: '加载模板',
+      forget_pass: '忘记密码？', reset_pass: '重置密码'
+    },
     ar: {
       home: 'الرئيسية', customers: 'العملاء', invoices: 'الفواتير', new_invoice: 'فاتورة جديدة',
       products: 'المنتجات', settings: 'الإعدادات', greeting: 'السلام عليكم 👋',

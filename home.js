@@ -1,7 +1,7 @@
 (function(){
   'use strict';
 
-  var CURRENCY_SYMBOLS = {PKR:'Rs', USD:'$', AED:'AED', GBP:'GBP'};
+  var CURRENCY_SYMBOLS = {PKR:'Rs', USD:'$', AED:'AED', GBP:'£', INR:'₹', CNY:'¥', EUR:'€', SAR:'SR', RUB:'₽', TRY:'₺', IRR:'﷼', AFN:'؋', BDT:'৳', CAD:'C$', AUD:'A$', JPY:'¥', KRW:'₩', MYR:'RM', IDR:'Rp', THB:'฿', ZAR:'R', NGN:'₦', KES:'KSh', EGP:'E£', IQD:'ع.د', KWD:'د.ك', QAR:'ر.ق', OMR:'ر.ع.', BHD:'د.ب', JOD:'د.ا', LBP:'ل.ل', SYP:'ل.س', YER:'﷼', SDG:'ج.س', LYD:'ل.د', TND:'د.ت', DZD:'د.ج', MAD:'د.م.', MRU:'UM', SOS:'Sh', ETB:'Br', GHS:'₵', UGX:'USh', TZS:'TSh', RWF:'FRw', MWK:'MK', ZMW:'ZK', BWP:'P', NAD:'$', MZN:'MT', AOA:'Kz', CDF:'FC', XAF:'FCFA', XOF:'CFA', XPF:'₣'};
   var currentUser = null;
   var currentProfile = null;
   var allInvoices = [];
@@ -25,7 +25,7 @@
     }).catch(function(err){
       console.error('[KW] dashboard failed:', err);
       document.getElementById('homeRoot').innerHTML =
-        '<div class="kw-loading">Could not load. <a href="home.html" style="color:#0F766E">Retry</a></div>';
+        '<div class="kw-loading" style="color:red">Error: ' + err.message + '<br><a href="home.html" style="color:#0F766E">Retry</a></div>';
     });
   });
 
@@ -73,7 +73,6 @@
   function getInvoiceStatus(inv){
     if (inv.status === 'paid') return 'paid';
     if (inv.status === 'overdue') return 'overdue';
-    // Auto-detect overdue: if due date passed and not paid
     if (inv.invoice && inv.invoice.due){
       try {
         var due = new Date(inv.invoice.due + 'T23:59:59');
@@ -91,24 +90,20 @@
       ? '<span class="kw-premium-pill">⭐ PREMIUM</span>'
       : '';
 
-    // Compute stats
     var totalInv = allInvoices.length;
     var totalRevenue = 0;
     var pendingAmount = 0;
-    var paidCount = 0;
 
     allInvoices.forEach(function(inv){
       var t = calcTotals(inv.items);
       var status = getInvoiceStatus(inv);
       if (status === 'paid'){
         totalRevenue += t;
-        paidCount++;
       } else {
         pendingAmount += t;
       }
     });
 
-    // Recent 5
     var recent = allInvoices.slice(0, 5);
 
     var recentHtml = '';
@@ -130,7 +125,7 @@
         var status = getInvoiceStatus(inv);
         var statusLabel = status === 'paid' ? 'PAID' : (status === 'overdue' ? 'OVERDUE' : 'UNPAID');
         return (
-          '<div class="kw-inv-card" data-id="' + escapeHtml(inv.id || '') + '" onclick="window.location.href=\'history.html\'">' +
+          '<div class="kw-inv-card" onclick="window.location.href=\'history.html\'">' +
             '<div class="kw-inv-avatar">' + escapeHtml(initial) + '</div>' +
             '<div class="kw-inv-body">' +
               '<p class="kw-inv-client">' + escapeHtml(client) + '</p>' +
@@ -188,7 +183,10 @@
             '<span class="kw-action-icon">+</span>' +
             '<span class="kw-action-label">New<br>Invoice</span>' +
           '</a>' +
-          '<a href="udhaar.html" class="kw-action products"><span class="kw-action-icon">📒</span><span class="kw-action-label">Udhaar</span></a>' +
+          '<a href="products.html" class="kw-action products">' +
+            '<span class="kw-action-icon">📦</span>' +
+            '<span class="kw-action-label">Products</span>' +
+          '</a>' +
           '<a href="customers.html" class="kw-action customers">' +
             '<span class="kw-action-icon">👥</span>' +
             '<span class="kw-action-label">Customers</span>' +

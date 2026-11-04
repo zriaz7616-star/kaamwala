@@ -1,49 +1,50 @@
-
-// KW_ERROR_DISPLAY — visible error banner
-window.addEventListener('error', function(e){
-  try {
-    var el = document.getElementById('__kw_err');
-    if (!el){
-      el = document.createElement('div');
-      el.id = '__kw_err';
-      el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#FEF2F2;color:#991B1B;padding:12px;z-index:99999;font-size:13px;font-family:monospace;border-bottom:2px solid #DC2626;max-height:50vh;overflow:auto;white-space:pre-wrap';
-      document.body.appendChild(el);
-    }
-    el.textContent = 'ERR: ' + (e.message || 'unknown') + '\n' + (e.filename || '') + ':' + (e.lineno || '') + ':' + (e.colno || '');
-  } catch(_){}
-});
-window.addEventListener('unhandledrejection', function(e){
-  try {
-    var el = document.getElementById('__kw_err');
-    if (!el){
-      el = document.createElement('div');
-      el.id = '__kw_err';
-      el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#FEF2F2;color:#991B1B;padding:12px;z-index:99999;font-size:13px;font-family:monospace;border-bottom:2px solid #DC2626;max-height:50vh;overflow:auto;white-space:pre-wrap';
-      document.body.appendChild(el);
-    }
-    el.textContent = 'ERR (async): ' + (e.reason && e.reason.message || e.reason || 'unknown');
-  } catch(_){}
-});
-
 (function(){
   'use strict';
 
   var currentLogo = '';
   var currentQr = '';
+  
+  // Master Country List & Currency
+  var MASTER_COUNTRIES = [
+    { c:'PK', n:'Pakistan 🇵🇰', cur:'PKR' }, { c:'IN', n:'India 🇮🇳', cur:'INR' },
+    { c:'BD', n:'Bangladesh 🇧🇩', cur:'BDT' }, { c:'AF', n:'Afghanistan 🇦🇫', cur:'AFN' },
+    { c:'IR', n:'Iran 🇮🇷', cur:'IRR' }, { c:'TR', n:'Turkey 🇹🇷', cur:'TRY' },
+    { c:'RU', n:'Russia 🇷🇺', cur:'RUB' }, { c:'CN', n:'China 🇨🇳', cur:'CNY' },
+    { c:'SA', n:'Saudi Arabia 🇸🇦', cur:'SAR' }, { c:'AE', n:'UAE 🇦🇪', cur:'AED' },
+    { c:'QA', n:'Qatar 🇶🇦', cur:'QAR' }, { c:'KW', n:'Kuwait 🇰🇼', cur:'KWD' },
+    { c:'BH', n:'Bahrain 🇧🇭', cur:'BHD' }, { c:'OM', n:'Oman 🇴🇲', cur:'OMR' },
+    { c:'JO', n:'Jordan 🇯🇴', cur:'JOD' }, { c:'LB', n:'Lebanon 🇱🇧', cur:'LBP' },
+    { c:'IQ', n:'Iraq 🇮🇶', cur:'IQD' }, { c:'SY', n:'Syria 🇸🇾', cur:'SYP' },
+    { c:'YE', n:'Yemen 🇾🇪', cur:'YER' }, { c:'EG', n:'Egypt 🇪🇬', cur:'EGP' },
+    { c:'SD', n:'Sudan 🇸🇩', cur:'SDG' }, { c:'LY', n:'Libya 🇱🇾', cur:'LYD' },
+    { c:'TN', n:'Tunisia 🇹🇳', cur:'TND' }, { c:'DZ', n:'Algeria 🇩🇿', cur:'DZD' },
+    { c:'MA', n:'Morocco 🇲🇦', cur:'MAD' }, { c:'NG', n:'Nigeria 🇳🇬', cur:'NGN' },
+    { c:'KE', n:'Kenya 🇰🇪', cur:'KES' }, { c:'ZA', n:'South Africa 🇿🇦', cur:'ZAR' },
+    { c:'ET', n:'Ethiopia 🇪🇹', cur:'ETB' }, { c:'GH', n:'Ghana 🇬🇭', cur:'GHS' },
+    { c:'UG', n:'Uganda 🇺🇬', cur:'UGX' }, { c:'TZ', n:'Tanzania 🇹🇿', cur:'TZS' },
+    { c:'US', n:'United States 🇺🇸', cur:'USD' }, { c:'CA', n:'Canada 🇨🇦', cur:'CAD' },
+    { c:'GB', n:'United Kingdom 🇬🇧', cur:'GBP' }, { c:'EU', n:'Europe 🇪🇺', cur:'EUR' },
+    { c:'AU', n:'Australia 🇦🇺', cur:'AUD' }, { c:'JP', n:'Japan 🇯🇵', cur:'JPY' },
+    { c:'KR', n:'South Korea 🇰🇷', cur:'KRW' }, { c:'MY', n:'Malaysia 🇲🇾', cur:'MYR' },
+    { c:'ID', n:'Indonesia 🇮🇩', cur:'IDR' }, { c:'TH', n:'Thailand 🇹🇭', cur:'THB' }
+  ];
 
   document.addEventListener('DOMContentLoaded', function(){
     if (window.pdfjsLib){
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
     }
+    
+    populateDropdowns();
     bindLogo();
     bindQr();
-    bindProducts();
     bindImport();
-    try { bindCategory(); } catch(e){ console.warn("bindCategory skipped:", e.message); }
+    bindCategory();
+    bindCountryChange();
+    
     document.getElementById('saveProfileBtn').addEventListener('click', save);
     document.getElementById('clearProfileBtn').addEventListener('click', clearProfile);
 
-    // Load profile from Firebase after auth
+    // Load profile from Firebase
     if (window.FB){
       window.FB.waitForAuth().then(function(u){
         if (!u){ location.href = 'auth.html'; return; }
@@ -65,6 +66,48 @@ window.addEventListener('unhandledrejection', function(e){
 
   function $(id){ return document.getElementById(id); }
 
+  function populateDropdowns(){
+    var countryEl = $('pCountry');
+    var currencyEl = $('pCurrency');
+    if (!countryEl || !currencyEl) return;
+
+    if (countryEl.options.length === 0) {
+      var cHtml = '';
+      MASTER_COUNTRIES.forEach(function(c){
+        cHtml += '<option value="' + c.c + '">' + c.n + '</option>';
+      });
+      countryEl.innerHTML = cHtml;
+    }
+
+    if (currencyEl.options.length === 0) {
+      var uniqueCurrencies = [];
+      MASTER_COUNTRIES.forEach(function(c){
+        if (uniqueCurrencies.indexOf(c.cur) === -1) uniqueCurrencies.push(c.cur);
+      });
+      var curHtml = '';
+      uniqueCurrencies.sort().forEach(function(cur){
+        curHtml += '<option value="' + cur + '">' + cur + '</option>';
+      });
+      currencyEl.innerHTML = curHtml;
+    }
+  }
+
+  function bindCountryChange(){
+    var cEl = $('pCountry');
+    if (cEl) {
+      cEl.addEventListener('change', function(){
+        var selected = this.value;
+        for (var i = 0; i < MASTER_COUNTRIES.length; i++) {
+          if (MASTER_COUNTRIES[i].c === selected) {
+            var curEl = $('pCurrency');
+            if (curEl) curEl.value = MASTER_COUNTRIES[i].cur;
+            break;
+          }
+        }
+      });
+    }
+  }
+
   function fillForm(p){
     function set(id, v){ var el = $(id); if (el) el.value = v == null ? '' : v; }
     set('pBusinessName', p.businessName);
@@ -79,6 +122,7 @@ window.addEventListener('unhandledrejection', function(e){
     set('pCurrency', p.currency || 'PKR');
     set('pPrefix', p.prefix || 'INV');
     set('pCategory', p.category || '');
+    set('pCountry', p.country || 'PK');
     set('qrText', p.qrText || '');
   }
 
@@ -201,7 +245,7 @@ window.addEventListener('unhandledrejection', function(e){
   /* ---------- PRODUCTS ---------- */
   function bindProducts(){
     var btn = $('addProductBtn');
-    if (!btn) return;  // Products moved to products.html
+    if (!btn) return;
     btn.addEventListener('click', function(){
       addProductRow({name:'', rate:''});
     });
@@ -209,7 +253,7 @@ window.addEventListener('unhandledrejection', function(e){
 
   function renderProducts(list){
     var wrap = $('productsList');
-    if (!wrap) return;  // Not on this page
+    if (!wrap) return;
     wrap.innerHTML = '';
     if (!list || list.length === 0){
       addProductRow({name:'', rate:''});
@@ -248,7 +292,7 @@ window.addEventListener('unhandledrejection', function(e){
 
   function collectProducts(){
     var wrap = $('productsList');
-    if (!wrap) return (window.__kwCurrentProfile && window.__kwCurrentProfile.products) || [];
+    if (!wrap) return [];
     var rows = wrap.querySelectorAll('.product-row');
     var out = [];
     for (var i = 0; i < rows.length; i++){
@@ -259,10 +303,49 @@ window.addEventListener('unhandledrejection', function(e){
     return out;
   }
 
-  /* ---------- IMPORT ---------- */
+  /* ---------- CATEGORY & IMPORT ---------- */
+  function bindCategory(){
+    var sel = $('pCategory');
+    var btn = $('loadTemplateBtn');
+    if (!sel || !btn) return;
+    
+    if (window.KW_CATEGORIES){
+      Object.keys(window.KW_CATEGORIES).forEach(function(k){
+        var c = window.KW_CATEGORIES[k];
+        var opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = c.icon + '  ' + c.label;
+        sel.appendChild(opt);
+      });
+    }
+
+    btn.addEventListener('click', function(){
+      var key = sel.value;
+      if (!key){ toast('Pehle category select karein'); return; }
+      var cat = window.KW_CATEGORIES[key];
+      if (!cat || !cat.products) return;
+      if (!confirm('Add ' + cat.products.length + ' products from "' + cat.label + '"?')) return;
+      
+      var wrap = $('productsList');
+      var existingRows = wrap.querySelectorAll('.product-row');
+      for (var i = 0; i < existingRows.length; i++){
+        var nm = existingRows[i].querySelector('.pr-name').value.trim();
+        var rt = existingRows[i].querySelector('.pr-rate').value.trim();
+        if (!nm && !rt) existingRows[i].parentNode.removeChild(existingRows[i]);
+      }
+
+      cat.products.forEach(function(p){
+        var name = Array.isArray(p) ? p[0] : (p.name || '');
+        var rate = Array.isArray(p) ? p[1] : (p.rate || 0);
+        addProductRow({ name: name, rate: rate });
+      });
+      toast('✓ ' + cat.products.length + ' products added');
+    });
+  }
+
   function bindImport(){
     var inp = $('importFileInput');
-    if (!inp) return;  // Moved to products.html
+    if (!inp) return;
     inp.addEventListener('change', onImportFile);
   }
 
@@ -271,12 +354,6 @@ window.addEventListener('unhandledrejection', function(e){
     if (!el) return;
     el.className = 'import-status show ' + kind;
     el.textContent = msg;
-  }
-  function clearImportStatus(){
-    var el = $('importStatus');
-    if (!el) return;
-    el.className = 'import-status';
-    el.textContent = '';
   }
 
   function onImportFile(e){
@@ -309,7 +386,15 @@ window.addEventListener('unhandledrejection', function(e){
         if (products.length === 0){
           setImportStatus('err', 'Koi product nahi mila.'); return;
         }
-        applyImportedProducts(products);
+        
+        var wrap = $('productsList');
+        var existingRows = wrap.querySelectorAll('.product-row');
+        for (var i = 0; i < existingRows.length; i++){
+          var nm = existingRows[i].querySelector('.pr-name').value.trim();
+          var rt = existingRows[i].querySelector('.pr-rate').value.trim();
+          if (!nm && !rt) existingRows[i].parentNode.removeChild(existingRows[i]);
+        }
+        products.forEach(function(p){ addProductRow({ name: p.name, rate: p.rate }); });
         setImportStatus('ok', products.length + ' products import ho gaye.');
       } catch(err){
         setImportStatus('err', 'Read error: ' + err.message);
@@ -324,6 +409,7 @@ window.addEventListener('unhandledrejection', function(e){
     var headerIdx = -1, nameCol = -1, rateCol = -1;
     var nameKeys = ['name','product','item','description','particulars','goods','service','detail'];
     var rateKeys = ['rate','price','amount','cost','unit price','mrp','value'];
+    
     for (var r = 0; r < Math.min(rows.length, 5); r++){
       var row = rows[r] || [];
       var mName = -1, mRate = -1;
@@ -388,7 +474,14 @@ window.addEventListener('unhandledrejection', function(e){
         if (products.length === 0){
           setImportStatus('err', 'PDF se products nahi mile.'); return;
         }
-        applyImportedProducts(products);
+        var wrap = $('productsList');
+        var existingRows = wrap.querySelectorAll('.product-row');
+        for (var i = 0; i < existingRows.length; i++){
+          var nm = existingRows[i].querySelector('.pr-name').value.trim();
+          var rt = existingRows[i].querySelector('.pr-rate').value.trim();
+          if (!nm && !rt) existingRows[i].parentNode.removeChild(existingRows[i]);
+        }
+        products.forEach(function(p){ addProductRow({ name: p.name, rate: p.rate }); });
         setImportStatus('ok', products.length + ' items mile.');
       }).catch(function(err){
         setImportStatus('err', 'PDF error: ' + (err.message || err));
@@ -428,60 +521,6 @@ window.addEventListener('unhandledrejection', function(e){
     return out.slice(0, 500);
   }
 
-  function applyImportedProducts(products){
-    products.forEach(function(p){ addProductRow({ name: p.name, rate: p.rate }); });
-    var wrap = $('productsList');
-    var rows = wrap.querySelectorAll('.product-row');
-    for (var i = 0; i < rows.length; i++){
-      var nm = rows[i].querySelector('.pr-name').value.trim();
-      var rt = rows[i].querySelector('.pr-rate').value.trim();
-      if (!nm && !rt && rows.length > 1) rows[i].parentNode.removeChild(rows[i]);
-    }
-    toast(products.length + ' products added. Save karein.');
-  }
-
-  /* ---------- CATEGORY TEMPLATES ---------- */
-  function bindCategory(){
-    var sel = $('pCategory');
-    var btn = $('loadTemplateBtn');
-    if (!sel || !btn) return;  // Elements removed — skip silently
-    if (window.KW_CATEGORIES){
-      Object.keys(window.KW_CATEGORIES).forEach(function(k){
-        var c = window.KW_CATEGORIES[k];
-        var opt = document.createElement('option');
-        opt.value = k;
-        opt.textContent = c.icon + '  ' + c.label;
-        sel.appendChild(opt);
-      });
-    }
-    btn.addEventListener('click', function(){
-      var key = sel.value;
-      if (!key){ toast('Pehle category select karein'); return; }
-      var cat = window.KW_CATEGORIES[key];
-      if (!cat || !cat.products) return;
-      if (!confirm('Add ' + cat.products.length + ' products from "' + cat.label + '"?')) return;
-      applyTemplate(cat.products);
-      toast('✓ ' + cat.products.length + ' products added');
-    });
-  }
-
-  function applyTemplate(products){
-    var wrap = $('productsList');
-    // Remove empty placeholder rows
-    var existingRows = wrap.querySelectorAll('.product-row');
-    for (var i = 0; i < existingRows.length; i++){
-      var nm = existingRows[i].querySelector('.pr-name').value.trim();
-      var rt = existingRows[i].querySelector('.pr-rate').value.trim();
-      if (!nm && !rt) existingRows[i].parentNode.removeChild(existingRows[i]);
-    }
-    // Add template products
-    products.forEach(function(p){
-      var name = Array.isArray(p) ? p[0] : (p.name || '');
-      var rate = Array.isArray(p) ? p[1] : (p.rate || 0);
-      addProductRow({ name: name, rate: rate });
-    });
-  }
-
   /* ---------- SAVE ---------- */
   function save(){
     var p = {
@@ -498,7 +537,8 @@ window.addEventListener('unhandledrejection', function(e){
       qrText: $('qrText').value.trim(),
       currency: $('pCurrency').value,
       prefix: ($('pPrefix').value.trim() || 'INV').toUpperCase(),
-      category: ($('pCategory') && $('pCategory').value) || '',
+      category: $('pCategory') ? $('pCategory').value : '',
+      country: $('pCountry') ? $('pCountry').value : 'PK',
       logo: currentLogo || '',
       products: collectProducts(),
       savedAt: new Date().toISOString()
@@ -509,7 +549,7 @@ window.addEventListener('unhandledrejection', function(e){
     toast('Saving to cloud…');
     window.FB.saveProfile(p).then(function(){
       toast('✓ Profile saved');
-      setTimeout(function(){ location.href = 'app.html'; }, 900);
+      setTimeout(function(){ location.href = 'home.html'; }, 900);
     }).catch(function(err){
       btn.disabled = false;
       toast('Save failed: ' + (err.message || ''));
@@ -522,11 +562,12 @@ window.addEventListener('unhandledrejection', function(e){
       currentLogo = ''; currentQr = '';
       renderLogoPreview(); renderQrPreview();
       renderProducts([]);
-      clearImportStatus();
+      if ($('importStatus')) $('importStatus').className = 'import-status';
       ['pBusinessName','pOwnerName','pLicense','pEmail','pPhone','pAddress',
        'pJazzcash','pEasypaisa','pBank','pPrefix','qrText']
         .forEach(function(id){ var el = $(id); if (el) el.value = ''; });
-      var cur = $('pCurrency'); if (cur) cur.value = 'PKR';
+      if ($('pCurrency')) $('pCurrency').value = 'PKR';
+      if ($('pCountry')) $('pCountry').value = 'PK';
       toast('Profile deleted');
     }).catch(function(err){
       toast('Delete failed: ' + (err.message || ''));

@@ -35,6 +35,22 @@
     var bizName = (currentProfile && currentProfile.businessName) || 'Your Business';
     var userEmail = (currentUser && currentUser.email) || '';
 
+    var langOptions = [
+      { v: 'en', l: '🇬🇧 English' },
+      { v: 'ur', l: '🇵🇰 اردو' },
+      { v: 'ar', l: '🇸🇦 العربية' },
+      { v: 'es', l: '🇪🇸 Español' },
+      { v: 'fr', l: '🇫🇷 Français' },
+      { v: 'hi', l: '🇮🇳 हिन्दी' },
+      { v: 'zh', l: '🇨🇳 中文' }
+    ];
+
+    var langSelectHtml = '<select id="kwLangSegment" style="padding:8px 12px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:inherit;font-weight:700;font-size:.85rem;color:#0F172A;outline:none">';
+    langOptions.forEach(function(opt){
+      langSelectHtml += '<option value="' + opt.v + '"' + (lang === opt.v ? ' selected' : '') + '>' + opt.l + '</option>';
+    });
+    langSelectHtml += '</select>';
+
     var html =
       '<div class="kw-header">' +
         '<div class="kw-header-top">' +
@@ -53,7 +69,7 @@
             '<span class="kw-setting-icon">🏢</span>' +
             '<div class="kw-setting-body">' +
               '<p class="kw-setting-title">' + escapeHtml(t('business_edit')) + '</p>' +
-              '<p class="kw-setting-sub">' + escapeHtml(t('business_edit_sub')) + '</p>' +
+              '<p class="kw-setting-sub">Logo, contact, payment details</p>' +
             '</div>' +
             '<span class="kw-setting-arrow">›</span>' +
           '</a>' +
@@ -69,7 +85,7 @@
             '<span class="kw-setting-icon">📋</span>' +
             '<div class="kw-setting-body">' +
               '<p class="kw-setting-title">' + escapeHtml(t('history')) + '</p>' +
-              '<p class="kw-setting-sub">' + escapeHtml(t('history_sub')) + '</p>' +
+              '<p class="kw-setting-sub">View all saved invoices</p>' +
             '</div>' +
             '<span class="kw-setting-arrow">›</span>' +
           '</a>' +
@@ -83,21 +99,15 @@
             '<span class="kw-setting-icon">🌐</span>' +
             '<div class="kw-setting-body">' +
               '<p class="kw-setting-title">' + escapeHtml(t('language')) + '</p>' +
-              '<p class="kw-setting-sub">' + escapeHtml(t('language_sub')) + '</p>' +
+              '<p class="kw-setting-sub">App interface language</p>' +
             '</div>' +
-            '<select id="kwLangSegment" style="padding:8px 12px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:inherit;font-weight:700;font-size:.85rem;color:#0F172A;outline:none">' +
-              '<option value="en"' + (lang === 'en' ? ' selected' : '') + '>🇬🇧 English</option>' +
-              '<option value="ur"' + (lang === 'ur' ? ' selected' : '') + '>🇵🇰 اردو</option>' +
-              '<option value="ar"' + (lang === 'ar' ? ' selected' : '') + '>🇸🇦 العربية</option>' +
-              '<option value="es"' + (lang === 'es' ? ' selected' : '') + '>🇪🇸 Español</option>' +
-              '<option value="fr"' + (lang === 'fr' ? ' selected' : '') + '>🇫🇷 Français</option>' +
-            '</select>' +
+            langSelectHtml +
           '</div>' +
           '<div class="kw-setting-row">' +
             '<span class="kw-setting-icon">🌙</span>' +
             '<div class="kw-setting-body">' +
               '<p class="kw-setting-title">' + escapeHtml(t('theme')) + '</p>' +
-              '<p class="kw-setting-sub">' + escapeHtml(t('theme_sub')) + '</p>' +
+              '<p class="kw-setting-sub">Dark background, easier on eyes</p>' +
             '</div>' +
             '<label class="kw-toggle">' +
               '<input type="checkbox" id="kwThemeToggle"' + (theme === 'dark' ? ' checked' : '') + '>' +
@@ -128,7 +138,7 @@
             '<span class="kw-setting-icon danger">🚪</span>' +
             '<div class="kw-setting-body">' +
               '<p class="kw-setting-title" style="color:#DC2626">' + escapeHtml(t('signout')) + '</p>' +
-              '<p class="kw-setting-sub">' + escapeHtml(t('signout_sub')) + '</p>' +
+              '<p class="kw-setting-sub">Logout from this device</p>' +
             '</div>' +
           '</button>' +
         '</div>' +
@@ -146,7 +156,6 @@
   }
 
   function bindEvents(){
-    // Language
     var langSeg = $('kwLangSegment');
     if (langSeg){
       langSeg.addEventListener('change', function(){
@@ -157,7 +166,6 @@
       });
     }
 
-    // Theme
     var themeToggle = $('kwThemeToggle');
     if (themeToggle){
       themeToggle.addEventListener('change', function(){
@@ -165,7 +173,6 @@
       });
     }
 
-    // Sign out
     var signoutBtn = $('kwSignOutBtn');
     if (signoutBtn){
       signoutBtn.addEventListener('click', function(){
