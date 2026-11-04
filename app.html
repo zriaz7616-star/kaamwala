@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0F766E">
-<meta name="robots" content="noindex, nofollow">
 <title>New Invoice — KaamWala</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="home.css">
 </head>
@@ -42,24 +40,24 @@
     <div class="kw-inv-card-head">
       <span class="kw-inv-card-icon">👤</span>
       <div class="kw-inv-card-head-text">
-        <div class="kw-inv-card-title" id="billToTitle">CUSTOMER DETAILS</div>
+        <div class="kw-inv-card-title" id="billToTitle" data-i18n="customer_details">CUSTOMER DETAILS</div>
       </div>
     </div>
     <div class="kw-inv-fields">
       <label class="kw-inv-field">
-        <span>Customer Name *</span>
+        <span data-i18n="client_name">Customer Name *</span>
         <input type="text" id="toName" placeholder="e.g. Ali Khan">
       </label>
       <label class="kw-inv-field">
-        <span>Phone</span>
+        <span data-i18n="phone">Phone</span>
         <input type="tel" id="toPhone" placeholder="+92 3XX XXXXXXX">
       </label>
       <label class="kw-inv-field" id="toEmailField">
-        <span>Email <small>(optional)</small></span>
+        <span data-i18n="email">Email <small>(optional)</small></span>
         <input type="email" id="toEmail" placeholder="client@example.com">
       </label>
       <label class="kw-inv-field" id="toAddressField">
-        <span>Address <small>(optional)</small></span>
+        <span data-i18n="address">Address <small>(optional)</small></span>
         <textarea id="toAddress" rows="2" placeholder="Street, City"></textarea>
       </label>
     </div>
@@ -69,13 +67,13 @@
     <div class="kw-inv-card-head">
       <span class="kw-inv-card-icon">🛒</span>
       <div class="kw-inv-card-head-text">
-        <div class="kw-inv-card-title">ITEMS</div>
+        <div class="kw-inv-card-title" data-i18n="items">ITEMS</div>
       </div>
     </div>
     <div id="items" class="kw-inv-items"></div>
     <div class="kw-inv-items-actions">
-      <button type="button" id="searchProductBtn" class="kw-inv-btn-search">🔍 Search</button>
-      <button type="button" id="addItemBtn" class="kw-inv-btn-add">+ Add Item</button>
+      <button type="button" id="searchProductBtn" class="kw-inv-btn-search" data-i18n="search">🔍 Search</button>
+      <button type="button" id="addItemBtn" class="kw-inv-btn-add" data-i18n="add_item">+ Add Item</button>
     </div>
   </div>
 
@@ -83,29 +81,40 @@
     <div class="kw-inv-card-head">
       <span class="kw-inv-card-icon">📄</span>
       <div class="kw-inv-card-head-text">
-        <div class="kw-inv-card-title">INVOICE DETAILS</div>
+        <div class="kw-inv-card-title" data-i18n="invoice_details">INVOICE DETAILS</div>
       </div>
     </div>
     <div class="kw-inv-fields">
       <label class="kw-inv-field">
-        <span>Invoice #</span>
+        <span data-i18n="invoice_num">Invoice #</span>
         <input type="text" id="invNumber">
       </label>
       <label class="kw-inv-field">
-        <span>Date</span>
+        <span data-i18n="date">Date</span>
         <input type="date" id="invDate">
       </label>
       <label class="kw-inv-field">
-        <span>Due Date</span>
+        <span data-i18n="due_date">Due Date</span>
         <input type="date" id="invDue">
       </label>
       <label class="kw-inv-field">
-        <span>Currency</span>
+        <span data-i18n="currency">Currency</span>
         <select id="invCurrency">
           <option value="PKR">PKR — Rupee</option>
           <option value="USD">USD — Dollar</option>
-          <option value="AED">AED — Dirham</option>
           <option value="GBP">GBP — Pound</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="AED">AED — Dirham</option>
+          <option value="SAR">SAR — Riyal</option>
+          <option value="INR">INR — Indian Rupee</option>
+          <option value="CNY">CNY — Chinese Yuan</option>
+          <option value="RUB">RUB — Russian Ruble</option>
+          <option value="TRY">TRY — Turkish Lira</option>
+          <option value="IRR">IRR — Iranian Rial</option>
+          <option value="BDT">BDT — Taka</option>
+          <option value="AFN">AFN — Afghani</option>
+          <option value="CAD">CAD — Canadian Dollar</option>
+          <option value="AUD">AUD — Australian Dollar</option>
         </select>
       </label>
     </div>
@@ -115,7 +124,7 @@
     <div class="kw-inv-card-head">
       <span class="kw-inv-card-icon">💰</span>
       <div class="kw-inv-card-head-text">
-        <div class="kw-inv-card-title">PAYMENT STATUS</div>
+        <div class="kw-inv-card-title" data-i18n="payment_status">PAYMENT STATUS</div>
       </div>
     </div>
     <div class="kw-inv-fields">
@@ -124,14 +133,14 @@
           <input type="radio" name="payStatus" value="unpaid" checked>
           <span class="kw-status-pill unpaid">
             <span class="kw-status-dot"></span>
-            <span class="kw-status-text">Unpaid</span>
+            <span class="kw-status-text" data-i18n="unpaid">Unpaid</span>
           </span>
         </label>
         <label class="kw-status-opt">
           <input type="radio" name="payStatus" value="paid">
           <span class="kw-status-pill paid">
             <span class="kw-status-dot"></span>
-            <span class="kw-status-text">Paid</span>
+            <span class="kw-status-text" data-i18n="paid">Paid</span>
           </span>
         </label>
       </div>
@@ -143,12 +152,12 @@
     <div class="kw-inv-card-head">
       <span class="kw-inv-card-icon">💬</span>
       <div class="kw-inv-card-head-text">
-        <div class="kw-inv-card-title">NOTES</div>
+        <div class="kw-inv-card-title" data-i18n="notes">NOTES</div>
       </div>
     </div>
     <div class="kw-inv-fields">
       <label class="kw-inv-field">
-        <span>Notes <small>(optional)</small></span>
+        <span data-i18n="notes_optional">Notes <small>(optional)</small></span>
         <textarea id="invNotes" rows="3" placeholder="e.g. Payment due within 14 days."></textarea>
       </label>
     </div>
@@ -191,7 +200,7 @@
       <button id="kwSearchClose" type="button" style="background:transparent;border:none;font-size:1.4rem;cursor:pointer;color:#64748B;padding:4px 10px;font-family:inherit">✕</button>
     </div>
     <div style="padding:12px 16px;border-bottom:1px solid #E2E8F0">
-      <input type="text" id="kwSearchInput" placeholder="Product ya service ka naam…" autocomplete="off"
+      <input type="text" id="kwSearchInput" placeholder="Product ya service ka naam likhein…" autocomplete="off"
         style="width:100%;padding:12px 14px;border:1.5px solid #CBD5E1;border-radius:11px;font-size:16px;background:#fff;color:#0F172A;font-family:inherit;box-sizing:border-box;outline:none">
     </div>
     <div id="kwSearchList" style="flex:1;overflow-y:auto;padding:8px 16px 20px"></div>

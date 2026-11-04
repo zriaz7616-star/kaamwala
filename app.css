@@ -2308,3 +2308,14 @@ body.dark .inv-status-badge.unpaid{
   color:#FBBF24;border-color:#B45309;
 }
 
+
+/* Prevent keyboard from hiding inputs */
+.kw-inv-field input:focus,
+.kw-inv-field textarea:focus,
+.kw-inv-item-desc:focus,
+.kw-inv-item-grid input:focus {
+  scroll-margin-bottom: 200px;
+}
+.invoice-body {
+  scroll-padding-bottom: 300px;
+}

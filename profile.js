@@ -119,6 +119,10 @@
     set('pJazzcash', p.jazzcash);
     set('pEasypaisa', p.easypaisa);
     set('pBank', p.bank);
+    set('pPaypal', p.paypal);
+    set('pWise', p.wise);
+    set('pCrypto', p.crypto);
+    set('pIntlBank', p.intlBank);
     set('pCurrency', p.currency || 'PKR');
     set('pPrefix', p.prefix || 'INV');
     set('pCategory', p.category || '');
@@ -533,6 +537,10 @@
       jazzcash: $('pJazzcash').value.trim(),
       easypaisa: $('pEasypaisa').value.trim(),
       bank: $('pBank').value.trim(),
+      paypal: $('pPaypal').value.trim(),
+      wise: $('pWise').value.trim(),
+      crypto: $('pCrypto').value.trim(),
+      intlBank: $('pIntlBank').value.trim(),
       qrImage: currentQr || '',
       qrText: $('qrText').value.trim(),
       currency: $('pCurrency').value,

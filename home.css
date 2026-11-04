@@ -1019,3 +1019,21 @@ body.dark .kw-stat, body.dark .kw-action, body.dark .udb-total-card{
   background:linear-gradient(135deg, #0F766E 0%, #0EA5E9 100%) !important;
 }
 
+
+/* ============================================================
+   RTL (Right-to-Left) Support for Urdu/Arabic
+   ============================================================ */
+body[dir="rtl"] { text-align: right; }
+body[dir="rtl"] .kw-header-top,
+body[dir="rtl"] .kw-inv-card,
+body[dir="rtl"] .kw-action,
+body[dir="rtl"] .kw-nav { direction: rtl; }
+body[dir="rtl"] .kw-nav-item { flex-direction: row-reverse; }
+body[dir="rtl"] .kw-header-top { flex-direction: row-reverse; }
+body[dir="rtl"] .kw-stat { text-align: center; }
+body[dir="rtl"] .kw-setting-row { flex-direction: row-reverse; text-align: right; }
+body[dir="rtl"] .kw-setting-arrow { transform: rotate(180deg); }
+body[dir="rtl"] .kw-inv-card { flex-direction: row-reverse; text-align: right; }
+body[dir="rtl"] .kw-cust-card { flex-direction: row-reverse; text-align: right; }
+body[dir="rtl"] .udb-cust-row { flex-direction: row-reverse; text-align: right; }
+body[dir="rtl"] .udb-entry { flex-direction: row-reverse; text-align: right; }
