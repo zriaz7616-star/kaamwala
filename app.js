@@ -9,7 +9,7 @@
   var cloudPremium = false;
   var invoiceCount = 0;
 
-  var GUMROAD_PRODUCT_ID = 'YOUR_PRODUCT_ID_HERE'; 
+  var GUMROAD_PRODUCT_ID = 'TChQrOJGzRuxLYLYntLozQ=='; 
   var GUMROAD_LINK = 'https://zriaz8.gumroad.com/l/Kaamwala-premium';
 
   document.addEventListener('DOMContentLoaded', function(){
