@@ -400,6 +400,8 @@
     if (searchBtn) searchBtn.addEventListener('click', openSearchModal);
     var printBtn = $('printBtn');
     if (printBtn) printBtn.addEventListener('click', printInvoice);
+    var newInvBtn = $('newInvBtn');
+    if (newInvBtn) newInvBtn.addEventListener('click', function(){ location.href = 'app.html'; });
   }
 
   function ensureAtLeastOne(){
@@ -609,7 +611,7 @@
     var data = {
       from: { name: p.businessName || '', ownerName: p.ownerName || '', license: p.license || '', email: p.email || '', phone: p.phone || '', address: p.address || '', logo: p.logo || '' },
       to: { name: $('toName').value.trim(), email: $('toEmail').value.trim(), phone: $('toPhone').value.trim(), address: $('toAddress').value.trim() },
-      invoice: { number: $('invNumber').value.trim(), date: $('invDate').value, due: $('invDue').value, currency: $('invCurrency').value, notes: $('invNotes').value.trim() },
+      invoice: { number: $('invNumber').value.trim(), date: $('invDate').value, due: $('invDue').value, currency: $('invCurrency').value, notes: $('invNotes').value.trim(), theme: ($('invTheme') ? $('invTheme').value : 'classic') },
       status: getPaymentStatus(),
       payment: { 
         jazzcash: p.jazzcash || '', 
@@ -726,6 +728,7 @@
     var notesHtml = d.invoice.notes ? '<div class="inv-notes-block">' + escapeHtml(d.invoice.notes) + '</div>' : '';
     var footerHtml = '<div class="inv-signature"><div class="inv-signature-label">Authorized Signature</div><div class="inv-signature-line"></div></div><div class="inv-footer-line">' + (isPremium() ? 'Thank you for your business.' : 'Made with KaamWala · kaamwala.app') + '</div>';
 
+    el.setAttribute('data-theme', d.invoice.theme || 'classic');
     el.innerHTML = headHtml + metaHtml + billTo + itemsTable + bottomRow + notesHtml + footerHtml;
   }
 
@@ -734,6 +737,22 @@
     var data = readData();
     if (!data.to.name){ toast('Please add a client name'); return; }
     if (!data.items.some(function(it){ return it.desc; })){ toast('Please add at least one item'); return; }
+    
+    // STOCK VALIDATION
+    if (currentProfile && currentProfile.products) {
+      for (var i = 0; i < data.items.length; i++) {
+        var item = data.items[i];
+        if (!item.desc) continue;
+        var matched = currentProfile.products.find(function(p){ return p.name.toLowerCase() === item.desc.toLowerCase(); });
+        if (matched && matched.stock !== undefined && matched.stock !== '') {
+          var available = parseFloat(matched.stock) || 0;
+          if (item.qty > available) {
+            toast('Not enough stock for ' + matched.name + ' (Available: ' + available + ')');
+            return; // Stop saving
+          }
+        }
+      }
+    }
 
     var editingId = $('editingId') ? $('editingId').value : '';
     var now = new Date().toISOString();
@@ -804,6 +823,7 @@
       setVal('invDate', d.invoice && d.invoice.date);
       setVal('invDue', d.invoice && d.invoice.due);
       setVal('invNotes', d.invoice && d.invoice.notes);
+      if ($('invTheme') && d.invoice && d.invoice.theme) { $('invTheme').value = d.invoice.theme; }
       setPaymentStatus(d.status || 'unpaid');
       
       var curEl = $('invCurrency');

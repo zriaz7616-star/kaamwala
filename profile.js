@@ -92,21 +92,23 @@
     }
   }
 
+  
+  
   function bindCountryChange(){
-    var cEl = $('pCountry');
-    if (cEl) {
-      cEl.addEventListener('change', function(){
-        var selected = this.value;
-        for (var i = 0; i < MASTER_COUNTRIES.length; i++) {
-          if (MASTER_COUNTRIES[i].c === selected) {
-            var curEl = $('pCurrency');
-            if (curEl) curEl.value = MASTER_COUNTRIES[i].cur;
-            break;
-          }
-        }
-      });
-    }
+    var cEl = document.getElementById('pCountry');
+    var curEl = document.getElementById('pCurrency');
+    if (!cEl || !curEl) return;
+    
+    cEl.addEventListener('change', function(){
+      var selected = this.value;
+      var map = { PK:'PKR', IN:'INR', CN:'CNY', US:'USD', GB:'GBP', AE:'AED', SA:'SAR', EU:'EUR', BD:'BDT', AF:'AFN', IR:'IRR', TR:'TRY', RU:'RUB' };
+      if (map[selected]) {
+        curEl.value = map[selected];
+      }
+    });
   }
+
+
 
   function fillForm(p){
     function set(id, v){ var el = $(id); if (el) el.value = v == null ? '' : v; }

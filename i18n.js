@@ -5,9 +5,9 @@
   var STRINGS = {
     en: {
       home: 'Home', customers: 'Customers', invoices: 'Invoices', new_invoice: 'New Invoice',
-      products: 'Products', settings: 'Settings', greeting: 'Assalam o Alaikum 👋',
+      products: 'Products', settings: 'Settings', greeting: 'Assalam-O-Alaikum 👋',
       quick_actions: 'Quick Actions', recent_invoices: 'Recent Invoices',
-      total_customers: 'total customers', total_outstanding: 'Total outstanding',
+      total_customers: 'Total Customers', total_outstanding: 'Total Outstanding',
       pending: 'Pending', received: 'Received', billed: 'Billed', paid: 'Paid', due: 'Due',
       business_edit: 'Business Profile', language: 'Language', theme: 'Dark Mode',
       history: 'Invoice History', signout: 'Sign Out', save: 'Save', add_product: 'Add Product',

@@ -2319,3 +2319,27 @@ body.dark .inv-status-badge.unpaid{
 .invoice-body {
   scroll-padding-bottom: 300px;
 }
+
+/* Fix App.html header text */
+.kw-inv-topbar-main { text-transform: capitalize !important; }
+.kw-inv-card-title { text-transform: uppercase !important; }
+
+
+/* Theme 1: Classic (Default) */
+.invoice-paper[data-theme="classic"] .inv-head-block { border-bottom: 2px solid #0F766E; }
+.invoice-paper[data-theme="classic"] .inv-biz-name { color: #0F766E; }
+.invoice-paper[data-theme="classic"] .inv-items-table thead th { background: #0F766E; color: #fff; }
+
+/* Theme 2: Modern (Dark/Blue) */
+.invoice-paper[data-theme="modern"] .inv-head-block { background: #0F172A; color: #fff; padding: 20px; border-radius: 12px; border: none; margin: -10px -10px 20px -10px; }
+.invoice-paper[data-theme="modern"] .inv-biz-name { color: #fff; }
+.invoice-paper[data-theme="modern"] .inv-biz-line { color: #CBD5E1; }
+.invoice-paper[data-theme="modern"] .inv-items-table thead th { background: #0EA5E9; color: #fff; border: none; }
+.invoice-paper[data-theme="modern"] .inv-totals .grand-k, .invoice-paper[data-theme="modern"] .inv-totals .grand-v { color: #0EA5E9; border-color: #0EA5E9; }
+
+/* Theme 3: Minimal (Monochrome) */
+.invoice-paper[data-theme="minimal"] .inv-head-block { border-bottom: 1px solid #000; }
+.invoice-paper[data-theme="minimal"] .inv-biz-name { color: #000; }
+.invoice-paper[data-theme="minimal"] .inv-items-table thead th { background: #000; color: #fff; }
+.invoice-paper[data-theme="minimal"] .inv-totals .grand-k, .invoice-paper[data-theme="minimal"] .inv-totals .grand-v { color: #000; border-color: #000; }
+

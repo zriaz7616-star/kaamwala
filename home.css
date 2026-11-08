@@ -1102,3 +1102,18 @@ body.dark .kw-alert-action { background: #1E293B; color: #FCD34D; }
 .kw-alert-card.danger .kw-alert-action { color: #991B1B; }
 body.dark .kw-alert-card.danger .kw-alert-action { color: #FCA5A5; }
 
+
+/* Force Capitalize for specific text elements */
+.kw-greeting, 
+.kw-inv-topbar-main, 
+.kw-topbar-title, 
+.kw-action-label, 
+.kw-section-title {
+  text-transform: capitalize !important;
+}
+
+/* Fix the Header Title specifically */
+.kw-inv-topbar-main {
+  text-transform: capitalize !important;
+  letter-spacing: 0.5px;
+}

@@ -18,6 +18,7 @@
     <div class="kw-inv-topbar-main" id="topbarTitle">New Invoice</div>
   </div>
   <a href="history.html" class="kw-inv-icon-btn" aria-label="History">📋</a>
+  <button type="button" id="newInvBtn" class="kw-inv-icon-btn" aria-label="New Invoice" style="background:#0F766E;color:#fff;border:none;font-size:1.4rem;font-weight:800;">+</button>
 </header>
 
 <div class="kw-inv-tabs">
@@ -32,6 +33,7 @@
 <input type="hidden" id="editingId" value="">
 
 <main class="kw-inv-main">
+<div id="premiumBanner"></div>
 <datalist id="kwProducts"></datalist>
 
 <section id="view-edit" class="kw-inv-view">
@@ -96,6 +98,14 @@
       <label class="kw-inv-field">
         <span data-i18n="due_date">Due Date</span>
         <input type="date" id="invDue">
+      </label>
+      <label class="kw-inv-field">
+        <span>Invoice Style</span>
+        <select id="invTheme">
+          <option value="classic">Classic (Green)</option>
+          <option value="modern">Modern (Dark)</option>
+          <option value="minimal">Minimal (Black & White)</option>
+        </select>
       </label>
       <label class="kw-inv-field">
         <span data-i18n="currency">Currency</span>
