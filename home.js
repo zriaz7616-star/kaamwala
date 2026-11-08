@@ -139,7 +139,7 @@
       
       renderAlerts() + 
 
-      '<div class="kw-section"><h2 class="kw-section-title">'+t('quick_actions')+'</h2><div class="kw-actions"><a href="app.html" class="kw-action new"><span class="kw-action-icon">+</span><span class="kw-action-label">'+t('new_invoice')+'</span></a><a href="products.html" class="kw-action products"><span class="kw-action-icon">📦</span><span class="kw-action-label">'+t('products')+'</span></a><a href="customers.html" class="kw-action customers"><span class="kw-action-icon">👥</span><span class="kw-action-label">'+t('customers')+'</span></a><a href="settings.html" class="kw-action profile"><span class="kw-action-icon">⚙️</span><span class="kw-action-label">'+t('settings')+'</span></a></div></div>' +
+      '<div class="kw-section"><h2 class="kw-section-title">'+t('quick_actions')+'</h2><div class="kw-actions"><a href="app.html" class="kw-action new"><span class="kw-action-icon">+</span><span class="kw-action-label">'+t('new_invoice')+'</span></a><a href="products.html" class="kw-action products"><span class="kw-action-icon">📦</span><span class="kw-action-label">'+t('purchase')+'</span></a><a href="customers.html" class="kw-action customers"><span class="kw-action-icon">👥</span><span class="kw-action-label">'+t('customers')+'</span></a><a href="settings.html" class="kw-action profile"><span class="kw-action-icon">⚙️</span><span class="kw-action-label">'+t('settings')+'</span></a></div></div>' +
       '<div class="kw-section"><h2 class="kw-section-title">'+t('recent_invoices')+'</h2>'+recentHtml+'</div>';
 
     $('homeRoot').innerHTML = html; $('bottomNav').style.display = '';

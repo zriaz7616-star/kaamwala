@@ -5,7 +5,7 @@
   var STRINGS = {
     en: {
       home: 'Home', customers: 'Customers', invoices: 'Invoices', new_invoice: 'New Invoice',
-      products: 'Products', settings: 'Settings', greeting: 'Assalam-O-Alaikum 👋',
+      products: 'Products', purchase: 'Purchase', settings: 'Settings', greeting: 'Assalam-O-Alaikum 👋',
       quick_actions: 'Quick Actions', recent_invoices: 'Recent Invoices',
       total_customers: 'Total Customers', total_outstanding: 'Total Outstanding',
       pending: 'Pending', received: 'Received', billed: 'Billed', paid: 'Paid', due: 'Due',
@@ -19,7 +19,7 @@
     },
     ur: {
       home: 'ہوم', customers: 'گاہک', invoices: 'بل', new_invoice: 'نیا بل',
-      products: 'مصنوعات', settings: 'سیٹنگز', greeting: 'السلام علیکم 👋',
+      products: 'مصنوعات', purchase: 'خریداری', settings: 'سیٹنگز', greeting: 'السلام علیکم 👋',
       quick_actions: 'فوری کام', recent_invoices: 'حالیہ بل',
       total_customers: 'کل گاہک', total_outstanding: 'کل بقایا',
       pending: 'بقایا', received: 'موصول', billed: 'بل شدہ', paid: 'ادا شدہ', due: 'واجب الادا',
@@ -33,7 +33,7 @@
     },
     hi: {
       home: 'होम', customers: 'ग्राहक', invoices: 'चालान', new_invoice: 'नया चालान',
-      products: 'उत्पाद', settings: 'सेटिंग्स', greeting: 'नमस्ते 👋',
+      products: 'उत्पाद', purchase: 'खरीद', settings: 'सेटिंग्स', greeting: 'नमस्ते 👋',
       quick_actions: 'त्वरित कार्रवाई', recent_invoices: 'हाल के चालान',
       total_customers: 'कुल ग्राहक', total_outstanding: 'कुल बकाया',
       pending: 'लंबित', received: 'प्राप्त', billed: 'बिल किया गया', paid: 'भुगतान किया गया', due: 'देय',
@@ -47,7 +47,7 @@
     },
     zh: {
       home: '首页', customers: '客户', invoices: '发票', new_invoice: '新发票',
-      products: '产品', settings: '设置', greeting: '你好 👋',
+      products: '产品', purchase: '采购', settings: '设置', greeting: '你好 👋',
       quick_actions: '快捷操作', recent_invoices: '最近发票',
       total_customers: '总客户数', total_outstanding: '总未付款',
       pending: '待定', received: '已收款', billed: '已开票', paid: '已付款', due: '到期',

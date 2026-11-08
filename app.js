@@ -8,6 +8,7 @@
   var currentProfile = null;
   var cloudPremium = false;
   var invoiceCount = 0;
+  var currentTheme = 'classic';
 
   var GUMROAD_PRODUCT_ID = 'TChQrOJGzRuxLYLYntLozQ=='; 
   var GUMROAD_LINK = 'https://zriaz8.gumroad.com/l/Kaamwala-premium';
@@ -241,7 +242,37 @@
     });
   }
 
-  function refreshUI(){
+  
+  function openTemplateModal() {
+    var overlay = document.createElement('div');
+    overlay.className = 'kw-overlay';
+    overlay.innerHTML = 
+      '<div class="kw-modal" style="max-width:420px;">' +
+        '<h3>🎨 Choose Template</h3>' +
+        '<p>Select a design for your invoice.</p>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:15px;">' +
+          '<button class="tpl-btn" data-theme="classic" style="padding:15px;border-radius:12px;border:2px solid #0F766E;background:#F0FDFA;font-weight:700;color:#0F766E;cursor:pointer;">Classic<br><span style="font-size:1.5rem;">🟢</span></button>' +
+          '<button class="tpl-btn" data-theme="modern" style="padding:15px;border-radius:12px;border:2px solid #0EA5E9;background:#F0F9FF;font-weight:700;color:#0EA5E9;cursor:pointer;">Modern<br><span style="font-size:1.5rem;">🔵</span></button>' +
+          '<button class="tpl-btn" data-theme="minimal" style="padding:15px;border-radius:12px;border:2px solid #000;background:#F8FAFC;font-weight:700;color:#000;cursor:pointer;">Minimal<br><span style="font-size:1.5rem;">⚫</span></button>' +
+        '</div>' +
+        '<button class="kw-secondary" id="kwCloseTpl" style="margin-top:20px;">Close</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    overlay.querySelectorAll('.tpl-btn').forEach(function(btn) {
+      btn.onclick = function() {
+        currentTheme = this.getAttribute('data-theme');
+        overlay.parentNode.removeChild(overlay);
+        renderPreview();
+        schedulePrebuild();
+        toast('✓ Template updated');
+      };
+    });
+    overlay.querySelector('#kwCloseTpl').onclick = function() { overlay.parentNode.removeChild(overlay); };
+    overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.parentNode.removeChild(overlay); });
+  }
+
+function refreshUI(){
     renderPremiumBanner();
     renderPreview();
     pdfCache = { signature:null, blob:null, file:null, filename:null };
@@ -402,6 +433,8 @@
     if (printBtn) printBtn.addEventListener('click', printInvoice);
     var newInvBtn = $('newInvBtn');
     if (newInvBtn) newInvBtn.addEventListener('click', function(){ location.href = 'app.html'; });
+    var tempBtn = $('kwTemplateBtn');
+    if (tempBtn) tempBtn.addEventListener('click', openTemplateModal);
   }
 
   function ensureAtLeastOne(){
@@ -611,7 +644,7 @@
     var data = {
       from: { name: p.businessName || '', ownerName: p.ownerName || '', license: p.license || '', email: p.email || '', phone: p.phone || '', address: p.address || '', logo: p.logo || '' },
       to: { name: $('toName').value.trim(), email: $('toEmail').value.trim(), phone: $('toPhone').value.trim(), address: $('toAddress').value.trim() },
-      invoice: { number: $('invNumber').value.trim(), date: $('invDate').value, due: $('invDue').value, currency: $('invCurrency').value, notes: $('invNotes').value.trim(), theme: ($('invTheme') ? $('invTheme').value : 'classic') },
+      invoice: { number: $('invNumber').value.trim(), date: $('invDate').value, due: $('invDue').value, currency: $('invCurrency').value, notes: $('invNotes').value.trim(), theme: currentTheme },
       status: getPaymentStatus(),
       payment: { 
         jazzcash: p.jazzcash || '', 
@@ -823,7 +856,7 @@
       setVal('invDate', d.invoice && d.invoice.date);
       setVal('invDue', d.invoice && d.invoice.due);
       setVal('invNotes', d.invoice && d.invoice.notes);
-      if ($('invTheme') && d.invoice && d.invoice.theme) { $('invTheme').value = d.invoice.theme; }
+      
       setPaymentStatus(d.status || 'unpaid');
       
       var curEl = $('invCurrency');
@@ -833,6 +866,7 @@
       }
       if (d.id){
         if ($('editingId')) $('editingId').value = d.id;
+        if (d.invoice && d.invoice.theme) currentTheme = d.invoice.theme;
         if ($('topbarTitle')) $('topbarTitle').textContent = 'Editing Invoice';
       }
 

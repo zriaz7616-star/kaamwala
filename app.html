@@ -28,6 +28,9 @@
   <button type="button" class="kw-inv-tab" data-tab="preview">
     <span class="kw-inv-tab-icon">👁</span> <span>Preview</span>
   </button>
+  <button type="button" class="kw-inv-tab" id="kwTemplateBtn" style="color:#8B5CF6;">
+    <span class="kw-inv-tab-icon">🎨</span> <span>Templates</span>
+  </button>
 </div>
 
 <input type="hidden" id="editingId" value="">
@@ -99,14 +102,7 @@
         <span data-i18n="due_date">Due Date</span>
         <input type="date" id="invDue">
       </label>
-      <label class="kw-inv-field">
-        <span>Invoice Style</span>
-        <select id="invTheme">
-          <option value="classic">Classic (Green)</option>
-          <option value="modern">Modern (Dark)</option>
-          <option value="minimal">Minimal (Black & White)</option>
-        </select>
-      </label>
+      
       <label class="kw-inv-field">
         <span data-i18n="currency">Currency</span>
         <select id="invCurrency">
