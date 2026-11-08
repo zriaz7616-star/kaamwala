@@ -1,6 +1,10 @@
 /* KaamWala Service Worker — offline cache */
-const CACHE_NAME = 'kaamwala-v5';
+const CACHE_NAME = 'kaamwala-v6';
 const urlsToCache = [
+  '/kaamwala/apple-touch-icon.png',
+  '/kaamwala/icon-512.png',
+  '/kaamwala/icon-192.png',
+  '/kaamwala/kaamwala-logo.png',
   '/kaamwala/',
   '/kaamwala/index.html',
   '/kaamwala/app.html',
