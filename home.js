@@ -1,5 +1,6 @@
 (function(){
   'use strict';
+
   var CURRENCY_SYMBOLS = {PKR:'Rs', USD:'$', AED:'AED', GBP:'£', INR:'₹', CNY:'¥', EUR:'€', SAR:'SR', RUB:'₽', TRY:'₺', IRR:'﷼', AFN:'؋', BDT:'৳'};
   var currentUser = null, currentProfile = null, allInvoices = [];
 
@@ -29,6 +30,85 @@
   function calcTotals(items){ return (items||[]).reduce(function(s,it){ return s+(parseFloat(it.amount)||0); },0); }
   function getInvoiceStatus(inv){ if(inv.status==='paid')return 'paid'; if(inv.invoice&&inv.invoice.due){ try{ var due=new Date(inv.invoice.due+'T23:59:59'); if(due<new Date())return 'overdue'; }catch(e){} } return 'unpaid'; }
 
+  /* ---------- ALERTS LOGIC ---------- */
+  function getInventoryAlerts() {
+    var p = currentProfile || {};
+    if (!p.products || !p.products.length) return null;
+
+    var lowStock = [];
+    var expiringSoon = [];
+    var today = new Date();
+    var threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
+
+    p.products.forEach(function(prod) {
+      // Low Stock Check
+      if (prod.stock !== undefined && prod.stock !== '') {
+        var stockNum = parseFloat(prod.stock);
+        if (!isNaN(stockNum) && stockNum < 100) lowStock.push(prod);
+      }
+
+      // Expiry Check
+      if (prod.expiry && prod.expiry.trim()) {
+        var expStr = prod.expiry.trim();
+        var parts = expStr.split(/[\/\-\s]+/);
+        if (parts.length >= 2) {
+          var m = parseInt(parts[0], 10);
+          var y = parseInt(parts[1], 10);
+          if (y < 100) y += 2000;
+          
+          if (m >= 1 && m <= 12 && y > 2000) {
+            var expDate = new Date(y, m, 0); // Last day of the month
+            // Agar expiry date 3 mahine ke andar hai
+            if (expDate <= threeMonthsFromNow) {
+              expiringSoon.push({ prod: prod, date: expDate, expired: expDate < today });
+            }
+          }
+        }
+      }
+    });
+
+    if (lowStock.length === 0 && expiringSoon.length === 0) return null;
+    return { lowStock: lowStock, expiringSoon: expiringSoon };
+  }
+
+  function renderAlerts() {
+    var alerts = getInventoryAlerts();
+    if (!alerts) return '';
+    
+    var html = '<div class="kw-section" style="margin-top: 0; margin-bottom: 16px;">';
+    
+    if (alerts.lowStock.length > 0) {
+      html += '<div class="kw-alert-card warning">' +
+        '<div class="kw-alert-icon">📦</div>' +
+        '<div class="kw-alert-body">' +
+          '<div class="kw-alert-title">Low Stock Alert</div>' +
+          '<div class="kw-alert-desc">' + alerts.lowStock.length + ' items have stock less than 100. (' + 
+          alerts.lowStock.slice(0, 2).map(function(p){ return p.name; }).join(', ') + 
+          (alerts.lowStock.length > 2 ? '...' : '') + ')</div>' +
+        '</div>' +
+        '<a href="products.html" class="kw-alert-action">Check</a>' +
+      '</div>';
+    }
+
+    if (alerts.expiringSoon.length > 0) {
+      var hasExpired = alerts.expiringSoon.some(function(e){ return e.expired; });
+      var cardCls = hasExpired ? 'danger' : 'warning';
+      html += '<div class="kw-alert-card ' + cardCls + '">' +
+        '<div class="kw-alert-icon">⏳</div>' +
+        '<div class="kw-alert-body">' +
+          '<div class="kw-alert-title">Expiry Warning</div>' +
+          '<div class="kw-alert-desc">' + alerts.expiringSoon.length + ' items are expiring in 3 months or less. (' + 
+          alerts.expiringSoon.slice(0, 2).map(function(e){ return e.prod.name; }).join(', ') + 
+          (alerts.expiringSoon.length > 2 ? '...' : '') + ')</div>' +
+        '</div>' +
+        '<a href="products.html" class="kw-alert-action">Check</a>' +
+      '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
   function renderDashboard(){
     var p = currentProfile || {};
     var currency = p.currency || 'PKR';
@@ -36,8 +116,8 @@
     var totalInv = allInvoices.length, totalRevenue = 0, pendingAmount = 0;
 
     allInvoices.forEach(function(inv){
-      var t = calcTotals(inv.items); var status = getInvoiceStatus(inv);
-      if (status === 'paid') totalRevenue += t; else pendingAmount += t;
+      var tt = calcTotals(inv.items); var status = getInvoiceStatus(inv);
+      if (status === 'paid') totalRevenue += tt; else pendingAmount += tt;
     });
 
     var recent = allInvoices.slice(0, 5);
@@ -56,6 +136,9 @@
 
     var html = '<div class="kw-header"><div class="kw-header-top"><div class="kw-brand"><span class="kw-mark">KW</span><span>KaamWala</span></div><button class="kw-icon-btn" id="kwAcctBtn">👤</button></div><p class="kw-greeting">'+t('greeting')+'</p><h1 class="kw-biz-name">'+escapeHtml(p.businessName || 'Your Business')+premiumPill+'</h1><p class="kw-biz-meta">'+(p.phone ? escapeHtml(p.phone) + ' · ' : '')+(p.email ? escapeHtml(p.email) : '')+'</p></div>' +
       '<div class="kw-stats"><div class="kw-stat"><span class="kw-stat-icon">📄</span><span class="kw-stat-num">'+totalInv+'</span><span class="kw-stat-lbl">'+t('invoices')+'</span></div><div class="kw-stat revenue"><span class="kw-stat-icon">💰</span><span class="kw-stat-num">'+formatMoneyShort(totalRevenue, currency)+'</span><span class="kw-stat-lbl">'+t('received')+'</span></div><div class="kw-stat pending"><span class="kw-stat-icon">⏳</span><span class="kw-stat-num">'+formatMoneyShort(pendingAmount, currency)+'</span><span class="kw-stat-lbl">'+t('pending')+'</span></div></div>' +
+      
+      renderAlerts() + 
+
       '<div class="kw-section"><h2 class="kw-section-title">'+t('quick_actions')+'</h2><div class="kw-actions"><a href="app.html" class="kw-action new"><span class="kw-action-icon">+</span><span class="kw-action-label">'+t('new_invoice')+'</span></a><a href="products.html" class="kw-action products"><span class="kw-action-icon">📦</span><span class="kw-action-label">'+t('products')+'</span></a><a href="customers.html" class="kw-action customers"><span class="kw-action-icon">👥</span><span class="kw-action-label">'+t('customers')+'</span></a><a href="settings.html" class="kw-action profile"><span class="kw-action-icon">⚙️</span><span class="kw-action-label">'+t('settings')+'</span></a></div></div>' +
       '<div class="kw-section"><h2 class="kw-section-title">'+t('recent_invoices')+'</h2>'+recentHtml+'</div>';
 

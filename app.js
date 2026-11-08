@@ -756,6 +756,21 @@
     var btn = $('saveBtn');
     btn.disabled = true;
     toast('Saving to cloud…');
+    
+    // Deduct Stock Logic
+    if (isNew && currentProfile && currentProfile.products) {
+      var updatedProducts = currentProfile.products.slice();
+      data.items.forEach(function(item) {
+        if (!item.desc) return;
+        var matched = updatedProducts.find(function(p){ return p.name && p.name.toLowerCase() === item.desc.toLowerCase(); });
+        if (matched && matched.stock != null) {
+           matched.stock = Math.max(0, (parseFloat(matched.stock) || 0) - (parseFloat(item.qty) || 0));
+        }
+      });
+      currentProfile.products = updatedProducts;
+      window.FB.saveProfile(currentProfile).catch(function(e){ console.warn('Stock update failed', e); });
+    }
+
     window.FB.saveInvoice(data).then(function(){
       if (isNew) invoiceCount++;
       if ($('editingId')) $('editingId').value = data.id;

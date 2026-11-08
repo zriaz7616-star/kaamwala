@@ -1037,3 +1037,68 @@ body[dir="rtl"] .kw-inv-card { flex-direction: row-reverse; text-align: right; }
 body[dir="rtl"] .kw-cust-card { flex-direction: row-reverse; text-align: right; }
 body[dir="rtl"] .udb-cust-row { flex-direction: row-reverse; text-align: right; }
 body[dir="rtl"] .udb-entry { flex-direction: row-reverse; text-align: right; }
+
+/* Inventory Product Row Grid */
+.kw-prod-row {
+  background: #fff; border: 1px solid #E2E8F0; border-radius: 12px;
+  padding: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px;
+}
+body.dark .kw-prod-row { background: #1E293B; border-color: #334155; }
+.kw-prod-name { width: 100%; padding: 10px; border: 1.5px solid #E2E8F0; border-radius: 8px; font-weight: 700; font-size: 15px; }
+.kw-prod-del { position: absolute; right: 10px; background: #FEF2F2; color: #DC2626; border: none; border-radius: 8px; width: 34px; height: 34px; font-size: 1.2rem; }
+.kw-prod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.kw-prod-grid label span { display: block; font-size: 0.7rem; color: #64748B; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
+.kw-prod-grid input { width: 100%; padding: 8px; border: 1.5px solid #E2E8F0; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+body.dark .kw-prod-grid input { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+
+/* ============================================================
+   DASHBOARD ALERT CARDS
+   ============================================================ */
+.kw-alert-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 14px; margin-bottom: 10px;
+  text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1.5px solid transparent;
+}
+.kw-alert-card.warning {
+  background: #FFFBEB; border-color: #FDE68A;
+}
+body.dark .kw-alert-card.warning {
+  background: #422006; border-color: #92400E;
+}
+.kw-alert-card.danger {
+  background: #FEF2F2; border-color: #FECACA;
+}
+body.dark .kw-alert-card.danger {
+  background: #450A0A; border-color: #7F1D1D;
+}
+
+.kw-alert-icon {
+  font-size: 1.5rem; flex-shrink: 0;
+}
+.kw-alert-body {
+  flex: 1; min-width: 0;
+}
+.kw-alert-title {
+  font-weight: 800; font-size: 0.95rem; color: #78350F; margin-bottom: 2px;
+}
+body.dark .kw-alert-title { color: #FCD34D; }
+.kw-alert-card.danger .kw-alert-title { color: #991B1B; }
+body.dark .kw-alert-card.danger .kw-alert-title { color: #FCA5A5; }
+
+.kw-alert-desc {
+  font-size: 0.78rem; color: #92400E; line-height: 1.3;
+}
+body.dark .kw-alert-desc { color: #FDE68A; }
+.kw-alert-card.danger .kw-alert-desc { color: #B91C1C; }
+body.dark .kw-alert-card.danger .kw-alert-desc { color: #FCA5A5; }
+
+.kw-alert-action {
+  background: #fff; color: #78350F; font-weight: 800; font-size: 0.75rem;
+  padding: 6px 12px; border-radius: 8px; text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+body.dark .kw-alert-action { background: #1E293B; color: #FCD34D; }
+.kw-alert-card.danger .kw-alert-action { color: #991B1B; }
+body.dark .kw-alert-card.danger .kw-alert-action { color: #FCA5A5; }
+
